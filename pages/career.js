@@ -15,7 +15,7 @@ export default function CareersPage() {
     ];
 
     return (
-        <PageLayout title="Join Our Mission" description="Help us empower career journeys worldwide. Explore open positions at CareerLeap.ai and shape the future of work.">
+        <PageLayout title="Join Our Mission" description="Help us empower career journeys worldwide. Explore open positions at Leap.ai and shape the future of work.">
              <div className="mb-16 text-center max-w-3xl mx-auto space-y-4">
                 <p className="text-lg text-gray-600 dark:text-gray-300">
                     We are a diverse, remote-first team passionate about leveraging technology to make a positive impact on people's professional lives. If you thrive in collaborative environments and are driven by innovation and purpose, we'd love for you to join us.

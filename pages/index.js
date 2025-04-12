@@ -98,7 +98,7 @@ const Header = () => {
           {/* Logo */}
           <div className="flex-shrink-0">
             <a href="/" className={`text-2xl font-bold ${lightText} ${darkText}`}>
-              CareerLeap.ai
+              Leap.ai
             </a>
           </div>
 
@@ -202,7 +202,7 @@ const HeroSection = () => (
             <span className="block text-cyan-600 dark:text-cyan-400 xl:inline">Career Journey</span>
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-xl">
-            Unlock your potential with personalized career roadmaps and AI-driven insights. CareerLeap.ai empowers you to navigate your path effectively and gain the skills to thrive.
+            Unlock your potential with personalized career roadmaps and AI-driven insights. Leap.ai empowers you to navigate your path effectively and gain the skills to thrive.
           </p>
           <div className="mt-10">
             <Button size="lg" className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-cyan-950">
@@ -227,7 +227,7 @@ const HeroSection = () => (
           {/* Testimonial Overlay */}
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-4/5 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
             <blockquote className="text-gray-600 dark:text-gray-300 italic">
-              "CareerLeap.ai has given me the clarity and confidence to pursue opportunities I once thought were out of reach."
+              "Leap.ai has given me the clarity and confidence to pursue opportunities I once thought were out of reach."
             </blockquote>
             <div className="mt-4 flex items-center font-medium text-gray-900 dark:text-white">
   <Avatar className="h-12 w-12 mr-4">
@@ -316,7 +316,7 @@ const HowItWorksSection = () => (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-16">
         <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-          How CareerLeap.ai Works
+          How Leap.ai Works
         </h2>
         <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
           Empower your career journey in four simple steps.
@@ -375,12 +375,12 @@ const TestimonialsSection = () => (
           Success Stories
         </h2>
         <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
-          Hear from professionals who transformed their careers with CareerLeap.ai.
+          Hear from professionals who transformed their careers with Leap.ai.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         <TestimonialCard
-          quote="CareerLeap.ai has given me the clarity and confidence to pursue opportunities I once thought were out of reach."
+          quote="Leap.ai has given me the clarity and confidence to pursue opportunities I once thought were out of reach."
           name="James Thaura"
           title="Software Engineer"
           // Add avatarSrc if available
@@ -392,7 +392,7 @@ const TestimonialsSection = () => (
           // Add avatarSrc if available
         />
         <TestimonialCard
-          quote="CareerLeap.ai transformed my professional trajectory, providing the direction and support I needed to succeed!"
+          quote="Leap.ai transformed my professional trajectory, providing the direction and support I needed to succeed!"
           name="David Thompson"
           title="Data Analyst"
           // Add avatarSrc if available
@@ -579,7 +579,7 @@ const Footer = () => (
         {/* Column 1: Logo & Description (Optional) */}
         <div className="col-span-2 md:col-span-1 mb-6 md:mb-0">
           <a href="#" className="text-xl font-bold text-white mb-2 block">
-            CareerLeap.ai
+            Leap.ai
           </a>
           <p className="text-sm">Empowering your career journey with AI.</p>
           {/* Social Icons Placeholder */}
@@ -626,7 +626,7 @@ const Footer = () => (
 
       {/* Bottom Bar */}
       <div className="mt-8 border-t border-gray-700 dark:border-gray-800 pt-8 text-center">
-        <p className="text-sm">&copy; {new Date().getFullYear()} CareerLeap.ai. All rights reserved.</p>
+        <p className="text-sm">&copy; {new Date().getFullYear()} Leap.ai. All rights reserved.</p>
       </div>
     </div>
   </footer>

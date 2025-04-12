@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   });
 
   const emailData = {
-    from: `CareerLeap Contact <noreply@${process.env.MAILGUN_DOMAIN}>`,
+    from: `Leap Contact <noreply@${process.env.MAILGUN_DOMAIN}>`,
     to: 'jamesthaura51@gmail.com',
     subject: subject || `New message from ${name}`,
     html: `
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         <p><strong>Message:</strong></p>
         <p>${message.replace(/\n/g, '<br>')}</p>
         <p style="font-size: 12px; color: #666;">
-          Sent from CareerLeap.ai at ${new Date().toLocaleString()}
+          Sent from Leap.ai at ${new Date().toLocaleString()}
         </p>
       </div>
     `,

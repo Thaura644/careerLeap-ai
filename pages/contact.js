@@ -71,14 +71,14 @@ export default function ContactUsPage() {
                 <Mail className="h-6 w-6 text-cyan-600 dark:text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white">General Inquiries</h3>
-                  <a href="mailto:info@careerleap.ai" className="text-cyan-600 dark:text-cyan-400 hover:underline">jamesmweni52@gmail.com</a>
+                  <a href="mailto:info@Leap.ai" className="text-cyan-600 dark:text-cyan-400 hover:underline">jamesmweni52@gmail.com</a>
                 </div>
               </div>
                <div className="flex items-start space-x-3">
                 <LifeBuoy className="h-6 w-6 text-cyan-600 dark:text-cyan-400 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-medium text-gray-900 dark:text-white">Support</h3>
-                  <a href="mailto:support@careerleap.ai" className="text-cyan-600 dark:text-cyan-400 hover:underline">coming soon</a>
+                  <a href="mailto:support@Leap.ai" className="text-cyan-600 dark:text-cyan-400 hover:underline">coming soon</a>
                 </div>
               </div>
               <div className="flex items-start space-x-3">

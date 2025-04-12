@@ -10,7 +10,7 @@ export default function BlogPostPage({ post }) {
     // Default placeholder post if none is passed via props (for demonstration)
     const defaultPost = {
       title: "Blog Post Title Placeholder",
-      author: "CareerLeap Team",
+      author: "Leap Team",
       date: new Date().toISOString(),
       category: "Category",
       featuredImage: "https://placehold.co/1200x600/E0F2FE/0E7490?text=Featured+Image",

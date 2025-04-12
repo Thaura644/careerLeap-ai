@@ -12,8 +12,8 @@ export default function FaqPage() {
     const faqData = [
       {
         id: "faq-1",
-        question: "What is CareerLeap.ai?",
-        answer: "CareerLeap.ai is an AI-powered platform designed to help individuals navigate their career paths effectively. We provide personalized roadmaps, AI-driven insights, mentorship connections, and community support to foster professional growth and help overcome challenges like career uncertainty or imposter syndrome."
+        question: "What is Leap.ai?",
+        answer: "Leap.ai is an AI-powered platform designed to help individuals navigate their career paths effectively. We provide personalized roadmaps, AI-driven insights, mentorship connections, and community support to foster professional growth and help overcome challenges like career uncertainty or imposter syndrome."
       },
       {
         id: "faq-2",
@@ -22,8 +22,8 @@ export default function FaqPage() {
       },
       {
         id: "faq-3",
-        question: "Who is CareerLeap.ai for?",
-        answer: "CareerLeap.ai is designed for anyone looking to take control of their professional development, whether you're a recent graduate, considering a career change, aiming for a promotion, or simply seeking more clarity and confidence in your current path. It's particularly helpful for those facing career uncertainty or imposter syndrome."
+        question: "Who is Leap.ai for?",
+        answer: "Leap.ai is designed for anyone looking to take control of their professional development, whether you're a recent graduate, considering a career change, aiming for a promotion, or simply seeking more clarity and confidence in your current path. It's particularly helpful for those facing career uncertainty or imposter syndrome."
       },
       {
         id: "faq-4",
@@ -53,7 +53,7 @@ export default function FaqPage() {
     ];
   
     return (
-      <PageLayout title="Frequently Asked Questions" description="Find answers to common questions about CareerLeap.ai features, pricing, and more.">
+      <PageLayout title="Frequently Asked Questions" description="Find answers to common questions about Leap.ai features, pricing, and more.">
         <div className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="w-full">
             {faqData.map((item) => (

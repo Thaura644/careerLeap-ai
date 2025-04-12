@@ -27,7 +27,7 @@ export default function AboutUsPage() {
 
   return (
     <PageLayout 
-      title="About CareerLeap.ai" 
+      title="About Leap.ai" 
       description="Pioneering AI-Driven Career Acceleration Platform"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,7 +37,7 @@ export default function AboutUsPage() {
             Redefining Professional Development
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            At CareerLeap.ai, we combine advanced artificial intelligence with human expertise 
+            At Leap.ai, we combine advanced artificial intelligence with human expertise 
             to deliver transformative career solutions for ambitious professionals.
           </p>
         </section>
@@ -67,7 +67,7 @@ export default function AboutUsPage() {
               <h2 className="text-3xl font-bold mb-6">Our Value Proposition</h2>
               <div className="space-y-6">
                 <p className="text-lg">
-                  CareerLeap.ai delivers measurable outcomes through our proprietary 
+                  Leap.ai delivers measurable outcomes through our proprietary 
                   three-pillar methodology:
                 </p>
                 <ul className="space-y-4 list-disc pl-6">
@@ -125,7 +125,7 @@ export default function AboutUsPage() {
             Ready for Transformative Career Growth?
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join industry leaders and ambitious professionals who trust CareerLeap.ai 
+            Join industry leaders and ambitious professionals who trust Leap.ai 
             for their career development needs.
           </p>
           <a 

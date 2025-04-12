@@ -37,7 +37,7 @@ export default function SignUpPage() {
     };
   
     return (
-      <PageLayout title="Create Your Account" description="Join CareerLeap.ai and start transforming your career journey.">
+      <PageLayout title="Create Your Account" description="Join Leap.ai and start transforming your career journey.">
         <div className="flex justify-center">
           <Card className="w-full max-w-md dark:bg-cyan-900/50 dark:border-cyan-800">
             <CardHeader className="text-center">

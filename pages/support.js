@@ -51,7 +51,7 @@ export function SupportPage() {
                        <Users className="h-8 w-8 text-cyan-500 dark:text-cyan-400"/>
                    </CardHeader>
                    <CardContent className="flex-grow">
-                       <p className="text-gray-600 dark:text-gray-300 mb-4">Ask questions and find solutions from fellow CareerLeap.ai users and moderators.</p>
+                       <p className="text-gray-600 dark:text-gray-300 mb-4">Ask questions and find solutions from fellow Leap.ai users and moderators.</p>
                    </CardContent>
                     <CardFooter>
                        <Button variant="outline" asChild className="w-full dark:text-cyan-100 dark:border-cyan-700 dark:hover:bg-cyan-800">

@@ -68,7 +68,7 @@
 //       <DialogHeader>
 //         <DialogTitle className="text-center text-2xl font-bold dark:text-white">Log In</DialogTitle>
 //         <DialogDescription className="text-center dark:text-gray-400">
-//           Access your CareerLeap.ai account.
+//           Access your Leap.ai account.
 //         </DialogDescription>
 //       </DialogHeader>
 //       <div className="grid gap-4 py-4">
@@ -114,7 +114,7 @@
 //       <DialogHeader>
 //         <DialogTitle className="text-center text-2xl font-bold dark:text-white">Sign Up</DialogTitle>
 //         <DialogDescription className="text-center dark:text-gray-400">
-//           Create your CareerLeap.ai account to start your journey.
+//           Create your Leap.ai account to start your journey.
 //         </DialogDescription>
 //       </DialogHeader>
 //       <div className="grid gap-4 py-4">
@@ -171,17 +171,17 @@
 
 // // About Us Page
 // const AboutUsPage = () => (
-//   <PageLayout title="About CareerLeap.ai" description="Empowering career journeys through personalized guidance and AI.">
+//   <PageLayout title="About Leap.ai" description="Empowering career journeys through personalized guidance and AI.">
 //     <div className="prose prose-lg dark:prose-invert max-w-none lg:prose-xl mx-auto text-gray-600 dark:text-gray-300">
 //       {/* Use prose classes for nice typography on text-heavy pages */}
 //       <h2>Our Mission</h2>
-//       <p>At CareerLeap.ai, our mission is to empower individuals to navigate their career paths with clarity, confidence, and purpose. We believe everyone deserves the opportunity to reach their full professional potential, and we leverage the power of AI and community to make that happen.</p>
+//       <p>At Leap.ai, our mission is to empower individuals to navigate their career paths with clarity, confidence, and purpose. We believe everyone deserves the opportunity to reach their full professional potential, and we leverage the power of AI and community to make that happen.</p>
 
 //       <h2>Our Vision</h2>
 //       <p>We envision a world where career development is personalized, accessible, and effective for everyone. We aim to be the leading platform for AI-driven career guidance, helping people overcome challenges like uncertainty and imposter syndrome, acquire necessary skills, and build meaningful professional connections.</p>
 
 //       <h2>What We Do</h2>
-//       <p>CareerLeap.ai provides a suite of tools and resources designed to support your career growth:</p>
+//       <p>Leap.ai provides a suite of tools and resources designed to support your career growth:</p>
 //       <ul>
 //         <li><strong>Personalized Roadmaps:</strong> AI algorithms analyze your goals, skills, and preferences to create tailored career paths and learning plans.</li>
 //         <li><strong>AI-Driven Insights:</strong> Get recommendations for skills, courses, and connections relevant to your desired trajectory.</li>
@@ -240,7 +240,7 @@
 //               <Mail className="h-6 w-6 text-cyan-600 dark:text-cyan-400 mt-1 flex-shrink-0" />
 //               <div>
 //                 <h3 className="font-medium text-gray-900 dark:text-white">Email</h3>
-//                 <a href="mailto:support@careerleap.ai" className="text-cyan-600 dark:text-cyan-400 hover:underline">support@careerleap.ai</a>
+//                 <a href="mailto:support@Leap.ai" className="text-cyan-600 dark:text-cyan-400 hover:underline">support@Leap.ai</a>
 //               </div>
 //             </div>
 //             <div className="flex items-start space-x-3">
@@ -308,8 +308,8 @@
 // const FaqPage = () => {
 //   const faqData = [
 //     {
-//       question: "What is CareerLeap.ai?",
-//       answer: "CareerLeap.ai is an AI-powered platform designed to help individuals navigate their career paths effectively. We provide personalized roadmaps, AI-driven insights, mentorship connections, and community support to foster professional growth."
+//       question: "What is Leap.ai?",
+//       answer: "Leap.ai is an AI-powered platform designed to help individuals navigate their career paths effectively. We provide personalized roadmaps, AI-driven insights, mentorship connections, and community support to foster professional growth."
 //     },
 //     {
 //       question: "How does the AI create personalized roadmaps?",
@@ -338,7 +338,7 @@
 //   ];
 
 //   return (
-//     <PageLayout title="Frequently Asked Questions" description="Find answers to common questions about CareerLeap.ai.">
+//     <PageLayout title="Frequently Asked Questions" description="Find answers to common questions about Leap.ai.">
 //       <Accordion type="single" collapsible className="w-full max-w-3xl mx-auto">
 //         {faqData.map((item, index) => (
 //           <AccordionItem key={index} value={`item-${index}`} className="border-b dark:border-cyan-800">
@@ -381,7 +381,7 @@
 //   );
 
 //   return (
-//     <PageLayout title="CareerLeap Insights" description="Articles, tips, and resources to empower your professional journey.">
+//     <PageLayout title="Leap Insights" description="Articles, tips, and resources to empower your professional journey.">
 //        {/* Search Bar */}
 //       <div className="mb-8 max-w-lg mx-auto">
 //         <div className="relative">
@@ -435,7 +435,7 @@
 //   // Default placeholder post if none is passed via props
 //   const defaultPost = {
 //     title: "Blog Post Title Placeholder",
-//     author: "CareerLeap Team",
+//     author: "Leap Team",
 //     date: new Date().toISOString(),
 //     category: "Category",
 //     content: `
@@ -504,11 +504,11 @@
 //         { id: 1, title: "Senior Frontend Engineer", location: "Remote", department: "Engineering", type: "Full-time", description: "Build and maintain our user-facing applications using React, Next.js, and Tailwind CSS...", link: "#" },
 //         { id: 2, title: "AI/ML Engineer", location: "Tech City Hub or Remote", department: "Engineering", type: "Full-time", description: "Develop and deploy machine learning models for personalized career recommendations...", link: "#" },
 //         { id: 3, title: "Product Manager - Growth", location: "Remote", department: "Product", type: "Full-time", description: "Lead product initiatives focused on user acquisition, activation, and retention...", link: "#" },
-//         { id: 4, title: "Community Manager", location: "Remote", department: "Marketing", type: "Part-time", description: "Engage and grow the CareerLeap.ai user community across various platforms...", link: "#" },
+//         { id: 4, title: "Community Manager", location: "Remote", department: "Marketing", type: "Part-time", description: "Engage and grow the Leap.ai user community across various platforms...", link: "#" },
 //     ];
 
 //     return (
-//         <PageLayout title="Join Our Team" description="Help us empower career journeys worldwide. Explore open positions at CareerLeap.ai.">
+//         <PageLayout title="Join Our Team" description="Help us empower career journeys worldwide. Explore open positions at Leap.ai.">
 //              <div className="mb-12 text-center max-w-3xl mx-auto">
 //                 <p className="text-lg text-gray-600 dark:text-gray-300">
 //                     We're a passionate team building the future of personalized career guidance. If you're driven by impact and innovation, we'd love to hear from you.
@@ -544,7 +544,7 @@
 //                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Don't see the right fit?</h3>
 //                 <p className="text-gray-600 dark:text-gray-300 mb-4">We're always looking for talented individuals. Send us your resume and tell us how you can contribute.</p>
 //                  <Button asChild className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-cyan-950">
-//                     <a href="mailto:careers@careerleap.ai">Submit General Application</a>
+//                     <a href="mailto:careers@Leap.ai">Submit General Application</a>
 //                  </Button>
 //             </div>
 //         </PageLayout>
@@ -578,7 +578,7 @@
 
 
 // const CommunityPage = () => (
-//     <PageLayout title="CareerLeap.ai Community" description="Connect, share, and grow with fellow professionals.">
+//     <PageLayout title="Leap.ai Community" description="Connect, share, and grow with fellow professionals.">
 //         <div className="text-center max-w-3xl mx-auto">
 //              <Users className="h-16 w-16 text-cyan-500 dark:text-cyan-400 mx-auto mb-6"/>
 //              <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
@@ -610,7 +610,7 @@
 //                     <HelpCircle className="h-6 w-6 text-cyan-500 dark:text-cyan-400"/>
 //                 </CardHeader>
 //                 <CardContent>
-//                     <p className="text-gray-600 dark:text-gray-300 mb-4">Find answers to common questions about using CareerLeap.ai.</p>
+//                     <p className="text-gray-600 dark:text-gray-300 mb-4">Find answers to common questions about using Leap.ai.</p>
 //                     <Button variant="outline" asChild className="dark:text-cyan-100 dark:border-cyan-700 dark:hover:bg-cyan-800">
 //                         <a href="/faq">Browse FAQs <ArrowRight className="ml-2 h-4 w-4"/></a>
 //                     </Button>

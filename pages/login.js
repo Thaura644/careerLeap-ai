@@ -29,7 +29,7 @@ export default function LoginPage() {
     };
   
     return (
-      <PageLayout title="Log In" description="Access your CareerLeap.ai account.">
+      <PageLayout title="Log In" description="Access your Leap.ai account.">
         <div className="flex justify-center">
           <Card className="w-full max-w-md dark:bg-cyan-900/50 dark:border-cyan-800">
             <CardHeader className="text-center">

@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 // =============================================
 export default function CommunityPage() {
     return (
-        <PageLayout title="CareerLeap.ai Community" description="Connect, share experiences, ask questions, and grow together with fellow professionals and mentors.">
+        <PageLayout title="Leap.ai Community" description="Connect, share experiences, ask questions, and grow together with fellow professionals and mentors.">
             <div className="text-center max-w-4xl mx-auto">
                  <Users className="h-16 w-16 text-cyan-500 dark:text-cyan-400 mx-auto mb-6"/>
                  <p className="text-xl text-gray-700 dark:text-gray-200 mb-6">
-                    Welcome to the heart of CareerLeap.ai! Our community is the place to find support, inspiration, and valuable connections on your career journey.
+                    Welcome to the heart of Leap.ai! Our community is the place to find support, inspiration, and valuable connections on your career journey.
                 </p>
 
                 {/* Feature Highlights */}
@@ -36,7 +36,7 @@ export default function CommunityPage() {
                 </div>
 
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-                    Access to the community requires an active CareerLeap.ai account. Log in or sign up to participate!
+                    Access to the community requires an active Leap.ai account. Log in or sign up to participate!
                 </p>
                 <div className="flex justify-center gap-4">
                      <Button size="lg" asChild className="bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-500 dark:hover:bg-cyan-600 dark:text-cyan-950">

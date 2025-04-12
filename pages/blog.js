@@ -32,7 +32,7 @@ export default function BlogIndexPage() {
     // const categories = ['All', ...new Set(posts.map(p => p.category))];
   
     return (
-      <PageLayout title="CareerLeap Insights" description="Articles, tips, and resources to empower your professional journey.">
+      <PageLayout title="Leap Insights" description="Articles, tips, and resources to empower your professional journey.">
          {/* Search & Filter Bar */}
         <div className="mb-12 max-w-3xl mx-auto flex flex-col sm:flex-row gap-4">
           <div className="relative flex-grow">
