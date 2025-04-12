@@ -605,8 +605,8 @@ const Footer = () => (
         <div>
           <h3 className="text-sm font-semibold text-gray-300 tracking-wider uppercase mb-4">Resources</h3>
           <ul className="space-y-3">
-            <li><a href="#how-it-works" className="hover:text-white">How It Works</a></li>
-            <li><a href="#resources" className="hover:text-white">Blog</a></li>
+            <li><a href="/#how-it-works" className="hover:text-white">How It Works</a></li>
+            <li><a href="/blog" className="hover:text-white">Blog</a></li>
             <li><a href="community" className="hover:text-white">Community</a></li>
             <li><a href="faq" className="hover:text-white">FAQ</a></li>
              <li><a href="/support" className="hover:text-white">Support</a></li>

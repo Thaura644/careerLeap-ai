@@ -1,4 +1,10 @@
 import { PageLayout } from ".";
+import { useState } from "react";
+import { Input } from ".";
+import { ArrowRight, Search } from "lucide-react";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { CalendarDays } from "lucide-react";
+
 // =============================================
 // Blog Index Page (pages/blog.js)
 // =============================================
