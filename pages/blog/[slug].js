@@ -2,7 +2,7 @@
 // Blog Post Detail Page (pages/blog/[slug].js)
 // =============================================
 // In Next.js, fetch 'post' data using getStaticProps/getServerSideProps based on the [slug] parameter
-export function BlogPostPage({ post }) {
+export default function BlogPostPage({ post }) {
     // Default placeholder post if none is passed via props (for demonstration)
     const defaultPost = {
       title: "Blog Post Title Placeholder",

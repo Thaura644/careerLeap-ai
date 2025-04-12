@@ -2,7 +2,7 @@ import { PageLayout } from ".";
 // =============================================
 // Careers Page (pages/careers.js)
 // =============================================
-export function CareersPage() {
+export default function CareersPage() {
     // Placeholder job openings - fetch from API/CMS
     const jobOpenings = [
         { id: 1, title: "Senior Frontend Engineer (React/Next.js)", location: "Remote (Global)", department: "Engineering", type: "Full-time", description: "Lead the development of our user-facing applications, focusing on performance, accessibility, and user experience using React, Next.js, and Tailwind CSS.", link: "#job-1" },

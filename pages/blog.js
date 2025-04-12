@@ -2,7 +2,7 @@ import { PageLayout } from ".";
 // =============================================
 // Blog Index Page (pages/blog.js)
 // =============================================
-export function BlogIndexPage() {
+export default function BlogIndexPage() {
     // Placeholder blog post data - fetch from API/CMS in real app
     const posts = [
       { id: 1, title: "Mastering Skills for Career Advancement", excerpt: "Explore actionable steps to develop essential skills that can set you apart in the competitive job market. Gain insights into effective learning strategies.", date: "2023-02-15", category: "Skill Development", slug: "mastering-skills", image: "https://placehold.co/600x400/E0F2FE/0E7490?text=Skills" },

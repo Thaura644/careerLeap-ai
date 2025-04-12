@@ -2,7 +2,7 @@ import { PageLayout } from ".";
 // =============================================
 // Placeholder Policy Page Component (Used for Privacy, Terms, Cookies)
 // =============================================
-function PlaceholderPolicyPage({ title, lastUpdated, icon: Icon }) {
+export function PlaceholderPolicyPage({ title, lastUpdated, icon: Icon }) {
     return (
      <PageLayout title={title}>
         <div className="prose prose-lg dark:prose-invert max-w-4xl lg:prose-xl mx-auto text-gray-600 dark:text-gray-300 prose-headings:text-gray-900 dark:prose-headings:text-white prose-a:text-cyan-600 dark:prose-a:text-cyan-400">
@@ -68,9 +68,8 @@ function PlaceholderPolicyPage({ title, lastUpdated, icon: Icon }) {
 // =============================================
 // Specific Policy Pages (using the placeholder)
 // =============================================
-export function PrivacyPolicyPage() { return <PlaceholderPolicyPage title="Privacy Policy" icon={ShieldCheck} />; }
-export function TermsOfServicePage() { return <PlaceholderPolicyPage title="Terms of Service" icon={FileText} />; }
-export function CookiePolicyPage() { return <PlaceholderPolicyPage title="Cookie Policy" icon={CookieIconPlaceholder} />; } // Replace with actual icon if available
+export default function PrivacyPolicyPage() { return <PlaceholderPolicyPage title="Privacy Policy" icon={ShieldCheck} />; }
+// Replace with actual icon if available
 
 // Placeholder for Cookie Icon if not in lucide-react
 const CookieIconPlaceholder = (props) => (
@@ -85,3 +84,4 @@ const CookieIconPlaceholder = (props) => (
 );
 
 
+export {CookieIconPlaceholder};
