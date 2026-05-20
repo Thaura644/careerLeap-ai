@@ -1,23 +1,6 @@
 
-import React from "react";
-import Navbar from "@/components/Navbar";
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import HowItWorks from "@/components/HowItWorks";
-import About from "@/components/About";
-import Footer from "@/components/Footer";
+import LegacyLanding from "./LegacyLanding";
 
-const Index = () => {
-  return (
-    <div className="min-h-screen">
-      <Navbar />
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <About />
-      <Footer />
-    </div>
-  );
-};
+const Index = () => <LegacyLanding />;
 
 export default Index;

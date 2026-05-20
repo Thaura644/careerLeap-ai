@@ -17,6 +17,15 @@ import Resources from "./pages/Resources";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
 import AIInsights from "./pages/AIInsights";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import Support from "./pages/Support";
+import Career from "./pages/Career";
+import Blog from "./pages/Blog";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient({
@@ -75,6 +84,15 @@ const App = () => {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/community" element={<Community />} />
                 <Route path="/insights" element={<AIInsights />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/career" element={<Career />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/cookies" element={<Cookies />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { apiGet } from "@/lib/api";
 
 // Define types for dashboard data
 export interface ActivityDataPoint {
@@ -158,23 +159,45 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // This would be replaced with actual API calls in a real app
+    const localUser = localStorage.getItem("leap_user");
+    if (localUser) {
+      try {
+        const parsed = JSON.parse(localUser);
+        if (parsed?.fullName) setUserName(parsed.fullName);
+      } catch {
+        // noop
+      }
+    }
+
     const fetchDashboardData = async () => {
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Use dummy data for now
+        const data = await apiGet<{
+          userName: string;
+          activityData: ActivityDataPoint[];
+          skillsData: SkillDataPoint[];
+          overviewCards: OverviewCardData[];
+          upcomingSessions: SessionData[];
+          onlineResources: ResourceData[];
+          achievements: AchievementData[];
+        }>("/dashboard");
+
+        setActivityData(data.activityData || []);
+        setSkillsData(data.skillsData || []);
+        setOverviewCards(data.overviewCards || []);
+        setUpcomingSessions(data.upcomingSessions || []);
+        setOnlineResources(data.onlineResources || []);
+        setAchievements(data.achievements || []);
+        setUserName(data.userName || "Alex");
+        setLoading(false);
+      } catch (err) {
+        // Fallback to dummy data so feature UX remains available
         setActivityData(dummyActivityData);
         setSkillsData(dummySkillsData);
         setOverviewCards(dummyOverviewCards);
         setUpcomingSessions(dummyUpcomingSessions);
         setOnlineResources(dummyOnlineResources);
         setAchievements(dummyAchievements);
-        
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to load dashboard data");
+        setError("Backend unavailable. Showing demo dashboard data.");
         setLoading(false);
       }
     };

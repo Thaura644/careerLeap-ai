@@ -8,23 +8,40 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { Github, Twitter } from "lucide-react";
+import { apiPost } from "@/lib/api";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, implement actual authentication
-    toast({
-      title: "Login successful",
-      description: "Redirecting to your dashboard...",
-    });
-    
-    // Simulate a delay before redirecting
-    setTimeout(() => {
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") || "");
+    const password = String(formData.get("password") || "");
+
+    try {
+      const response = await apiPost<{ token: string; user: { fullName: string; email: string } }>(
+        "/auth/login",
+        { email, password }
+      );
+      localStorage.setItem("leap_token", response.token);
+      localStorage.setItem("leap_user", JSON.stringify(response.user));
+      toast({
+        title: "Login successful",
+        description: "Redirecting to your dashboard...",
+      });
       navigate("/dashboard");
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "Could not reach backend. Using local demo session.",
+        variant: "destructive",
+      });
+      localStorage.setItem("leap_token", "demo-token");
+      localStorage.setItem("leap_user", JSON.stringify({ fullName: "Demo User", email }));
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -40,6 +57,7 @@ const Login = () => {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="name@example.com"
               required
@@ -59,6 +77,7 @@ const Login = () => {
             </div>
             <Input
               id="password"
+              name="password"
               type="password"
               placeholder="••••••••"
               required

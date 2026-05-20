@@ -8,23 +8,42 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { Github, Twitter } from "lucide-react";
+import { apiPost } from "@/lib/api";
 
 const Signup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, implement actual user registration
-    toast({
-      title: "Account created successfully",
-      description: "Welcome to Leap.ai! Redirecting to onboarding...",
-    });
-    
-    // Simulate a delay before redirecting
-    setTimeout(() => {
+    const formData = new FormData(e.currentTarget);
+    const firstName = String(formData.get("firstName") || "");
+    const lastName = String(formData.get("lastName") || "");
+    const fullName = `${firstName} ${lastName}`.trim();
+    const email = String(formData.get("email") || "");
+    const password = String(formData.get("password") || "");
+
+    try {
+      const response = await apiPost<{ token: string; user: { fullName: string; email: string } }>(
+        "/auth/signup",
+        { fullName, email, password }
+      );
+      localStorage.setItem("leap_token", response.token);
+      localStorage.setItem("leap_user", JSON.stringify(response.user));
+      toast({
+        title: "Account created successfully",
+        description: "Welcome to Leap.ai! Redirecting to onboarding...",
+      });
       navigate("/onboarding");
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Signup fallback",
+        description: "Backend unavailable. Created local demo account.",
+      });
+      localStorage.setItem("leap_token", "demo-token");
+      localStorage.setItem("leap_user", JSON.stringify({ fullName, email }));
+      navigate("/onboarding");
+    }
   };
 
   return (
@@ -41,6 +60,7 @@ const Signup = () => {
               <Label htmlFor="firstName">First name</Label>
               <Input
                 id="firstName"
+                name="firstName"
                 placeholder="John"
                 required
                 className="w-full"
@@ -50,6 +70,7 @@ const Signup = () => {
               <Label htmlFor="lastName">Last name</Label>
               <Input
                 id="lastName"
+                name="lastName"
                 placeholder="Doe"
                 required
                 className="w-full"
@@ -61,6 +82,7 @@ const Signup = () => {
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="name@example.com"
               required
@@ -72,6 +94,7 @@ const Signup = () => {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password"
               type="password"
               placeholder="••••••••"
               required

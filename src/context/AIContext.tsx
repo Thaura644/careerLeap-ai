@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useToast } from "@/hooks/use-toast";
 import { AIUserProfile, AIMessage, RecommendedResource, CareerGoal } from "@/types/ai";
 import { uuid } from "@/lib/ai-utils";
+import { apiPost } from "@/lib/api";
 
 interface AIContextType {
   isProcessing: boolean;
@@ -21,16 +22,17 @@ interface AIContextType {
 
 // Mock function to simulate AI processing
 const simulateAIProcessing = async (prompt: string): Promise<string> => {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Different responses based on input
-  if (prompt.toLowerCase().includes("goal")) {
-    return "I'd be happy to help you set a new career goal. What specific skill or milestone would you like to achieve?";
-  } else if (prompt.toLowerCase().includes("recommend") || prompt.toLowerCase().includes("resource")) {
-    return "Based on your profile and goals, I recommend focusing on advanced React patterns and system design principles. Would you like me to find specific resources on these topics?";
-  } else if (prompt.toLowerCase().includes("hello") || prompt.toLowerCase().includes("hi")) {
-    return "Hello! I'm your AI career assistant. How can I help you with your professional development today?";
-  } else {
+  try {
+    const response = await apiPost<{ response: string }>("/ai/chat", { prompt });
+    return response.response;
+  } catch {
+    if (prompt.toLowerCase().includes("goal")) {
+      return "I'd be happy to help you set a new career goal. What specific skill or milestone would you like to achieve?";
+    } else if (prompt.toLowerCase().includes("recommend") || prompt.toLowerCase().includes("resource")) {
+      return "Based on your profile and goals, I recommend focusing on advanced React patterns and system design principles. Would you like me to find specific resources on these topics?";
+    } else if (prompt.toLowerCase().includes("hello") || prompt.toLowerCase().includes("hi")) {
+      return "Hello! I'm your AI career assistant. How can I help you with your professional development today?";
+    }
     return "I understand you're interested in advancing your career. Based on your profile, I suggest focusing on leadership skills and system design. Would you like specific resources on these topics?";
   }
 };

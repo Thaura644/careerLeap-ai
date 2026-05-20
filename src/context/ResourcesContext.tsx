@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { apiGet, apiPost } from "@/lib/api";
 
 // Define types for resource data
 export interface ResourceType {
@@ -243,22 +244,30 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // This would be replaced with actual API calls in a real app
     const fetchResources = async () => {
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Use dummy data for now
+        const data = await apiGet<{
+          trendingResources: ResourceType[];
+          recommendedResources: ResourceType[];
+          bookmarkedResources: ResourceType[];
+          completedResources: ResourceType[];
+          upcomingEvents: EventType[];
+        }>("/resources");
+
+        setTrendingResources(data.trendingResources || []);
+        setRecommendedResources(data.recommendedResources || []);
+        setBookmarkedResources(data.bookmarkedResources || []);
+        setCompletedResources(data.completedResources || []);
+        setUpcomingEvents(data.upcomingEvents || []);
+        setLoading(false);
+      } catch (err) {
+        // Fallback to dummy data so all feature ideas remain visible in UI
         setTrendingResources(dummyTrendingResources);
         setRecommendedResources(dummyRecommendedResources);
         setBookmarkedResources([...dummyTrendingResources, ...dummyRecommendedResources].filter(r => r.isBookmarked));
         setCompletedResources(dummyCompletedResources);
         setUpcomingEvents(dummyUpcomingEvents);
-        
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to load resources");
+        setError("Backend unavailable. Showing demo resource data.");
         setLoading(false);
       }
     };
@@ -266,7 +275,7 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
     fetchResources();
   }, []);
 
-  const toggleBookmark = (id: string) => {
+  const toggleBookmark = async (id: string) => {
     // Helper function to toggle bookmark in a resource array
     const toggleInArray = (resources: ResourceType[]) => {
       return resources.map(resource => 
@@ -275,6 +284,13 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
           : resource
       );
     };
+
+    // Notify backend (best-effort)
+    try {
+      await apiPost(`/resources/${id}/bookmark`, {});
+    } catch {
+      // keep UI responsive even if backend call fails
+    }
 
     // Update all arrays that might contain this resource
     setTrendingResources(toggleInArray(trendingResources));
