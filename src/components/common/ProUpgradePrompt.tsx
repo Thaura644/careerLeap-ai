@@ -13,7 +13,7 @@ interface ProUpgradePromptProps {
 
 export const ProUpgradePrompt: React.FC<ProUpgradePromptProps> = ({
   title = "Unlock Premium Resources",
-  description = "Gain access to over 500+ exclusive courses, workshops, and guides curated for your industry and career goals.",
+  description = "Get the full Leap.ai experience: unlimited AI roadmaps, goal tracking, and resources curated for your career gap.",
   className = "",
   buttonText = "Upgrade to Pro"
 }) => {

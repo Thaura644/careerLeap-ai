@@ -51,7 +51,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               Accelerate your career with AI-powered insights
             </h2>
             <p className="text-lg mb-8">
-              Join thousands of professionals who are advancing their careers faster with personalized AI guidance and mentorship.
+              Get a concrete, step-by-step career roadmap from where you are now to the role you actually want — built for your specific gap.
             </p>
             <div className="flex items-center space-x-4 mb-2">
               <div className="flex -space-x-2">

@@ -144,14 +144,30 @@ const LegacyLanding = () => {
             </div>
 
             <div className="relative">
-              <img src="/career.webp" alt="Career growth" className="h-full w-full rounded-2xl object-cover shadow-xl" />
+              <div className="rounded-2xl bg-white p-6 shadow-xl dark:bg-cyan-900">
+                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-600 dark:text-cyan-300">
+                  Sample roadmap · Senior → Staff
+                </p>
+                <div className="mt-4 space-y-3">
+                  {[
+                    ["Phase 1", "Own a cross-team system", "Take end-to-end ownership of one system used by 2+ teams."],
+                    ["Phase 2", "Publish your technical strategy", "Write the RFC that becomes the roadmap others follow."],
+                    ["Phase 3", "Prove leverage", "Ship the thing and show the metric that moved because of you."],
+                  ].map(([phase, title, desc]) => (
+                    <div key={phase} className="rounded-lg border border-slate-200 p-3 dark:border-cyan-800">
+                      <p className="text-xs font-semibold text-cyan-600 dark:text-cyan-300">{phase} — {title}</p>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-cyan-100/80">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="absolute -bottom-6 left-1/2 w-[85%] -translate-x-1/2 rounded-xl bg-white p-5 shadow-lg dark:bg-cyan-900">
                 <p className="text-sm font-semibold text-slate-700 dark:text-cyan-100">
                   Early access is live and free.
                 </p>
                 <p className="mt-1 text-sm text-slate-600 dark:text-cyan-100/80">
-                  Tell us where you are and where you want to be, and the roadmap generator returns a real
-                  plan — no hype, no invented results. We're still building, so feedback is welcome.
+                  This is the shape of the roadmap the generator actually returns — tell us where you are and
+                  where you want to be. We're still building, so feedback is welcome.
                 </p>
               </div>
             </div>
@@ -161,7 +177,7 @@ const LegacyLanding = () => {
         <section id="features" className="py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold">Everything You Need to Succeed</h2>
+              <h2 className="text-3xl font-bold">Built for the Senior → Staff gap</h2>
             </div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {features.map((item) => (
@@ -187,12 +203,18 @@ const LegacyLanding = () => {
               <h2 className="text-3xl font-bold">How Leap.ai Works</h2>
             </div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {["Craft your path", "Tailor your learning", "Engage mentors", "Join the network"].map((title, i) => (
-                <div key={title} className="rounded-xl bg-white p-6 text-center shadow-sm dark:bg-cyan-900">
+              {[
+                { title: "Tell us where you are", desc: "Current role, target role, and timeframe — a 2-minute profile." },
+                { title: "Get your AI roadmap", desc: "Phases, skills, milestones, and resources — in order, built for your gap." },
+                { title: "Execute with proof", desc: "Concrete projects that make your next level visible to hiring teams." },
+                { title: "Get community backup", desc: "A focused group of engineers at the same crossroads." },
+              ].map((step, i) => (
+                <div key={step.title} className="rounded-xl bg-white p-6 text-center shadow-sm dark:bg-cyan-900">
                   <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-cyan-600 text-white">
                     {i + 1}
                   </div>
-                  <h3 className="font-semibold">{title}</h3>
+                  <h3 className="font-semibold">{step.title}</h3>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-cyan-100/80">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -202,13 +224,16 @@ const LegacyLanding = () => {
         <section id="pricing" className="py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold">Choose the Perfect Plan</h2>
+              <h2 className="text-3xl font-bold">Start free. Upgrade when you're ready.</h2>
+              <p className="mt-3 text-slate-600 dark:text-cyan-100/80">
+                Early access is free while we build. Paid tiers unlock once checkout goes live.
+              </p>
             </div>
             <div className="grid gap-8 lg:grid-cols-3">
               {[
-                { name: "Early Access", price: "$0", cta: "Start Free", period: "free while we build" },
-                { name: "Roadmap Report", price: "₦15,000", cta: "Coming Soon", period: "one-time, after checkout" },
-                { name: "Pro", price: "₦10,000", cta: "Coming Soon", period: "per month, launch pricing" },
+                { name: "Early Access", price: "$0", cta: "Start Free", to: "/onboarding", period: "free while we build", features: ["Sample AI roadmap", "Community access", "No credit card"] },
+                { name: "Roadmap Report", price: "₦15,000", cta: "Get Yours", to: "/upgrade", period: "one-time", features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"] },
+                { name: "Pro", price: "₦10,000", cta: "Go Pro", to: "/upgrade", period: "per month, launch pricing", features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support"] },
               ].map((plan) => (
                 <Card key={plan.name} className="dark:border-cyan-800 dark:bg-cyan-900/40">
                   <CardHeader>
@@ -217,14 +242,16 @@ const LegacyLanding = () => {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-slate-600 dark:text-cyan-100/80">
-                      <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> AI roadmap</li>
-                      <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Skills tracking</li>
-                      <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Community support</li>
+                      {plan.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> {f}</li>
+                      ))}
                     </ul>
                     <p className="mt-3 text-xs text-slate-500 dark:text-cyan-100/70">{plan.period}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={plan.cta === "Coming Soon"}>{plan.cta}</Button>
+                    <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-700">
+                      <Link to={plan.to}>{plan.cta}</Link>
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
