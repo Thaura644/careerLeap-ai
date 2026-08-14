@@ -1,5 +1,6 @@
 package com.leapai.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -10,6 +11,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
 
+    // Injected via @Value so the placeholder is resolved (allowedOriginPatterns
+    // does not interpolate ${...} itself).
+    @Value("${LEAP_APP_ORIGIN:https://career-leap-ai.vercel.app}")
+    private String appOrigin;
+
     public WebConfig(AuthInterceptor authInterceptor) {
         this.authInterceptor = authInterceptor;
     }
@@ -18,7 +24,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 // Vite dev server + production frontend origin (overridable via env).
-                .allowedOriginPatterns("http://localhost:*", "${LEAP_APP_ORIGIN:https://career-leap-ai.vercel.app}")
+                .allowedOriginPatterns("http://localhost:*", appOrigin)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization");
