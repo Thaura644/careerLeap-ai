@@ -1,79 +1,34 @@
+/* Leap.ai does not use a service worker or PWA offline caching.
+ *
+ * Older deployments of this template registered a service worker that cached
+ * the SPA shell and kept serving stale bundles (which pointed at localhost)
+ * long after new builds were deployed. This file exists so that any stale
+ * worker's update check succeeds, installs this worker, and is then removed —
+ * wiping its caches in the process. After this runs once, the browser is
+ * back to fetching fresh assets on every visit.
+ */
+self.addEventListener("install", () => {
+  // Don't wait; take over as soon as possible so the cleanup runs.
+  self.skipWaiting();
+});
 
-// Cache name
-const CACHE_NAME = 'career-leap-v1';
-
-// Assets to cache
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/assets/index.css',
-  '/assets/index.js',
-  // Add other assets as needed
-];
-
-// Install event - cache assets
-self.addEventListener('install', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
-      })
+    (async () => {
+      // Clear every cache this or any older worker created.
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+      // Remove this worker and stop controlling the page.
+      await self.registration.unregister();
+      const clients = await self.clients.matchAll({ type: "window" });
+      for (const client of clients) {
+        client.navigate(client.url);
+      }
+    })()
   );
 });
 
-// Fetch event - serve from cache when offline
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return the response from the cached version
-        if (response) {
-          return response;
-        }
-        
-        // Not in cache - fetch from network
-        return fetch(event.request)
-          .then((response) => {
-            // Check if we received a valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // Clone the response
-            const responseToCache = response.clone();
-            
-            // Add to cache
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-              
-            return response;
-          });
-      })
-      .catch(() => {
-        // If both cache and network fail, return fallback
-        return caches.match('/offline.html');
-      })
-  );
-});
-
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            // Delete old caches
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
+// Serve nothing from cache: always fall through to the network.
+self.addEventListener("fetch", (event) => {
+  event.respondWith(fetch(event.request));
 });
