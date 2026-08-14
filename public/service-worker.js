@@ -16,13 +16,23 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       // Clear every cache this or any older worker created.
-      const keys = await caches.keys();
-      await Promise.all(keys.map((key) => caches.delete(key)));
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      } catch (err) {
+        // Ignore — some requests (e.g. chrome-extension://) can't be cached
+        // anyway; the unregister below is what actually ends the staleness.
+      }
       // Remove this worker and stop controlling the page.
       await self.registration.unregister();
+      // Reload every controlled tab so they drop the old cached shell.
       const clients = await self.clients.matchAll({ type: "window" });
       for (const client of clients) {
-        client.navigate(client.url);
+        try {
+          await client.navigate(client.url);
+        } catch (err) {
+          // A tab may be on about:blank or an extension page — skip it.
+        }
       }
     })()
   );
