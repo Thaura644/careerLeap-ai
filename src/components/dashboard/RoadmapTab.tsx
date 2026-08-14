@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
+import { BookOpen, ChevronRight, ExternalLink, Loader2 } from "lucide-react";
 import { apiPost } from "@/lib/api";
 
 interface RoadmapPhase {
@@ -12,6 +12,7 @@ interface RoadmapPhase {
   skills?: string[];
   milestones?: string[];
   resources?: { title: string; type?: string }[];
+  references?: { label: string; url: string }[];
 }
 
 interface RoadmapResponse {
@@ -117,6 +118,21 @@ export const RoadmapTab: React.FC = () => {
                       <p className="text-xs text-muted-foreground">
                         Resources: {phase.resources.map((r) => r.title).join(" · ")}
                       </p>
+                    ) : null}
+                    {phase.references?.length ? (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                        {phase.references.map((ref) => (
+                          <a
+                            key={ref.url}
+                            href={ref.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-xs text-leap-purple hover:underline"
+                          >
+                            {ref.label} <ExternalLink size={12} className="ml-1" />
+                          </a>
+                        ))}
+                      </div>
                     ) : null}
                   </div>
                 </div>

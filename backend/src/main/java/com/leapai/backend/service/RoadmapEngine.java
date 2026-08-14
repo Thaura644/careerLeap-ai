@@ -44,7 +44,8 @@ public class RoadmapEngine {
                         "Write the top 5 requirements of " + targetRole + " from real job postings",
                         "Score yourself 1–5 against each requirement",
                         "Pick the 2 weakest requirements to attack first"),
-                List.of(resource("Job description research template", "template"))));
+                List.of(resource("Job description research template", "template")),
+                List.of(reference("See the full " + gap.roadmapSlugLabel() + " roadmap", gap.roadmapUrl()))));
 
         phases.add(phase("Phase 2 — Close the technical gap",
                 "Weeks 5–12",
@@ -54,7 +55,9 @@ public class RoadmapEngine {
                         "Complete one structured deep-dive on " + gap.technicalSkills(focusAreas).get(0).toLowerCase(),
                         "Ship a project that exercises the gap skill end-to-end",
                         "Get one senior practitioner to review your work"),
-                List.of(resource("Structured course", "course"), resource("Practice project spec", "template"))));
+                List.of(resource("Structured course", "course"), resource("Practice project spec", "template")),
+                List.of(reference("Follow the " + gap.roadmapSlugLabel() + " curriculum", gap.roadmapUrl()),
+                        reference("Computer Science fundamentals", "https://roadmap.sh/computer-science"))));
 
         phases.add(phase("Phase 3 — Prove it with real work",
                 "Months 3–6",
@@ -64,7 +67,8 @@ public class RoadmapEngine {
                         "Lead or own one initiative end-to-end and document the outcome",
                         "Publish a case study with the numbers that moved",
                         "Present the work to at least one team outside your own"),
-                List.of(resource("Case-study writing guide", "guide"))));
+                List.of(resource("Case-study writing guide", "guide")),
+                List.of(reference("System design depth", "https://roadmap.sh/system-design"))));
 
         phases.add(phase("Phase 4 — Build visibility and influence",
                 "Months 5–9",
@@ -75,7 +79,8 @@ public class RoadmapEngine {
                         "Mentor one person — evidence of operating at the next level",
                         "Grow one external signal (post, talk, or open source)"),
                 List.of(resource("Technical writing checklist", "checklist"),
-                        resource("Mentoring starter kit", "guide"))));
+                        resource("Mentoring starter kit", "guide")),
+                gap.visibilityReferences()));
 
         phases.add(phase("Phase 5 — Apply, interview, and close",
                 "Months 8–12",
@@ -85,7 +90,9 @@ public class RoadmapEngine {
                         "Do 3+ mock interviews calibrated to " + targetRole,
                         "Apply to " + targetRole + " roles with a tailored narrative",
                         "Track every application and debrief every rejection"),
-                List.of(resource("Interview prep checklist", "checklist"))));
+                List.of(resource("Interview prep checklist", "checklist")),
+                List.of(reference("Interview prep roadmap", "https://roadmap.sh/leetcode"),
+                        reference("Practice on AlgoBytes (open-source coding platform)", "https://github.com/SameerKhurd/algo-bytes"))));
 
         Map<String, Object> roadmap = new LinkedHashMap<>();
         roadmap.put("summary", summary);
@@ -242,11 +249,42 @@ public class RoadmapEngine {
             if (toProduct) return "Product leader";
             return "target-level";
         }
+
+        /** The most relevant roadmap.sh roadmap for this role gap. */
+        private String roadmapSlugLabel() {
+            if (toStaff || toPrincipal) return "Software Architect";
+            if (toArchitect) return "Software Architect";
+            if (management) return "Engineering Manager";
+            if (toData) return "AI & Data Scientist";
+            if (toProduct) return "Product Manager";
+            if (toDevops) return "DevOps";
+            return "Backend";
+        }
+
+        private String roadmapUrl() {
+            if (toStaff || toPrincipal || toArchitect) return "https://roadmap.sh/software-architect";
+            if (management) return "https://roadmap.sh/engineering-manager";
+            if (toData) return "https://roadmap.sh/ai-data-scientist";
+            if (toProduct) return "https://roadmap.sh/product-manager";
+            if (toDevops) return "https://roadmap.sh/devops";
+            return "https://roadmap.sh/backend";
+        }
+
+        private List<Map<String, String>> visibilityReferences() {
+            if (management) {
+                return List.of(reference("Engineering Manager roadmap", "https://roadmap.sh/engineering-manager"));
+            }
+            if (toData) {
+                return List.of(reference("AI & Data Scientist roadmap", "https://roadmap.sh/ai-data-scientist"));
+            }
+            return List.of(reference("Software Architect roadmap", "https://roadmap.sh/software-architect"));
+        }
     }
 
     private static Map<String, Object> phase(
             String title, String duration, String focus,
-            List<String> skills, List<String> milestones, List<Map<String, String>> resources) {
+            List<String> skills, List<String> milestones, List<Map<String, String>> resources,
+            List<Map<String, String>> references) {
         Map<String, Object> phase = new LinkedHashMap<>();
         phase.put("title", title);
         phase.put("duration", duration);
@@ -254,11 +292,16 @@ public class RoadmapEngine {
         phase.put("skills", skills);
         phase.put("milestones", milestones);
         phase.put("resources", resources);
+        phase.put("references", references);
         return phase;
     }
 
     private static Map<String, String> resource(String title, String type) {
         return Map.of("title", title, "type", type);
+    }
+
+    private static Map<String, String> reference(String label, String url) {
+        return Map.of("label", label, "url", url);
     }
 
     private static String str(Map<String, Object> map, String key, String fallback) {
