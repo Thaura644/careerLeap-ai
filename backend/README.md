@@ -25,6 +25,34 @@ Backend default URL: `http://localhost:8080`
 - `GET /api/resources`
 - `GET /api/community`
 - `GET /api/insights`
+- `POST /api/ai/chat` — chat with the Leap.ai career coach (real LLM when configured)
+- `POST /api/insights/roadmap` — generate a personalized career roadmap from a profile JSON
+
+## Real AI (LLM)
+
+The AI endpoints call a real LLM (OpenAI-compatible chat completions) when configured.
+Environment variables (read automatically by Spring):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `LLM_API_KEY` | *(unset)* | Provider API key. **When unset, responses fall back to mock data and are marked `"source": "mock"`** so mock output is never presented as real AI. |
+| `LLM_BASE_URL` | `https://api.deepseek.com` | Any OpenAI-compatible provider (OpenRouter, OpenAI, Groq, …). |
+| `LLM_MODEL` | `deepseek-chat` | Model id on the provider. |
+| `LLM_TIMEOUT_SECONDS` | `60` | Request timeout. |
+
+Example (DeepSeek):
+
+```bash
+LLM_API_KEY=sk-... mvn spring-boot:run
+```
+
+Roadmap generation request:
+
+```bash
+curl -X POST http://localhost:8080/api/insights/roadmap \
+  -H "Content-Type: application/json" \
+  -d '{"currentRole":"Senior Frontend Developer","targetRole":"Staff Engineer","timeframeMonths":12,"focusAreas":["System Design","Leadership"]}'
+```
 
 ## Example Requests
 
