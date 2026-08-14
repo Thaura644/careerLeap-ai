@@ -17,7 +17,7 @@ export interface AIConversation {
 export interface RecommendedResource {
   id: string;
   title: string;
-  source: 'youtube' | 'coursera' | 'udemy' | 'datacamp' | 'article' | 'book' | 'other';
+  source: 'course' | 'workshop' | 'guide' | 'webinar' | 'podcast' | 'ebook' | 'article' | 'other';
   url: string;
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';

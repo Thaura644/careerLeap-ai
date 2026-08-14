@@ -24,6 +24,15 @@ interface ResourceCardProps {
   resource: ResourceType;
 }
 
+const hashCode = (value: string): number => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+};
+
 export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
   const { toggleBookmark } = useResources();
   const { toast } = useToast();
@@ -35,7 +44,6 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
     rating,
     reviews,
     duration,
-    image,
     isPro,
     isBookmarked,
     isCompleted = false,
@@ -83,13 +91,27 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
     }
   };
 
+  // Deterministic gradient per title — no placeholder assets, ever.
+  // Literal class strings so Tailwind's JIT can see them.
+  const GRADIENTS = [
+    "from-cyan-500 to-indigo-700",
+    "from-violet-500 to-purple-700",
+    "from-rose-500 to-orange-600",
+    "from-amber-500 to-teal-700",
+    "from-emerald-500 to-sky-700",
+    "from-blue-500 to-fuchsia-700",
+  ];
+  const gradientClass = GRADIENTS[Math.abs(hashCode(title)) % GRADIENTS.length];
+
   return (
     <Card className={cn(
       "overflow-hidden hover:shadow-md transition-shadow", 
       isCompleted ? "border-green-300 dark:border-green-800" : ""
     )}>
-      <div className="relative h-40 bg-muted flex items-center justify-center">
-        <img src={image} alt={title} className="w-full h-full object-cover" />
+      <div className={`relative h-40 bg-gradient-to-br ${gradientClass} flex items-center justify-center`}>
+        <span className="text-5xl font-bold text-white/90 drop-shadow">
+          {title.trim().charAt(0).toUpperCase()}
+        </span>
         {isPro && (
           <div className="absolute top-2 right-2">
             <Badge className="bg-leap-purple text-white border-none">PRO</Badge>

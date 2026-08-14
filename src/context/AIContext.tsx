@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { AIUserProfile, AIMessage, RecommendedResource, CareerGoal } from "@/types/ai";
+import { AIUserProfile, AIMessage, RecommendedResource, CareerGoal, AIConversation } from "@/types/ai";
 import { uuid } from "@/lib/ai-utils";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 
 interface AIContextType {
   isProcessing: boolean;
@@ -18,151 +18,79 @@ interface AIContextType {
   updateUserProfile: (profile: Partial<AIUserProfile>) => Promise<void>;
   messages: AIMessage[];
   clearMessages: () => void;
+  refreshProfile: () => Promise<void>;
 }
 
-// Mock function to simulate AI processing
-const simulateAIProcessing = async (prompt: string): Promise<string> => {
-  try {
-    const response = await apiPost<{ response: string }>("/ai/chat", { prompt });
-    return response.response;
-  } catch {
-    if (prompt.toLowerCase().includes("goal")) {
-      return "I'd be happy to help you set a new career goal. What specific skill or milestone would you like to achieve?";
-    } else if (prompt.toLowerCase().includes("recommend") || prompt.toLowerCase().includes("resource")) {
-      return "Based on your profile and goals, I recommend focusing on advanced React patterns and system design principles. Would you like me to find specific resources on these topics?";
-    } else if (prompt.toLowerCase().includes("hello") || prompt.toLowerCase().includes("hi")) {
-      return "Hello! I'm your AI career assistant. How can I help you with your professional development today?";
-    }
-    return "I understand you're interested in advancing your career. Based on your profile, I suggest focusing on leadership skills and system design. Would you like specific resources on these topics?";
-  }
-};
+// --- Backend DTO shapes ----------------------------------------------------
 
-// Mock function to generate resource recommendations
-const generateMockRecommendations = (): RecommendedResource[] => {
-  return [
-    {
-      id: uuid(),
-      title: "Advanced React Patterns",
-      source: "youtube",
-      url: "https://youtube.com/watch?v=example1",
-      description: "Learn advanced React patterns like compound components, render props, and hooks.",
-      difficulty: "intermediate",
-      estimatedTime: "1 hour 20 min",
-      thumbnail: "https://i.ytimg.com/vi/example/hqdefault.jpg",
-      relevanceScore: 0.92
-    },
-    {
-      id: uuid(),
-      title: "System Design for Tech Interviews",
-      source: "coursera",
-      url: "https://coursera.org/learn/systemdesign",
-      description: "Master system design concepts required for senior engineering roles.",
-      difficulty: "advanced",
-      estimatedTime: "10 hours",
-      relevanceScore: 0.89
-    },
-    {
-      id: uuid(),
-      title: "Leadership Skills for Engineers",
-      source: "udemy",
-      url: "https://udemy.com/course/leadership-for-engineers",
-      description: "Essential leadership skills for engineers transitioning to management roles.",
-      difficulty: "intermediate",
-      estimatedTime: "5 hours",
-      thumbnail: "https://img-c.udemycdn.com/course/240x135/example.jpg",
-      relevanceScore: 0.85
-    },
-    {
-      id: uuid(),
-      title: "Python for Data Science",
-      source: "datacamp",
-      url: "https://datacamp.com/courses/python-data-science",
-      description: "Learn Python fundamentals for data analysis and visualization.",
-      difficulty: "beginner",
-      estimatedTime: "8 hours",
-      relevanceScore: 0.78
-    }
-  ];
-};
+interface RawUser {
+  id: number;
+  fullName: string;
+  email: string;
+  plan: string;
+}
 
-// Create the mock user profile
-const createMockProfile = (): AIUserProfile => {
-  const conversationId = uuid();
-  
-  return {
-    id: uuid(),
-    userId: "user123",
-    interests: ["Web Development", "System Design", "Data Science", "Leadership"],
-    goals: [
-      {
-        id: uuid(),
-        title: "Master Advanced React Patterns",
-        description: "Learn and implement advanced React patterns in a project",
-        targetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        status: "in-progress",
-        progress: 45,
-        priority: "high",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      {
-        id: uuid(),
-        title: "Obtain AWS Certification",
-        description: "Study and pass the AWS Solutions Architect exam",
-        targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-        status: "not-started",
-        progress: 0,
-        priority: "medium",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    ],
-    skillAssessments: [
-      {
-        id: uuid(),
-        name: "React",
-        currentLevel: 75,
-        targetLevel: 90,
-        recommendations: ["Advanced hooks", "State management", "Performance optimization"],
-        lastUpdated: new Date()
-      },
-      {
-        id: uuid(),
-        name: "System Design",
-        currentLevel: 60,
-        targetLevel: 85,
-        recommendations: ["Distributed systems", "Scalability patterns", "Database design"],
-        lastUpdated: new Date()
-      },
-      {
-        id: uuid(),
-        name: "Leadership",
-        currentLevel: 40,
-        targetLevel: 70,
-        recommendations: ["Team management", "Communication", "Project planning"],
-        lastUpdated: new Date()
-      }
-    ],
-    conversations: [
-      {
-        id: conversationId,
-        title: "Career Planning",
-        messages: [
-          {
-            id: uuid(),
-            role: "system",
-            content: "I'm your career assistant. How can I help you today?",
-            timestamp: new Date(Date.now() - 86400000)
-          }
-        ],
-        createdAt: new Date(Date.now() - 86400000),
-        updatedAt: new Date(Date.now() - 86400000)
-      }
-    ],
-    learningHistory: [],
-    recommendedResources: generateMockRecommendations()
-  };
-};
+interface RawGoal {
+  id: number;
+  title: string;
+  description: string;
+  targetDate: string;
+  status: string;
+  progress: number;
+  priority: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface RawConversation {
+  id: number;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface RawMessage {
+  id: string;
+  role: string;
+  content: string;
+  timestamp: string;
+}
+
+interface RawRecommended {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  description: string;
+  difficulty: string;
+  estimatedTime: string;
+  relevanceScore: number;
+}
+
+// --- Mappers ---------------------------------------------------------------
+
+const mapGoal = (g: RawGoal): CareerGoal => ({
+  id: String(g.id),
+  title: g.title,
+  description: g.description || "",
+  targetDate: new Date(g.targetDate),
+  status: (g.status as CareerGoal["status"]) || "not-started",
+  progress: g.progress,
+  priority: (g.priority as CareerGoal["priority"]) || "medium",
+  createdAt: new Date(g.createdAt),
+  updatedAt: new Date(g.updatedAt),
+});
+
+const mapRecommended = (r: RawRecommended): RecommendedResource => ({
+  id: r.id,
+  title: r.title,
+  source: (r.source as RecommendedResource["source"]) || "other",
+  url: r.url,
+  description: r.description,
+  difficulty: (r.difficulty as RecommendedResource["difficulty"]) || "intermediate",
+  estimatedTime: r.estimatedTime,
+  relevanceScore: r.relevanceScore,
+});
 
 export const AIContext = createContext<AIContextType | undefined>(undefined);
 
@@ -174,275 +102,233 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [recommendedResources, setRecommendedResources] = useState<RecommendedResource[]>([]);
   const [messages, setMessages] = useState<AIMessage[]>([]);
 
-  // Initialize with mock data
-  useEffect(() => {
-    const mockProfile = createMockProfile();
-    setProfile(mockProfile);
-    
-    if (mockProfile.conversations.length > 0) {
-      setCurrentConversation(mockProfile.conversations[0].id);
-      setMessages(mockProfile.conversations[0].messages);
-    }
-    
-    setRecommendedResources(mockProfile.recommendedResources);
-  }, []);
-
-  // Send a message to the AI
-  const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || !profile || !currentConversation) return;
-    
-    setIsProcessing(true);
-    
-    // Add user message
-    const userMessage: AIMessage = {
-      id: uuid(),
-      role: "user",
-      content,
-      timestamp: new Date()
-    };
-    
-    // Optimistically update UI
-    setMessages(prev => [...prev, userMessage]);
-    
+  // Load the real profile: the authenticated user, their persisted goals, and
+  // their persisted conversations. Nothing is invented when the account is new.
+  const refreshProfile = useCallback(async () => {
     try {
-      // Simulate AI processing
-      const response = await simulateAIProcessing(content);
-      
-      // Add AI response
-      const aiMessage: AIMessage = {
-        id: uuid(),
-        role: "assistant",
-        content: response,
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, aiMessage]);
-      
-      // Update conversation in profile
-      if (profile) {
-        const updatedProfile = { ...profile };
-        const conversationIndex = updatedProfile.conversations.findIndex(
-          c => c.id === currentConversation
-        );
-        
-        if (conversationIndex !== -1) {
-          updatedProfile.conversations[conversationIndex].messages = [
-            ...updatedProfile.conversations[conversationIndex].messages,
-            userMessage,
-            aiMessage
-          ];
-          updatedProfile.conversations[conversationIndex].updatedAt = new Date();
-          setProfile(updatedProfile);
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to process your message. Please try again.",
-        variant: "destructive"
+      const [me, rawGoals, rawConversations] = await Promise.all([
+        apiGet<{ user: RawUser }>("/auth/me"),
+        apiGet<RawGoal[]>("/goals"),
+        apiGet<RawConversation[]>("/ai/conversations"),
+      ]);
+
+      const goals = (rawGoals || []).map(mapGoal);
+      const conversations: AIConversation[] = (rawConversations || []).map((c) => ({
+        id: String(c.id),
+        title: c.title,
+        messages: [],
+        createdAt: new Date(c.createdAt),
+        updatedAt: new Date(c.updatedAt),
+      }));
+
+      setProfile({
+        id: String(me.user.id),
+        userId: String(me.user.id),
+        interests: [],
+        goals,
+        skillAssessments: [],
+        conversations,
+        learningHistory: [],
+        recommendedResources: [],
       });
-      console.error("AI processing error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [profile, currentConversation, toast]);
 
-  // Generate recommendations based on user profile
+      // Keep the active conversation in sync with the server's list.
+      const active = currentConversation
+        ? conversations.find((c) => c.id === currentConversation) ?? conversations[0] ?? null
+        : conversations[0] ?? null;
+      setCurrentConversation(active ? active.id : null);
+
+      if (active) {
+        const detail = await apiGet<{ messages: RawMessage[] }>(`/ai/conversations/${active.id}`);
+        setMessages(
+          (detail.messages || []).map((m) => ({
+            id: m.id,
+            role: m.role as AIMessage["role"],
+            content: m.content,
+            timestamp: new Date(m.timestamp),
+          }))
+        );
+      } else {
+        setMessages([]);
+      }
+    } catch {
+      setProfile(null);
+      setMessages([]);
+    }
+  }, [currentConversation]);
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
+
+  const sendMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim() || isProcessing) return;
+
+      // Ensure a conversation exists to persist into.
+      let conversationId = currentConversation;
+      if (!conversationId) {
+        const created = await apiPost<{ id: number }>("/ai/conversations", {});
+        conversationId = String(created.id);
+        setCurrentConversation(conversationId);
+        await refreshProfile();
+      }
+
+      setIsProcessing(true);
+      const userMessage: AIMessage = { id: uuid(), role: "user", content, timestamp: new Date() };
+      setMessages((prev) => [...prev, userMessage]);
+
+      try {
+        const res = await apiPost<{ response: string; source: string }>("/ai/chat", {
+          prompt: content,
+          conversationId: Number(conversationId),
+        });
+        setMessages((prev) => [
+          ...prev,
+          { id: uuid(), role: "assistant", content: res.response, timestamp: new Date() },
+        ]);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to get a response. Please try again.",
+          variant: "destructive",
+        });
+        console.error("AI processing error:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [currentConversation, isProcessing, refreshProfile, toast]
+  );
+
+  // Real recommendations from the backend (scored against the user's profile).
   const generateRecommendations = useCallback(async () => {
-    if (!profile) return;
-    
     setIsProcessing(true);
-    
     try {
-      // Simulate AI generating recommendations
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newRecommendations = generateMockRecommendations();
-      setRecommendedResources(newRecommendations);
-      
+      const res = await apiPost<{ recommendations: RawRecommended[] }>("/insights/recommendations", {});
+      const mapped = (res.recommendations || []).map(mapRecommended);
+      setRecommendedResources(mapped);
+      setProfile((prev) => (prev ? { ...prev, recommendedResources: mapped } : prev));
       toast({
         title: "Success",
         description: "New learning resources have been recommended for you.",
       });
-      
-      // Update profile with new recommendations
-      if (profile) {
-        const updatedProfile = { ...profile };
-        updatedProfile.recommendedResources = newRecommendations;
-        setProfile(updatedProfile);
-      }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to generate recommendations. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
       console.error("Recommendation generation error:", error);
     } finally {
       setIsProcessing(false);
     }
-  }, [profile, toast]);
+  }, [toast]);
 
-  // Add or update a career goal
-  const setGoal = useCallback(async (goal: Partial<CareerGoal>) => {
-    if (!profile) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const newGoal: CareerGoal = {
-        id: uuid(),
-        title: goal.title || "New Goal",
-        description: goal.description || "",
-        targetDate: goal.targetDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        status: goal.status || "not-started",
-        progress: goal.progress || 0,
-        priority: goal.priority || "medium",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      const updatedProfile = { ...profile };
-      updatedProfile.goals = [...updatedProfile.goals, newGoal];
-      setProfile(updatedProfile);
-      
-      toast({
-        title: "Goal Created",
-        description: `Your new goal "${newGoal.title}" has been created.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create goal. Please try again.",
-        variant: "destructive"
-      });
-      console.error("Goal creation error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [profile, toast]);
+  const applyGoals = useCallback(
+    (goals: CareerGoal[]) => {
+      setProfile((prev) => (prev ? { ...prev, goals } : prev));
+    },
+    []
+  );
 
-  // Update an existing goal
-  const updateGoal = useCallback(async (id: string, goalUpdates: Partial<CareerGoal>) => {
-    if (!profile) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const updatedProfile = { ...profile };
-      const goalIndex = updatedProfile.goals.findIndex(g => g.id === id);
-      
-      if (goalIndex !== -1) {
-        updatedProfile.goals[goalIndex] = {
-          ...updatedProfile.goals[goalIndex],
-          ...goalUpdates,
-          updatedAt: new Date()
-        };
-        
-        setProfile(updatedProfile);
-        
+  // Add or update a career goal — persisted server-side.
+  const setGoal = useCallback(
+    async (goal: Partial<CareerGoal>) => {
+      setIsProcessing(true);
+      try {
+        const created = await apiPost<RawGoal>("/goals", {
+          title: goal.title || "New Goal",
+          description: goal.description || "",
+          targetDate: (goal.targetDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)).toISOString(),
+          status: goal.status || "not-started",
+          progress: goal.progress || 0,
+          priority: goal.priority || "medium",
+        });
+        applyGoals([...(profile?.goals || []), mapGoal(created)]);
+        toast({
+          title: "Goal Created",
+          description: `Your new goal "${created.title}" has been created.`,
+        });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to create goal. Please try again.", variant: "destructive" });
+        console.error("Goal creation error:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [profile, applyGoals, toast]
+  );
+
+  const updateGoal = useCallback(
+    async (id: string, goalUpdates: Partial<CareerGoal>) => {
+      setIsProcessing(true);
+      try {
+        const updated = await apiPut<RawGoal>(`/goals/${id}`, {
+          title: goalUpdates.title,
+          description: goalUpdates.description,
+          targetDate: goalUpdates.targetDate ? goalUpdates.targetDate.toISOString() : undefined,
+          status: goalUpdates.status,
+          progress: goalUpdates.progress,
+          priority: goalUpdates.priority,
+        });
+        applyGoals((profile?.goals || []).map((g) => (g.id === id ? mapGoal(updated) : g)));
         toast({
           title: "Goal Updated",
-          description: `Your goal "${updatedProfile.goals[goalIndex].title}" has been updated.`,
+          description: `Your goal "${updated.title}" has been updated.`,
         });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to update goal. Please try again.", variant: "destructive" });
+        console.error("Goal update error:", error);
+      } finally {
+        setIsProcessing(false);
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update goal. Please try again.",
-        variant: "destructive"
-      });
-      console.error("Goal update error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [profile, toast]);
+    },
+    [profile, applyGoals, toast]
+  );
 
-  // Delete a goal
-  const deleteGoal = useCallback(async (id: string) => {
-    if (!profile) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const updatedProfile = { ...profile };
-      const goalIndex = updatedProfile.goals.findIndex(g => g.id === id);
-      
-      if (goalIndex !== -1) {
-        const goalTitle = updatedProfile.goals[goalIndex].title;
-        updatedProfile.goals = updatedProfile.goals.filter(g => g.id !== id);
-        setProfile(updatedProfile);
-        
-        toast({
-          title: "Goal Deleted",
-          description: `Your goal "${goalTitle}" has been deleted.`,
-        });
+  const deleteGoal = useCallback(
+    async (id: string) => {
+      setIsProcessing(true);
+      try {
+        await apiDelete(`/goals/${id}`);
+        applyGoals((profile?.goals || []).filter((g) => g.id !== id));
+        toast({ title: "Goal Deleted", description: "Your goal has been deleted." });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to delete goal. Please try again.", variant: "destructive" });
+        console.error("Goal deletion error:", error);
+      } finally {
+        setIsProcessing(false);
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete goal. Please try again.",
-        variant: "destructive"
-      });
-      console.error("Goal deletion error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [profile, toast]);
+    },
+    [profile, applyGoals, toast]
+  );
 
-  // Update user profile
-  const updateUserProfile = useCallback(async (profileUpdates: Partial<AIUserProfile>) => {
-    if (!profile) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const updatedProfile = { ...profile, ...profileUpdates };
-      setProfile(updatedProfile);
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive"
-      });
-      console.error("Profile update error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [profile, toast]);
+  // Save career profile fields to the backend (used by onboarding).
+  const updateUserProfile = useCallback(
+    async (updates: Partial<AIUserProfile>) => {
+      setIsProcessing(true);
+      try {
+        const payload: Record<string, unknown> = {};
+        if (updates.interests) payload.interests = updates.interests.join(", ");
+        await apiPut("/auth/profile", payload);
+        setProfile((prev) => (prev ? { ...prev, ...updates } : prev));
+        toast({ title: "Profile Updated", description: "Your profile has been successfully updated." });
+      } catch (error) {
+        toast({ title: "Error", description: "Failed to update profile. Please try again.", variant: "destructive" });
+        console.error("Profile update error:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [toast]
+  );
 
-  // Clear current conversation messages
   const clearMessages = useCallback(() => {
     setMessages([]);
-    
-    if (profile && currentConversation) {
-      const updatedProfile = { ...profile };
-      const conversationIndex = updatedProfile.conversations.findIndex(
-        c => c.id === currentConversation
-      );
-      
-      if (conversationIndex !== -1) {
-        updatedProfile.conversations[conversationIndex].messages = [];
-        updatedProfile.conversations[conversationIndex].updatedAt = new Date();
-        setProfile(updatedProfile);
-      }
-    }
-  }, [profile, currentConversation]);
+  }, []);
 
-  const value = {
+  const value: AIContextType = {
     isProcessing,
     profile,
     currentConversation,
@@ -455,7 +341,8 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     recommendedResources,
     updateUserProfile,
     messages,
-    clearMessages
+    clearMessages,
+    refreshProfile,
   };
 
   return <AIContext.Provider value={value}>{children}</AIContext.Provider>;

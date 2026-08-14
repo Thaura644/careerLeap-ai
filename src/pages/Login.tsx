@@ -35,12 +35,9 @@ const Login = () => {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Could not reach backend. Using local demo session.",
+        description: "Invalid credentials or the service is unavailable. Please try again.",
         variant: "destructive",
       });
-      localStorage.setItem("leap_token", "demo-token");
-      localStorage.setItem("leap_user", JSON.stringify({ fullName: "Demo User", email }));
-      navigate("/dashboard");
     }
   };
 

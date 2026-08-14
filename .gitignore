@@ -25,3 +25,6 @@ dist-ssr
 
 # Java build output
 backend/target/
+
+# Runtime database (local dev H2 file)
+backend/data/

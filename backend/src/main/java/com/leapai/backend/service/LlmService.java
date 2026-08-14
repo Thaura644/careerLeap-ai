@@ -20,14 +20,15 @@ import java.util.Map;
 /**
  * Real LLM integration for Leap.ai (OpenAI-compatible chat completions).
  *
- * <p>Configuration is read from environment variables (Spring relaxed binding):
+ * <p>Configuration is read from environment variables:
  * <ul>
  *   <li>{@code LLM_API_KEY} — required for real generation. When unset, the
- *       service falls back to {@link MockDataService} and marks every response
- *       with {@code "source": "mock"} so mock output is never presented as
- *       real AI.</li>
- *   <li>{@code LLM_BASE_URL} — default {@code https://api.deepseek.com}. Any
- *       OpenAI-compatible provider works (OpenRouter, OpenAI, Groq, ...).</li>
+ *       service falls back to real deterministic logic instead: the
+ *       {@link RoadmapEngine} for roadmaps and a retrieval-based responder
+ *       over the user's own roadmap/goals/catalog for chat. Fallbacks are
+ *       marked {@code "source": "engine"} — never "mock", never presented as
+ *       AI output.</li>
+ *   <li>{@code LLM_BASE_URL} — default {@code https://api.deepseek.com}.</li>
  *   <li>{@code LLM_MODEL} — default {@code deepseek-chat}.</li>
  *   <li>{@code LLM_TIMEOUT_SECONDS} — default 60.</li>
  * </ul>
@@ -52,9 +53,10 @@ public class LlmService {
             + "assessment, skill development, real-world proof, and application/interview. Be specific "
             + "to the user's current and target role.";
 
-    private final MockDataService mockDataService;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+    private final RoadmapEngine roadmapEngine;
+    private final RetrievalChatService retrievalChat;
 
     private final String apiKey;
     private final String baseUrl;
@@ -62,14 +64,16 @@ public class LlmService {
     private final int timeoutSeconds;
 
     public LlmService(
-            MockDataService mockDataService,
             ObjectMapper objectMapper,
+            RoadmapEngine roadmapEngine,
+            RetrievalChatService retrievalChat,
             @Value("${LLM_API_KEY:}") String apiKey,
             @Value("${LLM_BASE_URL:https://api.deepseek.com}") String baseUrl,
             @Value("${LLM_MODEL:deepseek-chat}") String model,
             @Value("${LLM_TIMEOUT_SECONDS:60}") int timeoutSeconds) {
-        this.mockDataService = mockDataService;
         this.objectMapper = objectMapper;
+        this.roadmapEngine = roadmapEngine;
+        this.retrievalChat = retrievalChat;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.baseUrl = (baseUrl == null || baseUrl.isBlank())
                 ? "https://api.deepseek.com"
@@ -85,10 +89,14 @@ public class LlmService {
         return !apiKey.isEmpty();
     }
 
-    /** Chat completion. Falls back to the mock keyword responder when no key is set. */
-    public Map<String, Object> chat(String prompt, List<Map<String, String>> history) {
+    /**
+     * Chat completion. With a key, the real LLM answers. Without one, a
+     * retrieval-based responder grounded in the user's actual roadmap, goals,
+     * and the library catalog — real data, not canned phrases.
+     */
+    public Map<String, Object> chat(String prompt, List<Map<String, String>> history, Long userId) {
         if (!isConfigured()) {
-            return Map.of("source", "mock", "response", mockDataService.chatResponse(prompt));
+            return Map.of("source", "engine", "response", retrievalChat.respond(prompt, userId));
         }
         try {
             List<Map<String, Object>> messages = new ArrayList<>();
@@ -106,21 +114,15 @@ public class LlmService {
             String text = complete(messages);
             return Map.of("source", "llm", "response", text);
         } catch (Exception e) {
-            log.warn("[llm] chat failed, falling back to mock: {}", e.getMessage());
-            return Map.of("source", "mock", "response", mockDataService.chatResponse(prompt));
+            log.warn("[llm] chat failed, falling back to engine: {}", e.getMessage());
+            return Map.of("source", "engine", "response", retrievalChat.respond(prompt, userId));
         }
     }
 
-    /**
-     * Generates a structured career roadmap from a profile.
-     * Falls back to a placeholder roadmap (marked {@code source: "mock"}) when
-     * no key is set or the LLM call fails, so the UI always has something to render.
-     */
+    /** Structured roadmap. LLM when configured; otherwise the deterministic engine. */
     public Map<String, Object> generateRoadmap(Map<String, Object> profile) {
-        Map<String, Object> fallback = mockRoadmap();
         if (!isConfigured()) {
-            fallback.put("source", "mock");
-            return fallback;
+            return roadmapEngine.generate(profile);
         }
         try {
             String userJson = objectMapper.writeValueAsString(profile);
@@ -135,9 +137,8 @@ public class LlmService {
             result.put("roadmap", objectMapper.convertValue(roadmap, Map.class));
             return result;
         } catch (Exception e) {
-            log.warn("[llm] roadmap generation failed, falling back to mock: {}", e.getMessage());
-            fallback.put("source", "mock");
-            return fallback;
+            log.warn("[llm] roadmap generation failed, falling back to engine: {}", e.getMessage());
+            return roadmapEngine.generate(profile);
         }
     }
 
@@ -166,49 +167,6 @@ public class LlmService {
             throw new IllegalStateException("LLM API returned empty content");
         }
         return content;
-    }
-
-    private Map<String, Object> mockRoadmap() {
-        Map<String, Object> roadmap = new LinkedHashMap<>();
-        roadmap.put("summary",
-                "Placeholder roadmap — set the LLM_API_KEY environment variable to generate a real AI roadmap.");
-        List<Map<String, Object>> phases = new ArrayList<>();
-        phases.add(phase("Phase 1 — Assess & Skill Gap", "Weeks 1–4",
-                "Map the gap between your current role and your target role",
-                List.of("Skills inventory", "Target-role research"),
-                List.of("Complete a skill-gap analysis", "Write down your target role's top 5 requirements"),
-                List.of(resource("Career skill-gap guide", "guide"))));
-        phases.add(phase("Phase 2 — Build the Foundation", "Weeks 5–12",
-                "Close the biggest gaps with focused practice",
-                List.of("Deep work on top 2 gaps"),
-                List.of("Complete one portfolio project", "Finish one certification or structured course"),
-                List.of(resource("Structured course", "course"), resource("Practice project template", "template"))));
-        phases.add(phase("Phase 3 — Proof & Application", "Weeks 13–20",
-                "Create visible proof and start applying",
-                List.of("Personal branding", "Interview practice"),
-                List.of("Publish your case study", "Complete 3 mock interviews", "Apply to 10+ roles"),
-                List.of(resource("Interview prep checklist", "checklist"))));
-        roadmap.put("phases", phases);
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("roadmap", roadmap);
-        return result;
-    }
-
-    private static Map<String, Object> phase(
-            String title, String duration, String focus,
-            List<String> skills, List<String> milestones, List<Map<String, String>> resources) {
-        Map<String, Object> phase = new LinkedHashMap<>();
-        phase.put("title", title);
-        phase.put("duration", duration);
-        phase.put("focus", focus);
-        phase.put("skills", skills);
-        phase.put("milestones", milestones);
-        phase.put("resources", resources);
-        return phase;
-    }
-
-    private static Map<String, String> resource(String title, String type) {
-        return Map.of("title", title, "type", type);
     }
 
     private static String truncate(String value, int max) {

@@ -37,12 +37,10 @@ const Signup = () => {
       navigate("/onboarding");
     } catch (error) {
       toast({
-        title: "Signup fallback",
-        description: "Backend unavailable. Created local demo account.",
+        title: "Signup failed",
+        description: "Could not create your account. Check the details and try again.",
+        variant: "destructive",
       });
-      localStorage.setItem("leap_token", "demo-token");
-      localStorage.setItem("leap_user", JSON.stringify({ fullName, email }));
-      navigate("/onboarding");
     }
   };
 

@@ -1,15 +1,21 @@
 package com.leapai.backend.controller;
 
+import com.leapai.backend.config.UserContext;
 import com.leapai.backend.model.LoginRequest;
 import com.leapai.backend.model.SignupRequest;
-import com.leapai.backend.service.MockDataService;
+import com.leapai.backend.model.User;
+import com.leapai.backend.repository.UserRepository;
+import com.leapai.backend.service.AuthService;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Validated
@@ -17,19 +23,51 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final MockDataService mockDataService;
+    private final AuthService authService;
+    private final UserRepository users;
 
-    public AuthController(MockDataService mockDataService) {
-        this.mockDataService = mockDataService;
+    public AuthController(AuthService authService, UserRepository users) {
+        this.authService = authService;
+        this.users = users;
     }
 
     @PostMapping("/login")
     public Map<String, Object> login(@Valid @RequestBody LoginRequest request) {
-        return mockDataService.login(request.getEmail());
+        return authService.login(request.getEmail(), request.getPassword());
     }
 
     @PostMapping("/signup")
     public Map<String, Object> signup(@Valid @RequestBody SignupRequest request) {
-        return mockDataService.signup(request.getFullName(), request.getEmail());
+        return authService.signup(request.getFullName(), request.getEmail(), request.getPassword());
+    }
+
+    /** Current user (auth required via interceptor). */
+    @GetMapping("/me")
+    public Map<String, Object> me() {
+        return authService.me(UserContext.require());
+    }
+
+    /** Save the career profile collected during onboarding (drives the roadmap engine). */
+    @PutMapping("/profile")
+    public Map<String, Object> updateProfile(@RequestBody Map<String, Object> profile) {
+        User user = UserContext.require();
+        user.setCurrentRole(str(profile.get("currentRole"), user.getCurrentRole()));
+        user.setTargetRole(str(profile.get("targetRole"), user.getTargetRole()));
+        user.setYearsExperience(str(profile.get("yearsExperience"), user.getYearsExperience()));
+        user.setIndustry(str(profile.get("industry"), user.getIndustry()));
+        user.setLocation(str(profile.get("location"), user.getLocation()));
+        user.setTimeframe(str(profile.get("timeframe"), user.getTimeframe()));
+        user.setAspirations(str(profile.get("aspirations"), user.getAspirations()));
+        users.save(user);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("message", "Profile updated");
+        result.put("user", authService.me(user).get("user"));
+        return result;
+    }
+
+    private static String str(Object value, String fallback) {
+        if (value == null) return fallback;
+        String s = String.valueOf(value).trim();
+        return s.isEmpty() ? fallback : s;
     }
 }

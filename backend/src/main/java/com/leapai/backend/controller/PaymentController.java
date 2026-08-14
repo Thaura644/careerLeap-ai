@@ -1,8 +1,8 @@
 package com.leapai.backend.controller;
 
+import com.leapai.backend.config.UserContext;
 import com.leapai.backend.service.PaymentService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,16 +27,16 @@ public class PaymentController {
         return new LinkedHashMap<>(paymentService.status());
     }
 
-    /** Server-side verification of a Paystack reference; grants Pro on success. */
+    /** Server-side verification of a Paystack reference; grants the plan on the user's record. */
     @PostMapping("/verify")
     public Map<String, Object> verify(@RequestBody Map<String, Object> body) {
         String reference = String.valueOf(body.getOrDefault("reference", ""));
-        String email = String.valueOf(body.getOrDefault("email", ""));
-        return new LinkedHashMap<>(paymentService.verify(reference, email));
+        return new LinkedHashMap<>(paymentService.verify(UserContext.require(), reference));
     }
 
-    @GetMapping("/me/{email}")
-    public Map<String, Object> me(@PathVariable String email) {
-        return Map.of("pro", paymentService.isPro(email));
+    /** Whether the authenticated user holds a Pro grant (persisted on their record). */
+    @GetMapping("/me")
+    public Map<String, Object> me() {
+        return Map.of("pro", paymentService.isPro(UserContext.require()));
     }
 }

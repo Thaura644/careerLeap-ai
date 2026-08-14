@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, RefreshCw, ExternalLink, Youtube, BookOpen, Layers, Clock } from "lucide-react";
+import { ChevronRight, RefreshCw, ExternalLink, BookOpen, FileText, Calendar, Play, Clock } from "lucide-react";
 import { useAI } from "@/context/AIContext";
 import { RecommendedResource } from "@/types/ai";
 import { cn } from "@/lib/utils";
@@ -30,14 +30,18 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
   
   const getSourceIcon = (source: RecommendedResource["source"]) => {
     switch (source) {
-      case "youtube":
-        return <Youtube className="h-4 w-4 text-red-500" />;
-      case "coursera":
+      case "course":
         return <BookOpen className="h-4 w-4 text-blue-500" />;
-      case "udemy":
-        return <Layers className="h-4 w-4 text-purple-500" />;
-      case "datacamp":
-        return <Layers className="h-4 w-4 text-green-500" />;
+      case "workshop":
+        return <Calendar className="h-4 w-4 text-purple-500" />;
+      case "guide":
+        return <FileText className="h-4 w-4 text-amber-500" />;
+      case "webinar":
+        return <Play className="h-4 w-4 text-red-500" />;
+      case "podcast":
+        return <Play className="h-4 w-4 text-green-500" />;
+      case "ebook":
+        return <BookOpen className="h-4 w-4 text-cyan-500" />;
       default:
         return <BookOpen className="h-4 w-4 text-gray-500" />;
     }
@@ -93,10 +97,10 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
           >
             <TabsList className="mb-4">
               <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="youtube">YouTube</TabsTrigger>
-              <TabsTrigger value="coursera">Coursera</TabsTrigger>
-              <TabsTrigger value="udemy">Udemy</TabsTrigger>
-              <TabsTrigger value="datacamp">DataCamp</TabsTrigger>
+              <TabsTrigger value="course">Course</TabsTrigger>
+              <TabsTrigger value="workshop">Workshop</TabsTrigger>
+              <TabsTrigger value="guide">Guide</TabsTrigger>
+              <TabsTrigger value="webinar">Webinar</TabsTrigger>
             </TabsList>
           </Tabs>
         )}

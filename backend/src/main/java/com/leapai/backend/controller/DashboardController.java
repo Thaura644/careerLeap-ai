@@ -1,6 +1,7 @@
 package com.leapai.backend.controller;
 
-import com.leapai.backend.service.MockDataService;
+import com.leapai.backend.config.UserContext;
+import com.leapai.backend.service.DashboardService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,14 +12,14 @@ import java.util.Map;
 @RequestMapping("/api/dashboard")
 public class DashboardController {
 
-    private final MockDataService mockDataService;
+    private final DashboardService dashboardService;
 
-    public DashboardController(MockDataService mockDataService) {
-        this.mockDataService = mockDataService;
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping
     public Map<String, Object> getDashboardData() {
-        return mockDataService.dashboard();
+        return dashboardService.dashboard(UserContext.require());
     }
 }

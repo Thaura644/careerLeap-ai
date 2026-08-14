@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { apiGet } from "@/lib/api";
 
@@ -26,6 +25,7 @@ export interface SessionData {
   title: string;
   time: string;
   type: "mentor" | "peer" | "workshop";
+  event?: boolean;
 }
 
 export interface ResourceData {
@@ -50,98 +50,13 @@ interface DashboardContextType {
   onlineResources: ResourceData[];
   achievements: AchievementData[];
   userName: string;
+  hasRoadmap: boolean;
   loading: boolean;
   error: string | null;
 }
 
 // Create the context
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
-
-// Dummy data
-const dummyActivityData: ActivityDataPoint[] = [
-  { name: "Apr 01", value: 20 },
-  { name: "Apr 05", value: 35 },
-  { name: "Apr 10", value: 15 },
-  { name: "Apr 15", value: 40 },
-  { name: "Apr 20", value: 30 },
-  { name: "Apr 25", value: 45 },
-  { name: "Apr 30", value: 60 },
-];
-
-const dummySkillsData: SkillDataPoint[] = [
-  { name: "Technical", value: 65 },
-  { name: "Leadership", value: 30 },
-  { name: "Communication", value: 45 },
-  { name: "Domain", value: 55 },
-];
-
-const dummyOverviewCards: OverviewCardData[] = [
-  {
-    title: "Career Roadmap Progress",
-    value: "68%",
-    percentChange: 4,
-    progressValue: 68,
-  },
-  {
-    title: "Skills Completed",
-    value: "12/20",
-    percentChange: 2,
-    secondaryText: "2 new this month",
-    progressValue: 60,
-  },
-  {
-    title: "Mentor Sessions",
-    value: "3",
-    percentChange: 0,
-    secondaryText: "Next: Today, 3PM",
-    progressValue: 30,
-  },
-];
-
-const dummyUpcomingSessions: SessionData[] = [
-  {
-    id: "1",
-    title: "Mentor Session: System Design Review",
-    time: "Today, 3:00 PM",
-    type: "mentor",
-  },
-  {
-    id: "2",
-    title: "Peer Group: Frontend Masters",
-    time: "Tomorrow, 5:00 PM",
-    type: "peer",
-  },
-];
-
-const dummyOnlineResources: ResourceData[] = [
-  {
-    id: "1",
-    title: "System Design Interview Guide",
-    type: "article",
-    badge: "Recommended",
-  },
-  {
-    id: "2",
-    title: "Leadership in Tech Workshop",
-    type: "event",
-    badge: "Event",
-  },
-];
-
-const dummyAchievements: AchievementData[] = [
-  {
-    id: "1",
-    title: "JavaScript Mastery",
-    date: "Earned April 1, 2025",
-    color: "amber",
-  },
-  {
-    id: "2",
-    title: "90-Day Streak",
-    date: "Earned March 15, 2025",
-    color: "blue",
-  },
-];
 
 interface DashboardProviderProps {
   children: ReactNode;
@@ -154,7 +69,8 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [upcomingSessions, setUpcomingSessions] = useState<SessionData[]>([]);
   const [onlineResources, setOnlineResources] = useState<ResourceData[]>([]);
   const [achievements, setAchievements] = useState<AchievementData[]>([]);
-  const [userName, setUserName] = useState<string>("Alex");
+  const [userName, setUserName] = useState<string>("there");
+  const [hasRoadmap, setHasRoadmap] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -163,7 +79,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     if (localUser) {
       try {
         const parsed = JSON.parse(localUser);
-        if (parsed?.fullName) setUserName(parsed.fullName);
+        if (parsed?.fullName) setUserName(parsed.fullName.split(" ")[0]);
       } catch {
         // noop
       }
@@ -179,6 +95,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
           upcomingSessions: SessionData[];
           onlineResources: ResourceData[];
           achievements: AchievementData[];
+          hasRoadmap: boolean;
         }>("/dashboard");
 
         setActivityData(data.activityData || []);
@@ -187,17 +104,18 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
         setUpcomingSessions(data.upcomingSessions || []);
         setOnlineResources(data.onlineResources || []);
         setAchievements(data.achievements || []);
-        setUserName(data.userName || "Alex");
-        setLoading(false);
+        setUserName(data.userName || "there");
+        setHasRoadmap(data.hasRoadmap || false);
       } catch (err) {
-        // Fallback to dummy data so feature UX remains available
-        setActivityData(dummyActivityData);
-        setSkillsData(dummySkillsData);
-        setOverviewCards(dummyOverviewCards);
-        setUpcomingSessions(dummyUpcomingSessions);
-        setOnlineResources(dummyOnlineResources);
-        setAchievements(dummyAchievements);
-        setError("Backend unavailable. Showing demo dashboard data.");
+        // Honest empty state — the dashboard shows real numbers or nothing.
+        setActivityData([]);
+        setSkillsData([]);
+        setOverviewCards([]);
+        setUpcomingSessions([]);
+        setOnlineResources([]);
+        setAchievements([]);
+        setError("Could not load your dashboard. Please try again.");
+      } finally {
         setLoading(false);
       }
     };
@@ -214,6 +132,7 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
       onlineResources,
       achievements,
       userName,
+      hasRoadmap,
       loading,
       error,
     }}>

@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { AISkillsAssessment } from "@/components/onboarding/AISkillsAssessment";
+import { apiPut } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckCircle2, ArrowRight, FileText, ChevronRight } from "lucide-react";
@@ -23,7 +24,18 @@ const Onboarding = () => {
   const nextStep = () => {
     const nextStepNum = step + 1;
     if (nextStepNum > 6) {
-      // Onboarding complete
+      // Onboarding complete — persist the collected profile so the roadmap
+      // engine (and everything else) works from real data, then continue.
+      const val = (id: string) =>
+        (document.getElementById(id) as HTMLInputElement | null)?.value?.trim() || undefined;
+      apiPut("/auth/profile", {
+        currentRole: val("currentRole"),
+        targetRole: val("targetRole"),
+        location: val("location"),
+        aspirations: val("careerGoals"),
+      }).catch(() => {
+        // Profile save is best-effort on completion; the app still proceeds.
+      });
       toast({
         title: "Onboarding complete!",
         description: "Welcome to Leap.ai. Redirecting to your dashboard...",

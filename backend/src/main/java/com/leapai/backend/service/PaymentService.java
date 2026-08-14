@@ -2,16 +2,19 @@ package com.leapai.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leapai.backend.model.User;
+import com.leapai.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -19,7 +22,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Paystack payments for Leap.ai, gated behind a live-payments flag.
@@ -29,11 +31,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>{@code PAYMENTS_MODE} — {@code off} (default) or {@code live}. Only
  *       {@code live} arms the checkout; anything else returns it disabled.</li>
  *   <li>{@code PAYSTACK_PUBLIC_KEY} — sent to the browser for the inline popup.</li>
- *   <li>{@code PAYSTACK_SECRET_KEY} — server-side only, used to verify payments;
- *       falls back to {@code PAYSTACK_LIVE_SECRET} for this company's existing .env.</li>
+ *   <li>{@code PAYSTACK_SECRET_KEY} — server-side only; falls back to
+ *       {@code PAYSTACK_LIVE_SECRET} for this company's existing .env.</li>
  * </ul>
  *
- * <p>Pro grants are kept in memory for now (placeholder until a real database lands).
+ * <p>Verified charges grant the plan on the user's database record — real,
+ * durable entitlements, not an in-memory map.
  */
 @Service
 public class PaymentService {
@@ -43,20 +46,20 @@ public class PaymentService {
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+    private final UserRepository users;
 
     private final String mode;
     private final String publicKey;
     private final String secretKey;
 
-    /** In-memory pro grants keyed by email — replaced by a DB later. */
-    private final Map<String, Map<String, Object>> proGrants = new ConcurrentHashMap<>();
-
     public PaymentService(
             ObjectMapper objectMapper,
+            UserRepository users,
             @Value("${PAYMENTS_MODE:off}") String mode,
             @Value("${PAYSTACK_PUBLIC_KEY:}") String publicKey,
             @Value("${PAYSTACK_SECRET_KEY:${PAYSTACK_LIVE_SECRET:}}") String secretKey) {
         this.objectMapper = objectMapper;
+        this.users = users;
         this.mode = mode == null ? "off" : mode.trim().toLowerCase();
         this.publicKey = publicKey == null ? "" : publicKey.trim();
         this.secretKey = secretKey == null ? "" : secretKey.trim();
@@ -73,7 +76,6 @@ public class PaymentService {
     public Map<String, Object> status() {
         List<Map<String, Object>> plans = new ArrayList<>();
         // Single source of truth for pricing; amounts in kobo (naira subunit).
-        // Confirm amounts/currency with the human before launch.
         plans.add(plan("roadmap-report", "Roadmap Report", "\u20A615,000 one-time", 1_500_000L, "NGN"));
         plans.add(plan("pro-monthly", "Pro — monthly", "\u20A610,000/month", 1_000_000L, "NGN"));
 
@@ -86,10 +88,11 @@ public class PaymentService {
     }
 
     /**
-     * Verifies a Paystack transaction reference server-side and grants Pro.
-     * Only runs when payments are armed; otherwise refuses (no live API call).
+     * Verifies a Paystack transaction reference server-side and grants the plan
+     * on the authenticated user's record. Only runs when payments are armed.
      */
-    public Map<String, Object> verify(String reference, String email) {
+    @Transactional
+    public Map<String, Object> verify(User user, String reference) {
         if (!isArmed()) {
             return Map.of("verified", false,
                     "error", "payments not armed — set PAYMENTS_MODE=live and the Paystack keys");
@@ -114,26 +117,22 @@ public class PaymentService {
                 log.info("[payments] verify not-success for {}: {}", reference, shown);
                 return Map.of("verified", false, "status", shown);
             }
-            Map<String, Object> grant = new LinkedHashMap<>();
-            grant.put("plan", data.path("metadata").path("plan").asText("pro"));
-            grant.put("reference", reference);
-            grant.put("grantedAt", Instant.now().toString());
-            grant.put("amount", data.path("amount").asLong());
-            grant.put("currency", data.path("currency").asText());
-            if (email != null && !email.isBlank()) {
-                proGrants.put(email, grant);
-            }
-            log.info("[payments] VERIFIED live charge {} for {}", reference, email);
+            String planId = data.path("metadata").path("plan").asText("pro-monthly");
+            user.setPlan(User.Plan.PRO);
+            users.save(user);
+            log.info("[payments] VERIFIED live charge {} for {} (granted {})",
+                    reference, user.getEmail(), planId);
             return Map.of("verified", true, "pro", true,
-                    "email", email == null ? "" : email, "reference", reference);
+                    "email", user.getEmail(), "reference", reference, "plan", planId,
+                    "grantedAt", Instant.now().toString());
         } catch (Exception e) {
             log.warn("[payments] verify failed for {}: {}", reference, e.getMessage());
             return Map.of("verified", false, "error", e.getMessage());
         }
     }
 
-    public boolean isPro(String email) {
-        return email != null && !email.isBlank() && proGrants.containsKey(email);
+    public boolean isPro(User user) {
+        return user != null && user.getPlan() == User.Plan.PRO;
     }
 
     private static Map<String, Object> plan(String id, String label, String displayPrice,

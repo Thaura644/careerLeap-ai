@@ -2,16 +2,42 @@ package com.leapai.backend.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    private final AuthInterceptor authInterceptor;
+
+    public WebConfig(AuthInterceptor authInterceptor) {
+        this.authInterceptor = authInterceptor;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:5173")
+                // Vite dev server + production frontend origin (overridable via env).
+                .allowedOriginPatterns("http://localhost:*", "${LEAP_APP_ORIGIN:https://leap-ai.vercel.app}")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization");
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authInterceptor)
+                .addPathPatterns(
+                        "/api/auth/me",
+                        "/api/auth/profile",
+                        "/api/dashboard/**",
+                        "/api/resources/**",
+                        "/api/community/**",
+                        "/api/insights/**",
+                        "/api/ai/**",
+                        "/api/goals/**",
+                        "/api/payments/verify",
+                        "/api/payments/me")
+                .excludePathPatterns("/api/health", "/api/payments/status");
     }
 }

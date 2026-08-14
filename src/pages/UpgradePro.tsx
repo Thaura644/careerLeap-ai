@@ -34,13 +34,17 @@ const UpgradePro = () => {
   const [status, setStatus] = useState<PaymentStatus | null>(null);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [pro, setPro] = useState(() => localStorage.getItem("leap_pro") === "true");
+  const [pro, setPro] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     apiGet<PaymentStatus>("/payments/status")
       .then(setStatus)
       .catch(() => setStatus(null));
+    // Real entitlement from the server — not a localStorage flag.
+    apiGet<{ pro: boolean }>("/payments/me")
+      .then((res) => setPro(res.pro))
+      .catch(() => setPro(false));
   }, []);
 
   const proPlan = status?.plans.find((p) => p.id === "pro-monthly");
@@ -73,7 +77,6 @@ const UpgradePro = () => {
             });
             if (res.verified) {
               setPro(true);
-              localStorage.setItem("leap_pro", "true");
               setMessage("Payment verified — Pro activated. Thank you!");
             } else {
               setMessage("Payment could not be verified. Contact support if you were charged.");
