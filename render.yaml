@@ -6,7 +6,7 @@ services:
     name: leap-ai-backend
     runtime: docker
     plan: free
-    region: oregon
+    region: frankfurt
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
