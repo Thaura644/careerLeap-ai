@@ -234,8 +234,8 @@ const Settings = () => {
                       
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">Mentor Sessions</p>
-                          <p className="text-sm text-muted-foreground">Notifications about upcoming mentor sessions</p>
+                          <p className="font-medium">Community</p>
+                          <p className="text-sm text-muted-foreground">Replies and mentions in the community</p>
                         </div>
                         <Switch defaultChecked />
                       </div>
