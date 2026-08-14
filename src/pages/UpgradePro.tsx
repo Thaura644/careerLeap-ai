@@ -1,23 +1,34 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { apiGet, apiPost } from "@/lib/api";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Check } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-type Plan = { id: string; label: string; displayPrice: string; amountKobo: number; currency: string };
-type PaymentStatus = { mode: string; enabled: boolean; publicKey: string; plans: Plan[] };
+type Currency = "NGN" | "USD" | "GHS" | "ZAR" | "KES";
+type CurrencyPrice = { displayPrice: string; amountMinor: number };
+type Plan = { id: string; label: string; prices: Record<Currency, CurrencyPrice> };
+type PaymentStatus = {
+  mode: string;
+  enabled: boolean;
+  publicKey: string;
+  currencies: Currency[];
+  plans: Plan[];
+};
 
 function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -30,8 +41,19 @@ function loadPaystackScript(): Promise<void> {
   });
 }
 
+/** Best-guess currency from the visitor's locale; falls back to USD. */
+function detectCurrency(): Currency {
+  const region = (navigator.language || "en-US").split("-")[1]?.toUpperCase();
+  const byRegion: Record<string, Currency> = {
+    NG: "NGN", GH: "GHS", ZA: "ZAR", KE: "KES",
+    US: "USD", GB: "USD", CA: "USD", AU: "USD", DE: "USD", FR: "USD",
+  };
+  return byRegion[region || ""] || "USD";
+}
+
 const UpgradePro = () => {
   const [status, setStatus] = useState<PaymentStatus | null>(null);
+  const [currency, setCurrency] = useState<Currency>("USD");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [pro, setPro] = useState(false);
@@ -39,7 +61,12 @@ const UpgradePro = () => {
 
   useEffect(() => {
     apiGet<PaymentStatus>("/payments/status")
-      .then(setStatus)
+      .then((res) => {
+        setStatus(res);
+        // Only use the detected currency if the backend actually supports it.
+        const detected = detectCurrency();
+        setCurrency(res.currencies.includes(detected) ? detected : res.currencies[0] || "USD");
+      })
       .catch(() => setStatus(null));
     // Real entitlement from the server — not a localStorage flag.
     apiGet<{ pro: boolean }>("/payments/me")
@@ -48,6 +75,15 @@ const UpgradePro = () => {
   }, []);
 
   const proPlan = status?.plans.find((p) => p.id === "pro-monthly");
+  const reportPlan = status?.plans.find((p) => p.id === "roadmap-report");
+
+  const priceFor = (plan?: Plan) => {
+    if (!plan || !status) return { display: "—", amount: 0 };
+    const p = plan.prices[currency] || plan.prices[status.currencies[0]];
+    return { display: p.displayPrice, amount: p.amountMinor };
+  };
+  const proPrice = useMemo(() => priceFor(proPlan), [proPlan, currency, status]);
+  const reportPrice = useMemo(() => priceFor(reportPlan), [reportPlan, currency, status]);
 
   const startCheckout = async (plan: Plan) => {
     if (!status?.enabled) {
@@ -58,6 +94,7 @@ const UpgradePro = () => {
       setMessage("Enter your email first.");
       return;
     }
+    const p = plan.prices[currency] || plan.prices[status.currencies[0]];
     setBusy(true);
     setMessage(null);
     try {
@@ -66,9 +103,10 @@ const UpgradePro = () => {
       const popup = (window as any).PaystackPop.setup({
         key: status.publicKey,
         email: email.trim(),
-        amount: plan.amountKobo,
-        currency: plan.currency,
+        amount: p.amountMinor,
+        currency,
         ref: reference,
+        metadata: { plan: plan.id },
         callback: async (response: { reference: string }) => {
           try {
             const res = await apiPost<{ verified: boolean; pro?: boolean }>("/payments/verify", {
@@ -97,11 +135,11 @@ const UpgradePro = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-10 text-center">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-3">Upgrade to Pro</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Unlock advanced AI features, premium resources, and career-boosting tools to accelerate your professional growth.
+            Unlock unlimited roadmaps, goal tracking, and community support.
           </p>
           {status && !status.enabled && (
             <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
@@ -111,418 +149,136 @@ const UpgradePro = () => {
           {pro && <p className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">✓ Pro is active</p>}
         </div>
 
-        <Tabs defaultValue="monthly" className="mb-8">
-          <div className="flex justify-center mb-6">
-            <TabsList>
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="annual">
-                Annual
-                <Badge variant="outline" className="ml-2 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
-                  Save 20%
-                </Badge>
-              </TabsTrigger>
-            </TabsList>
+        {status && status.currencies.length > 0 && (
+          <div className="flex justify-center items-center gap-3 mb-8">
+            <span className="text-sm text-muted-foreground">Currency</span>
+            <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {status.currencies.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+        )}
 
-          <TabsContent value="monthly">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Free Plan */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Free</CardTitle>
-                  <CardDescription>Basic career development tools</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <span className="text-3xl font-bold">$0</span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Basic career roadmap</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Public community access</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Limited AI insights (3/month)</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Basic skills assessment</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" variant="outline">Current Plan</Button>
-                </CardFooter>
-              </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          {/* Roadmap Report */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Roadmap Report</CardTitle>
+              <CardDescription>One personalized career roadmap, yours to keep</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <span className="text-3xl font-bold">{reportPrice.display}</span>
+                <span className="text-muted-foreground"> one-time</span>
+              </div>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>One personalized roadmap</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Delivered instantly</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Yours to keep</span>
+                </li>
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button
+                className="w-full"
+                disabled={!status?.enabled || busy}
+                onClick={() => reportPlan && startCheckout(reportPlan)}
+              >
+                {status?.enabled ? `Get yours — ${reportPrice.display}` : "Checkout coming soon"}
+              </Button>
+            </CardFooter>
+          </Card>
 
-              {/* Pro Plan */}
-              <Card className="border-leap-purple border-2">
-                <div className="bg-leap-purple text-white py-1 px-3 rounded-t-md text-center text-sm font-medium">
-                  RECOMMENDED
-                </div>
-                <CardHeader>
-                  <CardTitle>Pro</CardTitle>
-                  <CardDescription>Advanced career acceleration</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <span className="text-3xl font-bold">{proPlan?.displayPrice ?? "—"}</span>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Everything in Free</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Unlimited AI insights</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>1 monthly mentor session</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Advanced skill development</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Premium resources library</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Industry-specific roadmaps</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter className="flex-col gap-2">
-                  {status?.enabled && (
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Email for payment"
-                      className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                    />
-                  )}
-                  <Button
-                    className="w-full bg-leap-purple hover:bg-opacity-90"
-                    disabled={!status?.enabled || busy}
-                    onClick={() => proPlan && startCheckout(proPlan)}
-                  >
-                    {status?.enabled ? `Pay ${proPlan?.displayPrice ?? ""}` : "Checkout coming soon"}
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Enterprise Plan */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <CardDescription>For teams and organizations</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <span className="text-3xl font-bold">$49</span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Everything in Pro</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Team management dashboard</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Dedicated account manager</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Custom integrations</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Company-specific training</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Advanced analytics & reporting</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Contact Sales</Button>
-                </CardFooter>
-              </Card>
+          {/* Pro */}
+          <Card className="border-leap-purple border-2">
+            <div className="bg-leap-purple text-white py-1 px-3 rounded-t-md text-center text-sm font-medium">
+              RECOMMENDED
             </div>
-          </TabsContent>
-
-          <TabsContent value="annual">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Free Plan */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Free</CardTitle>
-                  <CardDescription>Basic career development tools</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <span className="text-3xl font-bold">$0</span>
-                    <span className="text-muted-foreground">/year</span>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Basic career roadmap</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Public community access</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Limited AI insights (3/month)</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Basic skills assessment</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" variant="outline">Current Plan</Button>
-                </CardFooter>
-              </Card>
-
-              {/* Pro Plan */}
-              <Card className="border-leap-purple border-2">
-                <div className="bg-leap-purple text-white py-1 px-3 rounded-t-md text-center text-sm font-medium">
-                  RECOMMENDED
-                </div>
-                <CardHeader>
-                  <CardTitle>Pro</CardTitle>
-                  <CardDescription>Advanced career acceleration</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div>
-                      <span className="text-3xl font-bold">$182</span>
-                      <span className="text-muted-foreground">/year</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <s>$228</s> Save $46 (20%)
-                    </div>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Everything in Free</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Unlimited AI insights</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>1 monthly mentor session</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Advanced skill development</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Premium resources library</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Industry-specific roadmaps</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" disabled title="Annual billing coming soon">
-                    Annual billing coming soon
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Enterprise Plan */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <CardDescription>For teams and organizations</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div>
-                      <span className="text-3xl font-bold">$470</span>
-                      <span className="text-muted-foreground">/year</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      <s>$588</s> Save $118 (20%)
-                    </div>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Everything in Pro</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Team management dashboard</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Dedicated account manager</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Custom integrations</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Company-specific training</span>
-                    </li>
-                    <li className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                      <span>Advanced analytics & reporting</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Contact Sales</Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold mb-6 text-center">Compare Features</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-4 px-6 text-left">Feature</th>
-                  <th className="py-4 px-6 text-center">Free</th>
-                  <th className="py-4 px-6 text-center">Pro</th>
-                  <th className="py-4 px-6 text-center">Enterprise</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-4 px-6 flex items-center">
-                    AI Roadmap Generator
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground ml-2" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Personalized career path based on your goals and skills
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </td>
-                  <td className="py-4 px-6 text-center">Basic</td>
-                  <td className="py-4 px-6 text-center">Advanced</td>
-                  <td className="py-4 px-6 text-center">Custom</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6 flex items-center">
-                    AI Insights
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="h-4 w-4 text-muted-foreground ml-2" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Smart recommendations for skill development
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </td>
-                  <td className="py-4 px-6 text-center">3/month</td>
-                  <td className="py-4 px-6 text-center">Unlimited</td>
-                  <td className="py-4 px-6 text-center">Unlimited</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6">Mentor Sessions</td>
-                  <td className="py-4 px-6 text-center">-</td>
-                  <td className="py-4 px-6 text-center">1/month</td>
-                  <td className="py-4 px-6 text-center">4/month</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6">Premium Resources</td>
-                  <td className="py-4 px-6 text-center">-</td>
-                  <td className="py-4 px-6 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6">Community Access</td>
-                  <td className="py-4 px-6 text-center">Public</td>
-                  <td className="py-4 px-6 text-center">Pro Groups</td>
-                  <td className="py-4 px-6 text-center">Private Network</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6">Industry Networks</td>
-                  <td className="py-4 px-6 text-center">Limited</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6">LinkedIn & Twitter Integration</td>
-                  <td className="py-4 px-6 text-center">-</td>
-                  <td className="py-4 px-6 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <Check className="h-5 w-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-6">Progress Analytics</td>
-                  <td className="py-4 px-6 text-center">Basic</td>
-                  <td className="py-4 px-6 text-center">Advanced</td>
-                  <td className="py-4 px-6 text-center">Enterprise</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <CardHeader>
+              <CardTitle>Pro</CardTitle>
+              <CardDescription>Unlimited roadmaps + goal tracking + community support</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4">
+                <span className="text-3xl font-bold">{proPrice.display}</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Everything in Roadmap Report</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Unlimited roadmaps</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Goal tracking + insights</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Community support</span>
+                </li>
+              </ul>
+            </CardContent>
+            <CardFooter className="flex-col gap-2">
+              {status?.enabled && (
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email for payment"
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                />
+              )}
+              <Button
+                className="w-full bg-leap-purple hover:bg-opacity-90"
+                disabled={!status?.enabled || busy}
+                onClick={() => proPlan && startCheckout(proPlan)}
+              >
+                {status?.enabled ? `Go Pro — ${proPrice.display}/mo` : "Checkout coming soon"}
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
 
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
           <div className="max-w-3xl mx-auto grid gap-6 text-left">
             <div>
-              <h3 className="font-bold mb-2">Can I cancel my subscription at any time?</h3>
-              <p className="text-muted-foreground">Yes, you can cancel your subscription anytime. Your plan will remain active until the end of your billing period.</p>
+              <h3 className="font-bold mb-2">Can I cancel my Pro subscription at any time?</h3>
+              <p className="text-muted-foreground">
+                Yes — cancel anytime and the plan stays active until the end of the period you paid for.
+              </p>
             </div>
             <div>
-              <h3 className="font-bold mb-2">How do mentor sessions work?</h3>
-              <p className="text-muted-foreground">Once you upgrade to Pro, you'll be able to book sessions with mentors in your field. Sessions are 30-minute video calls where you can discuss your career goals and challenges.</p>
+              <h3 className="font-bold mb-2">Which currencies do you accept?</h3>
+              <p className="text-muted-foreground">
+                Naira, US Dollars, Ghanaian Cedis, South African Rand, and Kenyan Shillings — pick yours
+                above and the price is shown in it.
+              </p>
             </div>
             <div>
               <h3 className="font-bold mb-2">Is there a refund policy?</h3>
-              <p className="text-muted-foreground">We offer a 14-day money-back guarantee if you're not satisfied with your Pro subscription.</p>
-            </div>
-            <div>
-              <h3 className="font-bold mb-2">Can I switch between monthly and annual billing?</h3>
-              <p className="text-muted-foreground">Yes, you can switch between billing cycles at any time from your account settings.</p>
+              <p className="text-muted-foreground">
+                If the roadmap doesn't help, email us within 7 days of purchase and we'll refund it.
+                Every roadmap is generated fresh for your profile — there's nothing canned to resell.
+              </p>
             </div>
           </div>
         </div>
@@ -534,7 +290,7 @@ const UpgradePro = () => {
             disabled={!status?.enabled || busy}
             onClick={() => proPlan && startCheckout(proPlan)}
           >
-            {status?.enabled ? `Upgrade to Pro — ${proPlan?.displayPrice ?? ""}` : "Upgrade to Pro (coming soon)"}
+            {status?.enabled ? `Upgrade to Pro — ${proPrice.display}/mo` : "Upgrade to Pro (coming soon)"}
           </Button>
         </div>
       </div>

@@ -73,16 +73,31 @@ public class PaymentService {
         return "live".equals(mode) && !publicKey.isEmpty() && !secretKey.isEmpty();
     }
 
+    /** Paystack-supported currencies; amounts are in each currency's minor unit
+     *  (kobo for NGN, cents for USD/ZAR/KES, pesewas for GHS). */
+    static final List<String> CURRENCIES = List.of("NGN", "USD", "GHS", "ZAR", "KES");
+
     public Map<String, Object> status() {
         List<Map<String, Object>> plans = new ArrayList<>();
-        // Single source of truth for pricing; amounts in kobo (naira subunit).
-        plans.add(plan("roadmap-report", "Roadmap Report", "\u20A615,000 one-time", 1_500_000L, "NGN"));
-        plans.add(plan("pro-monthly", "Pro — monthly", "\u20A610,000/month", 1_000_000L, "NGN"));
+        // Single source of truth for pricing, per currency. Amounts are minor units.
+        plans.add(plan("roadmap-report", "Roadmap Report", Map.of(
+                "NGN", price("\u20A615,000", 1_500_000L),
+                "USD", price("$12", 1_200L),
+                "GHS", price("GH\u20B5150", 15_000L),
+                "ZAR", price("R220", 22_000L),
+                "KES", price("KSh 1,600", 160_000L))));
+        plans.add(plan("pro-monthly", "Pro — monthly", Map.of(
+                "NGN", price("\u20A610,000", 1_000_000L),
+                "USD", price("$8", 800L),
+                "GHS", price("GH\u20B5100", 10_000L),
+                "ZAR", price("R145", 14_500L),
+                "KES", price("KSh 1,050", 105_000L))));
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("mode", mode);
         result.put("enabled", isArmed());
         result.put("publicKey", isArmed() ? publicKey : "");
+        result.put("currencies", CURRENCIES);
         result.put("plans", plans);
         return result;
     }
@@ -135,14 +150,18 @@ public class PaymentService {
         return user != null && user.getPlan() == User.Plan.PRO;
     }
 
-    private static Map<String, Object> plan(String id, String label, String displayPrice,
-                                            long amountKobo, String currency) {
+    private static Map<String, Object> plan(String id, String label, Map<String, Map<String, Object>> prices) {
         Map<String, Object> p = new LinkedHashMap<>();
         p.put("id", id);
         p.put("label", label);
-        p.put("displayPrice", displayPrice);
-        p.put("amountKobo", amountKobo);
-        p.put("currency", currency);
+        p.put("prices", prices);
         return p;
+    }
+
+    private static Map<String, Object> price(String display, long amountMinor) {
+        Map<String, Object> c = new LinkedHashMap<>();
+        c.put("displayPrice", display);
+        c.put("amountMinor", amountMinor);
+        return c;
     }
 }
