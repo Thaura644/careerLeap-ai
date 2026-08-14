@@ -20,9 +20,10 @@ import {
   LogOut, 
   Loader2, 
   Upload, 
-  Linkedin, 
-  Twitter, 
-  Github,
+  // Social-connect icons; unused while the connections tab is commented out.
+  // Linkedin,
+  // Twitter,
+  // Github,
   Mail,
   CheckCircle,
   AlertTriangle
@@ -326,96 +327,21 @@ const Settings = () => {
           </TabsContent>
           
           <TabsContent value="connections">
+            {/* Social/third-party account connections are commented out until
+                they are real: the Connect buttons had no handlers and the
+                GitHub row falsely showed "Connected". Re-enable when OAuth is
+                actually wired end-to-end. */}
             <Card>
               <CardHeader>
                 <CardTitle>Connected Accounts</CardTitle>
-                <CardDescription>Manage your connected social accounts and platforms</CardDescription>
+                <CardDescription>Third-party account connections are not available yet</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-[#0077b5]/10 p-2 rounded-full">
-                        <Linkedin className="h-6 w-6 text-[#0077b5]" />
-                      </div>
-                      <div>
-                        <p className="font-medium">LinkedIn</p>
-                        <p className="text-sm text-muted-foreground">Connect your professional profile</p>
-                      </div>
-                    </div>
-                    <Button variant="outline">Connect</Button>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-[#1DA1F2]/10 p-2 rounded-full">
-                        <Twitter className="h-6 w-6 text-[#1DA1F2]" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Twitter</p>
-                        <p className="text-sm text-muted-foreground">Connect for industry updates</p>
-                      </div>
-                    </div>
-                    <Button variant="outline">Connect</Button>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-[#333]/10 dark:bg-[#f6f8fa]/10 p-2 rounded-full">
-                        <Github className="h-6 w-6 text-[#333] dark:text-[#f6f8fa]" />
-                      </div>
-                      <div>
-                        <p className="font-medium">GitHub</p>
-                        <p className="text-sm text-muted-foreground">Showcase your projects and contributions</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-800">
-                        Connected
-                      </Badge>
-                      <Button variant="ghost" size="sm">Disconnect</Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator className="my-6" />
-                
-                <div>
-                  <h3 className="text-lg font-medium mb-4">API Integrations</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Connect your career development data with third-party services
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="border-dashed">
-                      <CardContent className="pt-6 flex flex-col items-center justify-center h-40 text-center">
-                        <p className="font-medium mb-2">Learning Platforms</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Connect your courses from Udemy, Coursera, etc.
-                        </p>
-                        <Button variant="outline" size="sm">
-                          Browse Integrations
-                        </Button>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border-dashed">
-                      <CardContent className="pt-6 flex flex-col items-center justify-center h-40 text-center">
-                        <p className="font-medium mb-2">Project Management</p>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Connect to GitHub, JIRA, or Trello boards
-                        </p>
-                        <Button variant="outline" size="sm">
-                          Browse Integrations
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Account connections (LinkedIn, Twitter, GitHub, learning platforms) are on
+                  the roadmap but not built yet. You'll see them here once they exist — this
+                  page will never claim a connection that isn't real.
+                </p>
               </CardContent>
             </Card>
           </TabsContent>

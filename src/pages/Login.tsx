@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { Github, Twitter } from "lucide-react";
+// Social-login icons; unused while the social buttons are commented out.
+// import { Github, Twitter } from "lucide-react";
 import { apiPost } from "@/lib/api";
 
 const Login = () => {
@@ -97,7 +98,10 @@ const Login = () => {
           Log in
         </Button>
 
-        <div className="relative my-6">
+        {/* Social login is commented out until real OAuth exists (no backend
+            endpoints or handlers — the buttons did nothing). Re-enable when
+            GitHub/Twitter OAuth is wired end-to-end. */}
+        {/* <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
           </div>
@@ -115,7 +119,7 @@ const Login = () => {
             <Twitter className="mr-2 h-4 w-4" />
             Twitter
           </Button>
-        </div>
+        </div> */}
       </form>
     </AuthLayout>
   );
