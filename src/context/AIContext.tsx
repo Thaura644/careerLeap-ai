@@ -105,6 +105,13 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   // Load the real profile: the authenticated user, their persisted goals, and
   // their persisted conversations. Nothing is invented when the account is new.
   const refreshProfile = useCallback(async () => {
+    // Not logged in? Skip the protected calls entirely (they'd just 401).
+    if (!localStorage.getItem("leap_token")) {
+      setProfile(null);
+      setMessages([]);
+      setCurrentConversation(null);
+      return;
+    }
     try {
       const [me, rawGoals, rawConversations] = await Promise.all([
         apiGet<{ user: RawUser }>("/auth/me"),

@@ -86,6 +86,11 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
     }
 
     const fetchDashboardData = async () => {
+      // Not logged in? Skip the protected call entirely (it would just 401).
+      if (!localStorage.getItem("leap_token")) {
+        setLoading(false);
+        return;
+      }
       try {
         const data = await apiGet<{
           userName: string;

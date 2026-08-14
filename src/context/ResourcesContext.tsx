@@ -56,6 +56,11 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchResources = async () => {
+    // Not logged in? Skip the protected call entirely (it would just 401).
+    if (!localStorage.getItem("leap_token")) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
