@@ -27,6 +27,24 @@ Backend default URL: `http://localhost:8080`
 - `GET /api/insights`
 - `POST /api/ai/chat` — chat with the Leap.ai career coach (real LLM when configured)
 - `POST /api/insights/roadmap` — generate a personalized career roadmap from a profile JSON
+- `GET /api/payments/status` — whether payments are armed + the plans to render
+- `POST /api/payments/verify` — verify a Paystack reference server-side, grant Pro
+- `GET /api/payments/me/{email}` — is this email Pro?
+
+## Payments (Paystack, gated)
+
+The /upgrade checkout stays **disabled until the human arms it**: set
+`PAYMENTS_MODE=live` (default is `off`). Keys: `PAYSTACK_PUBLIC_KEY` (sent to
+the browser for the inline popup) and `PAYSTACK_SECRET_KEY` (server-only, falls
+back to `PAYSTACK_LIVE_SECRET`). The secret key never leaves the server.
+
+```bash
+PAYMENTS_MODE=live PAYSTACK_PUBLIC_KEY=pk_live_... PAYSTACK_LIVE_SECRET=sk_live_... mvn spring-boot:run
+```
+
+Plans and prices are defined once in `PaymentService.status()` (amounts in
+kobo, currency NGN) — confirm amounts with the human before launch. Pro grants
+are in-memory until a real database lands.
 
 ## Real AI (LLM)
 

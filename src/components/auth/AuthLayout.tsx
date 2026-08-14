@@ -57,9 +57,8 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               <div className="flex -space-x-2">
                 <div className="w-10 h-10 rounded-full bg-white bg-opacity-20"></div>
                 <div className="w-10 h-10 rounded-full bg-white bg-opacity-20"></div>
-                <div className="w-10 h-10 rounded-full bg-white bg-opacity-20"></div>
               </div>
-              <p className="font-medium">Joined by 10,000+ professionals</p>
+              <p className="font-medium">Early access — first cohort forming now</p>
             </div>
           </div>
         </div>

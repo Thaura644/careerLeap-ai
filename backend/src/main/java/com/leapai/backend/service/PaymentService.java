@@ -1,0 +1,149 @@
+package com.leapai.backend.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Paystack payments for Leap.ai, gated behind a live-payments flag.
+ *
+ * <p>The checkout on /upgrade stays inert until the human explicitly arms it:
+ * <ul>
+ *   <li>{@code PAYMENTS_MODE} — {@code off} (default) or {@code live}. Only
+ *       {@code live} arms the checkout; anything else returns it disabled.</li>
+ *   <li>{@code PAYSTACK_PUBLIC_KEY} — sent to the browser for the inline popup.</li>
+ *   <li>{@code PAYSTACK_SECRET_KEY} — server-side only, used to verify payments;
+ *       falls back to {@code PAYSTACK_LIVE_SECRET} for this company's existing .env.</li>
+ * </ul>
+ *
+ * <p>Pro grants are kept in memory for now (placeholder until a real database lands).
+ */
+@Service
+public class PaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+    private static final String PAYSTACK_API = "https://api.paystack.co";
+
+    private final ObjectMapper objectMapper;
+    private final HttpClient httpClient;
+
+    private final String mode;
+    private final String publicKey;
+    private final String secretKey;
+
+    /** In-memory pro grants keyed by email — replaced by a DB later. */
+    private final Map<String, Map<String, Object>> proGrants = new ConcurrentHashMap<>();
+
+    public PaymentService(
+            ObjectMapper objectMapper,
+            @Value("${PAYMENTS_MODE:off}") String mode,
+            @Value("${PAYSTACK_PUBLIC_KEY:}") String publicKey,
+            @Value("${PAYSTACK_SECRET_KEY:${PAYSTACK_LIVE_SECRET:}}") String secretKey) {
+        this.objectMapper = objectMapper;
+        this.mode = mode == null ? "off" : mode.trim().toLowerCase();
+        this.publicKey = publicKey == null ? "" : publicKey.trim();
+        this.secretKey = secretKey == null ? "" : secretKey.trim();
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(15))
+                .build();
+    }
+
+    /** True only when the human has armed live payments (mode=live + keys present). */
+    public boolean isArmed() {
+        return "live".equals(mode) && !publicKey.isEmpty() && !secretKey.isEmpty();
+    }
+
+    public Map<String, Object> status() {
+        List<Map<String, Object>> plans = new ArrayList<>();
+        // Single source of truth for pricing; amounts in kobo (naira subunit).
+        // Confirm amounts/currency with the human before launch.
+        plans.add(plan("roadmap-report", "Roadmap Report", "\u20A615,000 one-time", 1_500_000L, "NGN"));
+        plans.add(plan("pro-monthly", "Pro — monthly", "\u20A610,000/month", 1_000_000L, "NGN"));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("mode", mode);
+        result.put("enabled", isArmed());
+        result.put("publicKey", isArmed() ? publicKey : "");
+        result.put("plans", plans);
+        return result;
+    }
+
+    /**
+     * Verifies a Paystack transaction reference server-side and grants Pro.
+     * Only runs when payments are armed; otherwise refuses (no live API call).
+     */
+    public Map<String, Object> verify(String reference, String email) {
+        if (!isArmed()) {
+            return Map.of("verified", false,
+                    "error", "payments not armed — set PAYMENTS_MODE=live and the Paystack keys");
+        }
+        if (reference == null || reference.isBlank()) {
+            return Map.of("verified", false, "error", "reference required");
+        }
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(PAYSTACK_API + "/transaction/verify/"
+                            + URLEncoder.encode(reference, StandardCharsets.UTF_8)))
+                    .timeout(Duration.ofSeconds(30))
+                    .header("Authorization", "Bearer " + secretKey)
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode node = objectMapper.readTree(response.body());
+            JsonNode data = node.path("data");
+            String status = data.path("status").asText("");
+            if (!"success".equals(status)) {
+                String shown = status.isBlank() ? "http_" + response.statusCode() : status;
+                log.info("[payments] verify not-success for {}: {}", reference, shown);
+                return Map.of("verified", false, "status", shown);
+            }
+            Map<String, Object> grant = new LinkedHashMap<>();
+            grant.put("plan", data.path("metadata").path("plan").asText("pro"));
+            grant.put("reference", reference);
+            grant.put("grantedAt", Instant.now().toString());
+            grant.put("amount", data.path("amount").asLong());
+            grant.put("currency", data.path("currency").asText());
+            if (email != null && !email.isBlank()) {
+                proGrants.put(email, grant);
+            }
+            log.info("[payments] VERIFIED live charge {} for {}", reference, email);
+            return Map.of("verified", true, "pro", true,
+                    "email", email == null ? "" : email, "reference", reference);
+        } catch (Exception e) {
+            log.warn("[payments] verify failed for {}: {}", reference, e.getMessage());
+            return Map.of("verified", false, "error", e.getMessage());
+        }
+    }
+
+    public boolean isPro(String email) {
+        return email != null && !email.isBlank() && proGrants.containsKey(email);
+    }
+
+    private static Map<String, Object> plan(String id, String label, String displayPrice,
+                                            long amountKobo, String currency) {
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("id", id);
+        p.put("label", label);
+        p.put("displayPrice", displayPrice);
+        p.put("amountKobo", amountKobo);
+        p.put("currency", currency);
+        return p;
+    }
+}

@@ -207,8 +207,8 @@ const LegacyLanding = () => {
             <div className="grid gap-8 lg:grid-cols-3">
               {[
                 { name: "Early Access", price: "$0", cta: "Start Free", period: "free while we build" },
-                { name: "Roadmap Report", price: "$15", cta: "Coming Soon", period: "one-time, after checkout" },
-                { name: "Pro", price: "$12", cta: "Coming Soon", period: "per month, launch pricing" },
+                { name: "Roadmap Report", price: "₦15,000", cta: "Coming Soon", period: "one-time, after checkout" },
+                { name: "Pro", price: "₦10,000", cta: "Coming Soon", period: "per month, launch pricing" },
               ].map((plan) => (
                 <Card key={plan.name} className="dark:border-cyan-800 dark:bg-cyan-900/40">
                   <CardHeader>

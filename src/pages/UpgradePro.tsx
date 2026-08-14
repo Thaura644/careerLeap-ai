@@ -1,6 +1,7 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { apiGet, apiPost } from "@/lib/api";
 import { 
   Card, 
   CardContent, 
@@ -15,7 +16,82 @@ import { Check, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+type Plan = { id: string; label: string; displayPrice: string; amountKobo: number; currency: string };
+type PaymentStatus = { mode: string; enabled: boolean; publicKey: string; plans: Plan[] };
+
+function loadPaystackScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).PaystackPop) return resolve();
+    const s = document.createElement("script");
+    s.src = "https://js.paystack.co/v1/inline.js";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("failed to load Paystack"));
+    document.head.appendChild(s);
+  });
+}
+
 const UpgradePro = () => {
+  const [status, setStatus] = useState<PaymentStatus | null>(null);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [pro, setPro] = useState(() => localStorage.getItem("leap_pro") === "true");
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiGet<PaymentStatus>("/payments/status")
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  }, []);
+
+  const proPlan = status?.plans.find((p) => p.id === "pro-monthly");
+
+  const startCheckout = async (plan: Plan) => {
+    if (!status?.enabled) {
+      setMessage("Checkout is not armed yet — payments are gated until the human flips the flag.");
+      return;
+    }
+    if (!email.trim()) {
+      setMessage("Enter your email first.");
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      await loadPaystackScript();
+      const reference = `leap_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const popup = (window as any).PaystackPop.setup({
+        key: status.publicKey,
+        email: email.trim(),
+        amount: plan.amountKobo,
+        currency: plan.currency,
+        ref: reference,
+        callback: async (response: { reference: string }) => {
+          try {
+            const res = await apiPost<{ verified: boolean; pro?: boolean }>("/payments/verify", {
+              reference: response.reference,
+              email: email.trim(),
+            });
+            if (res.verified) {
+              setPro(true);
+              localStorage.setItem("leap_pro", "true");
+              setMessage("Payment verified — Pro activated. Thank you!");
+            } else {
+              setMessage("Payment could not be verified. Contact support if you were charged.");
+            }
+          } catch {
+            setMessage("Verification failed. Contact support if you were charged.");
+          }
+          setBusy(false);
+        },
+        onClose: () => setBusy(false),
+      });
+      popup.openIframe();
+    } catch {
+      setBusy(false);
+      setMessage("Could not load Paystack. Try again in a moment.");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto">
@@ -24,6 +100,12 @@ const UpgradePro = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Unlock advanced AI features, premium resources, and career-boosting tools to accelerate your professional growth.
           </p>
+          {status && !status.enabled && (
+            <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+              Payments are gated right now (PAYMENTS_MODE is "{status.mode}") — checkout appears once the human arms it.
+            </p>
+          )}
+          {pro && <p className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">✓ Pro is active</p>}
         </div>
 
         <Tabs defaultValue="monthly" className="mb-8">
@@ -87,8 +169,7 @@ const UpgradePro = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
-                    <span className="text-3xl font-bold">$19</span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-3xl font-bold">{proPlan?.displayPrice ?? "—"}</span>
                   </div>
                   <ul className="space-y-2">
                     <li className="flex items-start">
@@ -117,8 +198,23 @@ const UpgradePro = () => {
                     </li>
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <Button className="w-full bg-leap-purple hover:bg-opacity-90">Upgrade to Pro</Button>
+                <CardFooter className="flex-col gap-2">
+                  {status?.enabled && (
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email for payment"
+                      className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    />
+                  )}
+                  <Button
+                    className="w-full bg-leap-purple hover:bg-opacity-90"
+                    disabled={!status?.enabled || busy}
+                    onClick={() => proPlan && startCheckout(proPlan)}
+                  >
+                    {status?.enabled ? `Pay ${proPlan?.displayPrice ?? ""}` : "Checkout coming soon"}
+                  </Button>
                 </CardFooter>
               </Card>
 
@@ -251,7 +347,9 @@ const UpgradePro = () => {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full bg-leap-purple hover:bg-opacity-90">Upgrade to Pro</Button>
+                  <Button className="w-full" disabled title="Annual billing coming soon">
+                    Annual billing coming soon
+                  </Button>
                 </CardFooter>
               </Card>
 
@@ -426,9 +524,14 @@ const UpgradePro = () => {
           </div>
         </div>
 
-        <div className="text-center pb-10">
-          <Button className="bg-leap-purple hover:bg-opacity-90 px-8 py-6 text-lg">
-            Upgrade to Pro
+        <div className="flex flex-col items-center gap-3 pb-10 text-center">
+          {message && <p className="text-sm text-muted-foreground">{message}</p>}
+          <Button
+            className="bg-leap-purple hover:bg-opacity-90 px-8 py-6 text-lg"
+            disabled={!status?.enabled || busy}
+            onClick={() => proPlan && startCheckout(proPlan)}
+          >
+            {status?.enabled ? `Upgrade to Pro — ${proPlan?.displayPrice ?? ""}` : "Upgrade to Pro (coming soon)"}
           </Button>
         </div>
       </div>
