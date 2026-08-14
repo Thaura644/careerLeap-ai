@@ -1,6 +1,7 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,18 +10,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 // Social-login icons; unused while the social buttons are commented out.
 // import { Github, Twitter } from "lucide-react";
-import { apiPost } from "@/lib/api";
+import { apiPost, ApiTimeoutError } from "@/lib/api";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
     const formData = new FormData(e.currentTarget);
     const email = String(formData.get("email") || "");
     const password = String(formData.get("password") || "");
 
+    setIsSubmitting(true);
     try {
       const response = await apiPost<{ token: string; user: { fullName: string; email: string } }>(
         "/auth/login",
@@ -34,11 +38,22 @@ const Login = () => {
       });
       navigate("/dashboard");
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Invalid credentials or the service is unavailable. Please try again.",
-        variant: "destructive",
-      });
+      if (error instanceof ApiTimeoutError) {
+        toast({
+          title: "Still waking up...",
+          description:
+            "The free server is starting up — this can take up to a minute. Just click Log in again in a few seconds.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid credentials or the service is unavailable. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,8 +109,13 @@ const Login = () => {
           </div>
         </div>
 
-        <Button type="submit" className="w-full bg-leap-purple hover:bg-opacity-90">
-          Log in
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-leap-purple hover:bg-opacity-90"
+        >
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting ? "Logging in..." : "Log in"}
         </Button>
 
         {/* Social login is commented out until real OAuth exists (no backend
