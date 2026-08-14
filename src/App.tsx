@@ -37,16 +37,24 @@ const queryClient = new QueryClient({
   },
 });
 
-// Register service worker for PWA
+// No PWA/service worker exists for this app (there is no /service-worker.js
+// file, so the old template's registration was silently registering the SPA
+// shell and serving stale bundles). Unregister any stale worker and clear its
+// caches so every visitor gets the current build.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('Service Worker registered with scope:', registration.scope);
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister();
+        }
       })
-      .catch(error => {
-        console.error('Service Worker registration failed:', error);
-      });
+      .catch(() => {});
+    if (window.caches) {
+      caches.keys()
+        .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+        .catch(() => {});
+    }
   });
 }
 
