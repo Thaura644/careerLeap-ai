@@ -69,6 +69,16 @@ public class AuthService {
         u.put("fullName", user.getFullName());
         u.put("email", user.getEmail());
         u.put("plan", user.getPlan().name().toLowerCase());
+        // Career profile (drives the roadmap engine). Null-safe for new accounts.
+        u.put("currentRole", nvl(user.getCurrentRole(), null));
+        u.put("targetRole", nvl(user.getTargetRole(), null));
+        u.put("timeframe", nvl(user.getTimeframe(), null));
+        u.put("industry", nvl(user.getIndustry(), null));
+        u.put("yearsExperience", nvl(user.getYearsExperience(), null));
         return u;
+    }
+
+    private static String nvl(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 }

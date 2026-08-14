@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, ChevronRight, ExternalLink, Loader2 } from "lucide-react";
 import { apiPost } from "@/lib/api";
+import { useAI } from "@/context/AIContext";
 
 interface RoadmapPhase {
   title: string;
@@ -23,21 +24,26 @@ interface RoadmapResponse {
   };
 }
 
-// Default profile until the onboarding questionnaire is wired in.
-const DEFAULT_PROFILE = {
-  currentRole: "Mid-level software engineer",
-  targetRole: "Senior / Staff engineer",
-  timeframeMonths: 12,
-  focusAreas: ["System design", "Technical leadership"],
-};
-
 export const RoadmapTab: React.FC = () => {
+  const { profile } = useAI();
   const [roadmap, setRoadmap] = useState<RoadmapResponse["roadmap"] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    apiPost<RoadmapResponse>("/insights/roadmap", DEFAULT_PROFILE)
+    // Build the request from the user's real profile (saved during onboarding).
+    // The backend merges whatever's missing with the user's saved profile, so
+    // an empty profile still yields a real roadmap — just not one personalized
+    // to role names the user never entered.
+    const request = {
+      currentRole: profile?.currentRole || undefined,
+      targetRole: profile?.targetRole || undefined,
+      timeframe: profile?.timeframe || undefined,
+      industry: profile?.industry || undefined,
+      yearsExperience: profile?.yearsExperience || undefined,
+      focusAreas: profile?.interests?.length ? profile.interests.slice(0, 3) : undefined,
+    };
+    apiPost<RoadmapResponse>("/insights/roadmap", request)
       .then((res) => {
         if (!cancelled && res.roadmap?.phases?.length) setRoadmap(res.roadmap);
       })
@@ -50,7 +56,7 @@ export const RoadmapTab: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [profile]);
 
   if (loading) {
     return (

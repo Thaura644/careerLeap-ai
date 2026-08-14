@@ -28,6 +28,11 @@ interface RawUser {
   fullName: string;
   email: string;
   plan: string;
+  currentRole?: string | null;
+  targetRole?: string | null;
+  timeframe?: string | null;
+  industry?: string | null;
+  yearsExperience?: string | null;
 }
 
 interface RawGoal {
@@ -131,6 +136,11 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       setProfile({
         id: String(me.user.id),
         userId: String(me.user.id),
+        currentRole: me.user.currentRole || undefined,
+        targetRole: me.user.targetRole || undefined,
+        timeframe: me.user.timeframe || undefined,
+        industry: me.user.industry || undefined,
+        yearsExperience: me.user.yearsExperience || undefined,
         interests: [],
         goals,
         skillAssessments: [],

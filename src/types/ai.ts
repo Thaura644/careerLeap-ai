@@ -50,6 +50,12 @@ export interface SkillAssessment {
 export interface AIUserProfile {
   id: string;
   userId: string;
+  // Career profile — drives the roadmap engine.
+  currentRole?: string;
+  targetRole?: string;
+  timeframe?: string;
+  industry?: string;
+  yearsExperience?: string;
   interests: string[];
   goals: CareerGoal[];
   skillAssessments: SkillAssessment[];
