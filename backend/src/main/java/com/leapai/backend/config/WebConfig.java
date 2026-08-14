@@ -18,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
                 // Vite dev server + production frontend origin (overridable via env).
-                .allowedOriginPatterns("http://localhost:*", "${LEAP_APP_ORIGIN:https://leap-ai.vercel.app}")
+                .allowedOriginPatterns("http://localhost:*", "${LEAP_APP_ORIGIN:https://career-leap-ai.vercel.app}")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization");

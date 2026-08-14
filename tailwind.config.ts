@@ -109,8 +109,10 @@ export default {
 				'gradient-x': 'gradient-x 10s ease infinite'
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif'],
-				heading: ['Poppins', 'sans-serif']
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+				heading: ['Inter', 'system-ui', 'sans-serif'],
+				display: ['Fraunces', 'Georgia', 'serif'],
+				mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
 			}
 		}
 	},

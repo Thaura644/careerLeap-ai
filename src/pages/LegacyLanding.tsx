@@ -1,97 +1,169 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Menu,
-  X,
-  Target,
-  BrainCircuit,
-  Users,
-  HeartHandshake,
-  Lightbulb,
-  Zap,
-  ArrowRight,
-  CheckCircle,
-} from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
-type Feature = {
-  icon: typeof Target;
-  title: string;
-  description: string;
-};
+const phases = [
+  {
+    n: "01",
+    title: "Own a cross-team system",
+    desc: "End-to-end ownership of one system two or more teams depend on. Your name in the runbooks, your pager in the rotation.",
+  },
+  {
+    n: "02",
+    title: "Publish your technical strategy",
+    desc: "Write the RFC other engineers follow — reviewed, revised, and shipped, not filed.",
+  },
+  {
+    n: "03",
+    title: "Prove the leverage",
+    desc: "One metric that moved because of you, and the writeup that shows how.",
+  },
+];
 
-const features: Feature[] = [
+const steps = [
   {
-    icon: Target,
-    title: "Personalized Roadmaps",
-    description:
-      "A step-by-step plan from your current role to your target role — skills, milestones, and proof.",
+    n: "1",
+    title: "Tell us where you are",
+    desc: "Current role, target role, timeframe. Two minutes — not a form-filling marathon.",
   },
   {
-    icon: BrainCircuit,
-    title: "Skill-Gap Analysis",
-    description:
-      "Know exactly what's missing between you and the role you want, in priority order.",
+    n: "2",
+    title: "We name the gap",
+    desc: "The specific skills and proof your target level actually requires, in priority order.",
   },
   {
-    icon: HeartHandshake,
-    title: "Real-World Proof",
-    description:
-      "Concrete projects and case studies that make your next level visible to hiring teams.",
+    n: "3",
+    title: "Execute in order",
+    desc: "Projects and milestones sequenced so each one makes the next one possible.",
   },
   {
-    icon: Users,
-    title: "Community Support",
-    description:
-      "A focused community of engineers at the same crossroads — wins, advice, and accountability.",
+    n: "4",
+    title: "Show the receipts",
+    desc: "Interview reps and a proof portfolio aimed at the level above you.",
+  },
+];
+
+const featureList = [
+  {
+    n: "01",
+    title: "Roadmaps, not courses",
+    desc: "One plan from here to your target role — sequenced so each step builds on the last. No 40-hour course list.",
   },
   {
-    icon: Lightbulb,
-    title: "Curated Learning",
-    description:
-      "Workshops and resources matched to your roadmap, not a generic course catalog.",
+    n: "02",
+    title: "The gap, named",
+    desc: "Skill-gap analysis that tells you what's missing in priority order, not a generic checklist.",
   },
   {
-    icon: Zap,
-    title: "Interview Prep",
-    description:
-      "Targeted practice for the interviews that stand between you and the offer.",
+    n: "03",
+    title: "Proof, not certificates",
+    desc: "Concrete projects and case studies that make the next level visible to hiring teams.",
   },
+  {
+    n: "04",
+    title: "A cohort, not a feed",
+    desc: "A small community of engineers at the same crossroads — wins, advice, accountability.",
+  },
+  {
+    n: "05",
+    title: "Interview reps",
+    desc: "Targeted practice for the interviews that stand between you and the offer.",
+  },
+  {
+    n: "06",
+    title: "Resources that fit the plan",
+    desc: "Workshops and material matched to your roadmap, not a generic catalog.",
+  },
+];
+
+const plans = [
+  {
+    name: "Early Access",
+    price: "$0",
+    period: "free while we build",
+    cta: "Start free",
+    to: "/onboarding",
+    features: ["Sample roadmap generator", "Community access", "No card, no spam"],
+  },
+  {
+    name: "Roadmap Report",
+    price: "₦15,000",
+    period: "one-time",
+    cta: "Get yours",
+    to: "/upgrade",
+    features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"],
+  },
+  {
+    name: "Pro",
+    price: "₦10,000",
+    period: "per month — launch pricing",
+    cta: "Go Pro",
+    to: "/upgrade",
+    features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support"],
+  },
+];
+
+const footerLinks: { label: string; to: string }[][] = [
+  [
+    { label: "How it works", to: "/#how-it-works" },
+    { label: "Features", to: "/#features" },
+    { label: "Pricing", to: "/#pricing" },
+    { label: "Dashboard", to: "/dashboard" },
+  ],
+  [
+    { label: "Resources", to: "/resources" },
+    { label: "Community", to: "/community" },
+    { label: "Blog", to: "/blog" },
+    { label: "FAQ", to: "/faq" },
+  ],
+  [
+    { label: "Privacy", to: "/privacy" },
+    { label: "Terms", to: "/terms" },
+    { label: "Support", to: "/support" },
+    { label: "Contact", to: "/contact" },
+  ],
 ];
 
 const LegacyLanding = () => {
   const [open, setOpen] = useState(false);
 
+  const navLinks = (
+    <>
+      <a href="#features" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
+        Features
+      </a>
+      <a href="#how-it-works" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
+        How it works
+      </a>
+      <a href="#pricing" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
+        Pricing
+      </a>
+      <Link to="/resources" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
+        Resources
+      </Link>
+      <Link to="/community" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
+        Community
+      </Link>
+    </>
+  );
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 dark:bg-cyan-950 dark:text-cyan-50">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-cyan-900 dark:bg-cyan-950/95">
-        <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-            Leap.ai
+    <div className="min-h-screen bg-[#FAF9F7] text-stone-900">
+      <header className="sticky top-0 z-50 border-b border-stone-200 bg-[#FAF9F7]/95 backdrop-blur">
+        <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
+          <Link to="/" className="font-display text-[22px] font-semibold tracking-tight">
+            Leap<span className="text-stone-400">.ai</span>
           </Link>
 
-          <div className="hidden items-center gap-6 md:flex">
-            <a href="#features" className="hover:text-cyan-600">Features</a>
-            <a href="#how-it-works" className="hover:text-cyan-600">How It Works</a>
-            <a href="#pricing" className="hover:text-cyan-600">Pricing</a>
-            <Link to="/resources" className="hover:text-cyan-600">Resources</Link>
-            <Link to="/community" className="hover:text-cyan-600">Community</Link>
-          </div>
+          <div className="hidden items-center gap-7 md:flex">{navLinks}</div>
 
-          <div className="hidden items-center gap-3 md:flex">
-            <Button variant="outline" asChild>
-              <Link to="/login">Log In</Link>
-            </Button>
-            <Button asChild className="bg-cyan-600 hover:bg-cyan-700">
-              <Link to="/signup">Sign Up</Link>
+          <div className="hidden items-center gap-4 md:flex">
+            <Link to="/login" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
+              Log in
+            </Link>
+            <Button asChild className="h-9 rounded-none bg-stone-900 px-4 text-[13px] hover:bg-stone-700">
+              <Link to="/signup">Sign up</Link>
             </Button>
           </div>
 
@@ -101,18 +173,14 @@ const LegacyLanding = () => {
         </nav>
 
         {open && (
-          <div className="border-t border-slate-200 px-4 py-3 md:hidden dark:border-cyan-900">
-            <div className="flex flex-col gap-3">
-              <a href="#features" onClick={() => setOpen(false)}>Features</a>
-              <a href="#how-it-works" onClick={() => setOpen(false)}>How It Works</a>
-              <a href="#pricing" onClick={() => setOpen(false)}>Pricing</a>
-              <Link to="/resources" onClick={() => setOpen(false)}>Resources</Link>
-              <Link to="/community" onClick={() => setOpen(false)}>Community</Link>
-              <Button variant="outline" asChild>
-                <Link to="/login">Log In</Link>
-              </Button>
-              <Button asChild className="bg-cyan-600 hover:bg-cyan-700">
-                <Link to="/signup">Sign Up</Link>
+          <div className="flex flex-col gap-4 border-t border-stone-200 px-5 py-4 md:hidden">
+            {navLinks}
+            <div className="flex gap-4">
+              <Link to="/login" className="text-sm text-stone-600">
+                Log in
+              </Link>
+              <Button asChild className="h-9 rounded-none bg-stone-900 px-4 text-[13px] hover:bg-stone-700">
+                <Link to="/signup">Sign up</Link>
               </Button>
             </div>
           </div>
@@ -120,202 +188,244 @@ const LegacyLanding = () => {
       </header>
 
       <main>
-        <section className="bg-gradient-to-br from-cyan-50 via-white to-violet-50 py-24 dark:from-cyan-900 dark:via-cyan-950 dark:to-violet-950">
-          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+        {/* Hero */}
+        <section className="border-b border-stone-200">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-14 px-5 py-20 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
             <div>
-              <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl md:text-6xl">
-                Stuck between <span className="text-cyan-600 dark:text-cyan-400">Senior and Staff?</span>
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+                Early access · free while we build
+              </p>
+              <h1 className="mt-5 font-display text-[40px] font-medium leading-[1.05] tracking-tight sm:text-[56px]">
+                The gap between Senior and Staff was never more{" "}
+                <em className="font-display italic">code</em>.
               </h1>
-              <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-cyan-100/80">
-                Leap.ai builds you a concrete, step-by-step roadmap from where you are now to the role you
-                actually want — the skills to build, the proof to show, and the milestones to hit, in order.
+              <p className="mt-6 max-w-lg text-[17px] leading-relaxed text-stone-600">
+                It's leverage. It's scope. It's visible proof that you moved a metric that
+                mattered. Leap.ai turns that gap into a working plan — the skills to build,
+                the projects to ship, and the milestones to hit, in that order.
               </p>
-              <div className="mt-8 flex gap-3">
-                <Button asChild className="bg-cyan-600 hover:bg-cyan-700">
-                  <Link to="/onboarding">Start Your Journey <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <div className="mt-9 flex flex-wrap items-center gap-4">
+                <Button
+                  asChild
+                  className="h-11 rounded-none bg-stone-900 px-6 text-sm hover:bg-stone-700"
+                >
+                  <Link to="/onboarding">
+                    Build my roadmap <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
-                <Button variant="outline" asChild>
-                  <Link to="/dashboard">Open Dashboard</Link>
+                <Button
+                  variant="outline"
+                  asChild
+                  className="h-11 rounded-none border-stone-300 bg-transparent px-6 text-sm text-stone-700 hover:bg-stone-100"
+                >
+                  <a href="#sample">See what you get</a>
                 </Button>
               </div>
-              <p className="mt-4 text-sm text-slate-500 dark:text-cyan-100/70">
-                Early access — free while we build. No credit card required.
+              <p className="mt-5 text-[13px] text-stone-500">
+                Free during early access. No card, no spam — delete your account anytime.
               </p>
             </div>
 
-            <div className="relative">
-              <div className="rounded-2xl bg-white p-6 shadow-xl dark:bg-cyan-900">
-                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-600 dark:text-cyan-300">
-                  Sample roadmap · Senior → Staff
-                </p>
-                <div className="mt-4 space-y-3">
-                  {[
-                    ["Phase 1", "Own a cross-team system", "Take end-to-end ownership of one system used by 2+ teams."],
-                    ["Phase 2", "Publish your technical strategy", "Write the RFC that becomes the roadmap others follow."],
-                    ["Phase 3", "Prove leverage", "Ship the thing and show the metric that moved because of you."],
-                  ].map(([phase, title, desc]) => (
-                    <div key={phase} className="rounded-lg border border-slate-200 p-3 dark:border-cyan-800">
-                      <p className="text-xs font-semibold text-cyan-600 dark:text-cyan-300">{phase} — {title}</p>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-cyan-100/80">{desc}</p>
-                    </div>
-                  ))}
+            {/* The roadmap as a printed artifact */}
+            <div id="sample" className="relative self-center">
+              <div className="rotate-[0.5deg] rounded-sm border border-stone-300 bg-white shadow-[6px_8px_0_rgba(28,25,23,0.07)]">
+                <div className="flex items-center justify-between border-b border-stone-200 px-5 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-stone-400">
+                    Leap.ai
+                  </p>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-stone-400">
+                    Roadmap № 0007
+                  </p>
                 </div>
-              </div>
-              <div className="absolute -bottom-6 left-1/2 w-[85%] -translate-x-1/2 rounded-xl bg-white p-5 shadow-lg dark:bg-cyan-900">
-                <p className="text-sm font-semibold text-slate-700 dark:text-cyan-100">
-                  Early access is live and free.
-                </p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-cyan-100/80">
-                  This is the shape of the roadmap the generator actually returns — tell us where you are and
-                  where you want to be. We're still building, so feedback is welcome.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold">Built for the Senior → Staff gap</h2>
-            </div>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {features.map((item) => (
-                <Card key={item.title} className="dark:border-cyan-800 dark:bg-cyan-900/40">
-                  <CardHeader>
-                    <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-cyan-100 text-cyan-700 dark:bg-cyan-800 dark:text-cyan-200">
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <CardTitle>{item.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-600 dark:text-cyan-100/80">{item.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="how-it-works" className="bg-cyan-50 py-20 dark:bg-cyan-900/30">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold">How Leap.ai Works</h2>
-            </div>
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {[
-                { title: "Tell us where you are", desc: "Current role, target role, and timeframe — a 2-minute profile." },
-                { title: "Get your AI roadmap", desc: "Phases, skills, milestones, and resources — in order, built for your gap." },
-                { title: "Execute with proof", desc: "Concrete projects that make your next level visible to hiring teams." },
-                { title: "Get community backup", desc: "A focused group of engineers at the same crossroads." },
-              ].map((step, i) => (
-                <div key={step.title} className="rounded-xl bg-white p-6 text-center shadow-sm dark:bg-cyan-900">
-                  <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-cyan-600 text-white">
-                    {i + 1}
+                <div className="px-5 py-4">
+                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-stone-500">
+                    Senior → Staff · 12 months
+                  </p>
+                  <div className="mt-4 space-y-4">
+                    {phases.map((p, i) => (
+                      <div key={p.n} className="relative flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <span className="font-mono text-[11px] text-stone-400">{p.n}</span>
+                          {i < phases.length - 1 && (
+                            <span className="mt-2 w-px flex-1 bg-stone-200" />
+                          )}
+                        </div>
+                        <div className="pb-2">
+                          <h3 className="text-[15px] font-semibold tracking-tight">{p.title}</h3>
+                          <p className="mt-1 text-[13px] leading-relaxed text-stone-600">{p.desc}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <h3 className="font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm text-slate-600 dark:text-cyan-100/80">{step.desc}</p>
+                </div>
+                <div className="border-t border-stone-200 px-5 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-stone-400">
+                    Generated from your profile — not a mockup
+                  </p>
+                </div>
+              </div>
+              <p className="absolute -right-2 -top-4 rotate-3 font-mono text-[11px] text-[#C2410C] sm:-right-4">
+                ← this is the actual output
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how-it-works" className="border-b border-stone-200">
+          <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+              How it works
+            </p>
+            <h2 className="mt-3 max-w-xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Four steps. No dead ends.
+            </h2>
+            <div className="mt-12 grid gap-px overflow-hidden border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map((s) => (
+                <div key={s.n} className="bg-[#FAF9F7] p-7">
+                  <span className="font-display text-3xl font-medium text-stone-300">{s.n}</span>
+                  <h3 className="mt-4 text-[15px] font-semibold tracking-tight">{s.title}</h3>
+                  <p className="mt-2 text-[13px] leading-relaxed text-stone-600">{s.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section id="pricing" className="py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 text-center">
-              <h2 className="text-3xl font-bold">Start free. Upgrade when you're ready.</h2>
-              <p className="mt-3 text-slate-600 dark:text-cyan-100/80">
-                Early access is free while we build. Paid tiers unlock once checkout goes live.
-              </p>
-            </div>
-            <div className="grid gap-8 lg:grid-cols-3">
-              {[
-                { name: "Early Access", price: "$0", cta: "Start Free", to: "/onboarding", period: "free while we build", features: ["Sample AI roadmap", "Community access", "No credit card"] },
-                { name: "Roadmap Report", price: "₦15,000", cta: "Get Yours", to: "/upgrade", period: "one-time", features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"] },
-                { name: "Pro", price: "₦10,000", cta: "Go Pro", to: "/upgrade", period: "per month, launch pricing", features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support"] },
-              ].map((plan) => (
-                <Card key={plan.name} className="dark:border-cyan-800 dark:bg-cyan-900/40">
-                  <CardHeader>
-                    <CardTitle>{plan.name}</CardTitle>
-                    <CardDescription className="text-3xl font-bold text-slate-900 dark:text-cyan-50">{plan.price}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 text-sm text-slate-600 dark:text-cyan-100/80">
-                      {plan.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> {f}</li>
-                      ))}
-                    </ul>
-                    <p className="mt-3 text-xs text-slate-500 dark:text-cyan-100/70">{plan.period}</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-700">
-                      <Link to={plan.to}>{plan.cta}</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+        {/* Features */}
+        <section id="features" className="border-b border-stone-200">
+          <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+              What's inside
+            </p>
+            <h2 className="mt-3 max-w-xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Built for the Senior → Staff gap. Nothing else.
+            </h2>
+            <div className="mt-12 grid gap-x-14 gap-y-10 md:grid-cols-2">
+              {featureList.map((f) => (
+                <div key={f.n} className="flex gap-5 border-t border-stone-200 pt-5">
+                  <span className="font-mono text-[11px] text-stone-400">{f.n}</span>
+                  <div>
+                    <h3 className="text-[15px] font-semibold tracking-tight">{f.title}</h3>
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-stone-600">{f.desc}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="bg-gradient-to-r from-cyan-600 to-violet-600 py-16 text-center text-white">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold">Ready to see your roadmap?</h2>
-            <p className="mt-4 text-cyan-100">
-              Get a personalized plan in minutes — free during early access.
+        {/* Pricing */}
+        <section id="pricing" className="border-b border-stone-200">
+          <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+              Pricing
+            </p>
+            <h2 className="mt-3 max-w-xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
+              Start free. Pay when it's useful.
+            </h2>
+            <div className="mt-12 grid gap-6 lg:grid-cols-3">
+              {plans.map((plan, i) => (
+                <div
+                  key={plan.name}
+                  className={
+                    i === 1
+                      ? "border border-stone-900 bg-white p-7"
+                      : "border border-stone-300 bg-[#FAF9F7] p-7"
+                  }
+                >
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="font-mono text-[12px] uppercase tracking-[0.18em] text-stone-500">
+                      {plan.name}
+                    </h3>
+                    <p className="font-mono text-[10px] text-stone-400">{plan.period}</p>
+                  </div>
+                  <p className="mt-4 font-display text-4xl font-medium tracking-tight">
+                    {plan.price}
+                  </p>
+                  <ul className="mt-6 space-y-2.5">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-[13px] text-stone-700">
+                        <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-stone-400" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    asChild
+                    className={
+                      i === 1
+                        ? "mt-8 h-10 w-full rounded-none bg-stone-900 text-[13px] hover:bg-stone-700"
+                        : "mt-8 h-10 w-full rounded-none border border-stone-300 bg-transparent text-[13px] text-stone-800 hover:bg-stone-100"
+                    }
+                  >
+                    <Link to={plan.to}>{plan.cta}</Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 text-[12px] text-stone-500">
+              Launch pricing. Checkout goes live the day we flip it — you'll see it happen in the
+              changelog before anyone is charged.
+            </p>
+          </div>
+        </section>
+
+        {/* Closing CTA */}
+        <section className="bg-stone-900">
+          <div className="mx-auto max-w-3xl px-5 py-20 text-center sm:px-8">
+            <h2 className="font-display text-3xl font-medium tracking-tight text-stone-50 sm:text-4xl">
+              Your next level is a list of moves.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-[15px] text-stone-400">
+              Start with the first one — a two-minute profile is all it takes to see yours.
             </p>
             <div className="mt-8">
-              <Button variant="secondary" asChild>
-                <Link to="/onboarding">Discover Your Path</Link>
+              <Button
+                asChild
+                className="h-11 rounded-none bg-stone-50 px-7 text-sm text-stone-900 hover:bg-white"
+              >
+                <Link to="/onboarding">
+                  Build my roadmap <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-slate-900 py-12 text-slate-300">
-        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
-          <div className="col-span-2 lg:col-span-1">
-            <p className="text-xl font-bold text-white">Leap.ai</p>
-            <p className="mt-2 text-sm">Personalized career roadmaps, built by AI.</p>
-          </div>
-          <div>
-            <p className="mb-3 font-semibold text-white">Company</p>
-            <div className="space-y-2 text-sm">
-              <Link to="/about" className="block hover:text-white">About Us</Link>
-              <a href="/#features" className="block hover:text-white">Features</a>
-              <a href="/#pricing" className="block hover:text-white">Pricing</a>
-              <Link to="/career" className="block hover:text-white">Careers</Link>
-              <Link to="/contact" className="block hover:text-white">Contact</Link>
+      {/* Footer */}
+      <footer className="border-t border-stone-200">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+            <div>
+              <p className="font-display text-xl font-semibold tracking-tight">
+                Leap<span className="text-stone-400">.ai</span>
+              </p>
+              <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-stone-600">
+                Built by one person, in the open. Early access is free — your feedback decides
+                what ships next.
+              </p>
             </div>
+            {footerLinks.map((col, i) => (
+              <div key={i} className="grid grid-cols-1 gap-2.5 content-start">
+                {col.map((l) => (
+                  <Link
+                    key={l.label}
+                    to={l.to}
+                    className="text-[13px] text-stone-600 hover:text-stone-900"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
           </div>
-          <div>
-            <p className="mb-3 font-semibold text-white">Resources</p>
-            <div className="space-y-2 text-sm">
-              <a href="/#how-it-works" className="block hover:text-white">How It Works</a>
-              <Link to="/blog" className="block hover:text-white">Blog</Link>
-              <Link to="/dashboard" className="block hover:text-white">Dashboard</Link>
-              <Link to="/community" className="block hover:text-white">Community</Link>
-              <Link to="/faq" className="block hover:text-white">FAQ</Link>
-              <Link to="/support" className="block hover:text-white">Support</Link>
-            </div>
-          </div>
-          <div>
-            <p className="mb-3 font-semibold text-white">Legal</p>
-            <div className="space-y-2 text-sm">
-              <Link to="/privacy" className="block hover:text-white">Privacy Policy</Link>
-              <Link to="/terms" className="block hover:text-white">Terms of Service</Link>
-              <Link to="/cookies" className="block hover:text-white">Cookie Policy</Link>
-            </div>
-          </div>
+          <p className="mt-10 border-t border-stone-200 pt-6 font-mono text-[11px] text-stone-400">
+            © {new Date().getFullYear()} Leap.ai — made with a keyboard, not a template.
+          </p>
         </div>
       </footer>
-
-      <section className="bg-slate-950 py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Leap.ai. All rights reserved.
-      </section>
-
     </div>
   );
 };
