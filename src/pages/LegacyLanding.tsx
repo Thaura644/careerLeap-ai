@@ -10,7 +10,6 @@ import {
   Lightbulb,
   Zap,
   ArrowRight,
-  Quote,
   CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Feature = {
   icon: typeof Target;
@@ -33,39 +31,39 @@ type Feature = {
 const features: Feature[] = [
   {
     icon: Target,
-    title: "AI-Powered Roadmaps",
+    title: "Personalized Roadmaps",
     description:
-      "Craft a personalized learning plan tailored to your career objectives.",
+      "A step-by-step plan from your current role to your target role — skills, milestones, and proof.",
   },
   {
     icon: BrainCircuit,
-    title: "AI-Driven Insights",
+    title: "Skill-Gap Analysis",
     description:
-      "Leverage AI insights to prioritize skills and make informed career moves.",
+      "Know exactly what's missing between you and the role you want, in priority order.",
   },
   {
     icon: HeartHandshake,
-    title: "Mentor Network",
+    title: "Real-World Proof",
     description:
-      "Connect with experienced professionals for guidance and support.",
+      "Concrete projects and case studies that make your next level visible to hiring teams.",
   },
   {
     icon: Users,
     title: "Community Support",
     description:
-      "Join a focused community to share wins, advice, and opportunities.",
+      "A focused community of engineers at the same crossroads — wins, advice, and accountability.",
   },
   {
     icon: Lightbulb,
-    title: "Skill Development",
+    title: "Curated Learning",
     description:
-      "Access workshops and curated resources to build market-ready skills.",
+      "Workshops and resources matched to your roadmap, not a generic course catalog.",
   },
   {
     icon: Zap,
-    title: "Overcome Challenges",
+    title: "Interview Prep",
     description:
-      "Get tools that help build confidence and reduce career uncertainty.",
+      "Targeted practice for the interviews that stand between you and the offer.",
   },
 ];
 
@@ -126,10 +124,11 @@ const LegacyLanding = () => {
           <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
             <div>
               <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl md:text-6xl">
-                Accelerate Your Career Growth <span className="text-cyan-600 dark:text-cyan-400">with AI</span>
+                Stuck between <span className="text-cyan-600 dark:text-cyan-400">Senior and Staff?</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg text-slate-600 dark:text-cyan-100/80">
-                Unlock your potential with personalized career roadmaps and AI-driven insights.
+                Leap.ai builds you a concrete, step-by-step roadmap from where you are now to the role you
+                actually want — the skills to build, the proof to show, and the milestones to hit, in order.
               </p>
               <div className="mt-8 flex gap-3">
                 <Button asChild className="bg-cyan-600 hover:bg-cyan-700">
@@ -140,26 +139,20 @@ const LegacyLanding = () => {
                 </Button>
               </div>
               <p className="mt-4 text-sm text-slate-500 dark:text-cyan-100/70">
-                No credit card required · 14-day free trial · Cancel anytime
+                Early access — free while we build. No credit card required.
               </p>
             </div>
 
             <div className="relative">
               <img src="/career.webp" alt="Career growth" className="h-full w-full rounded-2xl object-cover shadow-xl" />
               <div className="absolute -bottom-6 left-1/2 w-[85%] -translate-x-1/2 rounded-xl bg-white p-5 shadow-lg dark:bg-cyan-900">
-                <p className="italic text-slate-600 dark:text-cyan-100/80">
-                  "Leap.ai gave me clarity and confidence to pursue opportunities I thought were out of reach."
+                <p className="text-sm font-semibold text-slate-700 dark:text-cyan-100">
+                  Early access is live and free.
                 </p>
-                <div className="mt-4 flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src="/jm.jpg" alt="James Thaura" />
-                    <AvatarFallback>JT</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold">James Thaura</p>
-                    <p className="text-sm text-slate-500 dark:text-cyan-100/70">Software Engineer</p>
-                  </div>
-                </div>
+                <p className="mt-1 text-sm text-slate-600 dark:text-cyan-100/80">
+                  Tell us where you are and where you want to be, and the roadmap generator returns a real
+                  plan — no hype, no invented results. We're still building, so feedback is welcome.
+                </p>
               </div>
             </div>
           </div>
@@ -213,14 +206,14 @@ const LegacyLanding = () => {
             </div>
             <div className="grid gap-8 lg:grid-cols-3">
               {[
-                { name: "Starter", price: "$0", cta: "Start Free" },
-                { name: "Professional", price: "$29", cta: "Choose Pro" },
-                { name: "Ultimate", price: "$99", cta: "Choose Ultimate" },
+                { name: "Early Access", price: "$0", cta: "Start Free", period: "free while we build" },
+                { name: "Roadmap Report", price: "$15", cta: "Coming Soon", period: "one-time, after checkout" },
+                { name: "Pro", price: "$12", cta: "Coming Soon", period: "per month, launch pricing" },
               ].map((plan) => (
                 <Card key={plan.name} className="dark:border-cyan-800 dark:bg-cyan-900/40">
                   <CardHeader>
                     <CardTitle>{plan.name}</CardTitle>
-                    <CardDescription className="text-3xl font-bold text-slate-900 dark:text-cyan-50">{plan.price}/mo</CardDescription>
+                    <CardDescription className="text-3xl font-bold text-slate-900 dark:text-cyan-50">{plan.price}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-slate-600 dark:text-cyan-100/80">
@@ -228,9 +221,10 @@ const LegacyLanding = () => {
                       <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Skills tracking</li>
                       <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Community support</li>
                     </ul>
+                    <p className="mt-3 text-xs text-slate-500 dark:text-cyan-100/70">{plan.period}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full bg-cyan-600 hover:bg-cyan-700">{plan.cta}</Button>
+                    <Button className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={plan.cta === "Coming Soon"}>{plan.cta}</Button>
                   </CardFooter>
                 </Card>
               ))}
@@ -240,9 +234,9 @@ const LegacyLanding = () => {
 
         <section className="bg-gradient-to-r from-cyan-600 to-violet-600 py-16 text-center text-white">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold">Ready to Empower Your Career Journey?</h2>
+            <h2 className="text-3xl font-bold">Ready to see your roadmap?</h2>
             <p className="mt-4 text-cyan-100">
-              Use the landing experience you had before, plus the newer dashboard and AI workflows.
+              Get a personalized plan in minutes — free during early access.
             </p>
             <div className="mt-8">
               <Button variant="secondary" asChild>
@@ -257,7 +251,7 @@ const LegacyLanding = () => {
         <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 sm:px-6 lg:grid-cols-4 lg:px-8">
           <div className="col-span-2 lg:col-span-1">
             <p className="text-xl font-bold text-white">Leap.ai</p>
-            <p className="mt-2 text-sm">Empowering your career journey with AI.</p>
+            <p className="mt-2 text-sm">Personalized career roadmaps, built by AI.</p>
           </div>
           <div>
             <p className="mb-3 font-semibold text-white">Company</p>
@@ -295,9 +289,6 @@ const LegacyLanding = () => {
         © {new Date().getFullYear()} Leap.ai. All rights reserved.
       </section>
 
-      <section className="sr-only">
-        <Quote />
-      </section>
     </div>
   );
 };
