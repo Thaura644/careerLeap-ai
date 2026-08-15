@@ -24,16 +24,34 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Paystack payments for Leap.ai, gated behind a live-payments flag.
+ * Paystack payments for Leap.ai, gated behind a payments-mode flag.
  *
- * <p>The checkout on /upgrade stays inert until the human explicitly arms it:
+ * <p>The checkout on /upgrade stays inert until the human arms it. There are
+ * three modes, in increasing order of how real the money is:
  * <ul>
- *   <li>{@code PAYMENTS_MODE} — {@code off} (default) or {@code live}. Only
- *       {@code live} arms the checkout; anything else returns it disabled.</li>
- *   <li>{@code PAYSTACK_PUBLIC_KEY} — sent to the browser for the inline popup.</li>
- *   <li>{@code PAYSTACK_SECRET_KEY} — server-side only; falls back to
- *       {@code PAYSTACK_LIVE_SECRET} for this company's existing .env.</li>
+ *   <li>{@code simulate} — no Paystack at all. The frontend renders
+ *       "Simulate payment" buttons that call verify() directly; any non-blank
+ *       reference succeeds and the plan entitlement is granted exactly as a
+ *       real charge would. Zero keys, zero money, perfect for CI and for
+ *       proving the verify/entitlement matrix end-to-end.</li>
+ *   <li>{@code sandbox} — the real Paystack API with <b>test</b> keys
+ *       ({@code sk_test_…}/{@code pk_test_…}). The checkout runs for real
+ *       against Paystack's test environment: no money moves, and the human can
+ *       complete a genuine test transaction with Paystack's test card.</li>
+ *   <li>{@code live} — the real Paystack API with <b>live</b> keys
+ *       ({@code sk_live_…}/{@code pk_live_…}). Real customer money. Charges,
+ *       refunds and tax obligations belong to the human, not the agent.</li>
  * </ul>
+ *
+ * <p><b>Key-kind guard (the safety rail):</b> the mode and the keys must agree.
+ * Live mode refuses to arm with test keys, and sandbox mode refuses test-key
+ * transactions with live keys. This is what makes arming safe to test: a
+ * misconfigured flag can never route real money through test keys or silently
+ * grant entitlements on fake charges.
+ *
+ * <p>Env vars: {@code PAYMENTS_MODE} ({@code off} default, {@code simulate},
+ * {@code sandbox}, {@code live}), {@code PAYSTACK_PUBLIC_KEY} and
+ * {@code PAYSTACK_SECRET_KEY} (falls back to {@code PAYSTACK_LIVE_SECRET}).
  *
  * <p>Verified charges grant the plan on the user's database record — real,
  * durable entitlements, not an in-memory map.
@@ -60,7 +78,7 @@ public class PaymentService {
             @Value("${PAYSTACK_SECRET_KEY:${PAYSTACK_LIVE_SECRET:}}") String secretKey) {
         this.objectMapper = objectMapper;
         this.users = users;
-        this.mode = mode == null ? "off" : mode.trim().toLowerCase();
+        this.mode = normalize(mode);
         this.publicKey = publicKey == null ? "" : publicKey.trim();
         this.secretKey = secretKey == null ? "" : secretKey.trim();
         this.httpClient = HttpClient.newBuilder()
@@ -68,9 +86,40 @@ public class PaymentService {
                 .build();
     }
 
-    /** True only when the human has armed live payments (mode=live + keys present). */
+    private static String normalize(String v) {
+        if (v == null) return "off";
+        v = v.trim().toLowerCase();
+        return switch (v) {
+            case "simulate", "sandbox", "live" -> v;
+            default -> "off";
+        };
+    }
+
+    /** True only when the mode is armed AND the keys match the mode's kind. */
     public boolean isArmed() {
-        return "live".equals(mode) && !publicKey.isEmpty() && !secretKey.isEmpty();
+        return switch (mode) {
+            case "simulate" -> true; // no keys required; money never moves
+            case "sandbox" -> !publicKey.isEmpty() && !secretKey.isEmpty()
+                    && "test".equals(keyKind());
+            case "live" -> !publicKey.isEmpty() && !secretKey.isEmpty()
+                    && "live".equals(keyKind());
+            default -> false;
+        };
+    }
+
+    /** The kind of keys present: "live", "test", "none", or "mismatch" (public/secret disagree). */
+    public String keyKind() {
+        boolean pubLive = publicKey.startsWith("pk_live_");
+        boolean pubTest = publicKey.startsWith("pk_test_");
+        boolean secLive = secretKey.startsWith("sk_live_");
+        boolean secTest = secretKey.startsWith("sk_test_");
+        boolean pubNone = publicKey.isEmpty();
+        boolean secNone = secretKey.isEmpty();
+        if (pubNone && secNone) return "none";
+        if ((pubLive || pubNone) && secLive) return "live";
+        if ((pubTest || pubNone) && secTest) return "test";
+        if (pubNone || secNone) return "none"; // one side missing — can't tell yet
+        return "mismatch";
     }
 
     /** Paystack-supported currencies; amounts are in each currency's minor unit
@@ -110,14 +159,72 @@ public class PaymentService {
     }
 
     /**
-     * Verifies a Paystack transaction reference server-side and grants the plan
-     * on the authenticated user's record. Only runs when payments are armed.
+     * Readiness report for the human arming decision. Shows what mode is set,
+     * whether checkout would actually work, and — crucially — what kind of keys
+     * are configured, so nobody flips to live with test keys (or vice versa).
+     * Never leaks key material: only prefixes.
+     */
+    public Map<String, Object> readiness() {
+        String kind = keyKind();
+        List<String> warnings = new ArrayList<>();
+        String armed = isArmed() ? "yes" : "no";
+        switch (mode) {
+            case "simulate" -> warnings.add("Simulation mode: checkout works with simulated payments. No money moves, no Paystack API calls.");
+            case "sandbox" -> {
+                if (!"test".equals(kind)) {
+                    armed = "no";
+                    warnings.add("Sandbox mode requires TEST keys (sk_test_…/pk_test_…). Found: " + describeKeys(kind) + ".");
+                } else {
+                    warnings.add("Sandbox mode: real Paystack API with test keys. Use the test card 4084 0840 8408 4081. No real money moves.");
+                }
+            }
+            case "live" -> {
+                if (!"live".equals(kind)) {
+                    armed = "no";
+                    warnings.add("LIVE mode requires LIVE keys (sk_live_…/pk_live_…). Found: " + describeKeys(kind) + " — refusing to arm so no real money can flow.");
+                } else {
+                    warnings.add("LIVE mode with live keys: REAL customer money will move. Charges, refunds and tax obligations are the human's.");
+                }
+            }
+            default -> {
+                armed = "no";
+                warnings.add("Mode is \"off\": checkout is gated. Set PAYMENTS_MODE to simulate (dry run), sandbox (test keys), or live (real money).");
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("mode", mode);
+        result.put("armed", armed);
+        result.put("keyKind", kind);
+        result.put("publicKeyPrefix", publicKey.isEmpty() ? "" : publicKey.substring(0, Math.min(12, publicKey.length())) + "…");
+        result.put("secretKeyPrefix", secretKey.isEmpty() ? "" : secretKey.substring(0, Math.min(12, secretKey.length())) + "…");
+        result.put("warnings", warnings);
+        return result;
+    }
+
+    private static String describeKeys(String kind) {
+        return switch (kind) {
+            case "live" -> "live keys";
+            case "test" -> "test keys";
+            case "mismatch" -> "a mismatch (public and secret keys disagree)";
+            default -> "no keys";
+        };
+    }
+
+    /**
+     * Verifies a payment and grants the plan on the authenticated user's record.
+     * In {@code simulate} mode any non-blank reference succeeds (plan comes from
+     * the request body); in {@code sandbox}/{@code live} the reference is checked
+     * against the real Paystack API and the plan comes from Paystack's metadata.
      */
     @Transactional
-    public Map<String, Object> verify(User user, String reference) {
+    public Map<String, Object> verify(User user, String reference, String bodyPlan) {
+        if (mode.equals("simulate")) {
+            return verifySimulated(user, reference, bodyPlan);
+        }
         if (!isArmed()) {
             return Map.of("verified", false,
-                    "error", "payments not armed — set PAYMENTS_MODE=live and the Paystack keys");
+                    "error", "payments not armed — mode is " + mode + " with " + describeKeys(keyKind())
+                            + " keys; see /api/payments/readiness");
         }
         if (reference == null || reference.isBlank()) {
             return Map.of("verified", false, "error", "reference required");
@@ -140,14 +247,12 @@ public class PaymentService {
                 return Map.of("verified", false, "status", shown);
             }
             String planId = data.path("metadata").path("plan").asText("pro-monthly");
-            // Only the Pro plans grant the Pro entitlement. The Roadmap Report is
-            // a one-time product and must never flip a subscription.
-            boolean grantsPro = "pro-monthly".equals(planId) || "pro-annual".equals(planId);
+            boolean grantsPro = isProPlan(planId);
             if (grantsPro) {
                 user.setPlan(User.Plan.PRO);
                 users.save(user);
             }
-            log.info("[payments] VERIFIED live charge {} for {} (plan {}, grantedPro {})",
+            log.info("[payments] VERIFIED charge {} for {} (plan {}, grantedPro {})",
                     reference, user.getEmail(), planId, grantsPro);
             return Map.of("verified", true, "pro", grantsPro,
                     "email", user.getEmail(), "reference", reference, "plan", planId,
@@ -156,6 +261,29 @@ public class PaymentService {
             log.warn("[payments] verify failed for {}: {}", reference, e.getMessage());
             return Map.of("verified", false, "error", e.getMessage());
         }
+    }
+
+    private Map<String, Object> verifySimulated(User user, String reference, String bodyPlan) {
+        if (reference == null || reference.isBlank()) {
+            return Map.of("verified", false, "error", "reference required");
+        }
+        String planId = bodyPlan == null || bodyPlan.isBlank() ? "pro-monthly" : bodyPlan.trim();
+        boolean grantsPro = isProPlan(planId);
+        if (grantsPro) {
+            user.setPlan(User.Plan.PRO);
+            users.save(user);
+        }
+        log.info("[payments] SIMULATED verify {} for {} (plan {}, grantedPro {})",
+                reference, user.getEmail(), planId, grantsPro);
+        return Map.of("verified", true, "simulated", true, "pro", grantsPro,
+                "email", user.getEmail(), "reference", reference, "plan", planId,
+                "grantedAt", Instant.now().toString());
+    }
+
+    /** Only the Pro plans grant the Pro entitlement. The Roadmap Report is a
+     *  one-time product and must never flip a subscription. */
+    private static boolean isProPlan(String planId) {
+        return "pro-monthly".equals(planId) || "pro-annual".equals(planId);
     }
 
     public boolean isPro(User user) {

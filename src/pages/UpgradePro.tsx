@@ -30,6 +30,30 @@ type PaymentStatus = {
   plans: Plan[];
 };
 
+/** Short, honest description of the current payments mode for the banner. */
+function modeNotice(status: PaymentStatus | null): { tone: "info" | "warn" | "live"; text: string } | null {
+  if (!status) return null;
+  switch (status.mode) {
+    case "simulate":
+      return {
+        tone: "warn",
+        text: "DRY RUN — payments are in simulation mode. No money moves: the buttons below simulate a successful charge and prove the Pro entitlement flow end-to-end.",
+      };
+    case "sandbox":
+      return {
+        tone: "warn",
+        text: "SANDBOX — checkout is live against Paystack's test environment. Use the test card 4084 4084 4084 4081 (any future expiry, any CVV). No real money moves.",
+      };
+    case "live":
+      return {
+        tone: "live",
+        text: "Live checkout — real customer money. This is the production payment flow.",
+      };
+    default:
+      return null;
+  }
+}
+
 function loadPaystackScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if ((window as any).PaystackPop) return resolve();
@@ -91,10 +115,46 @@ const UpgradePro = () => {
   const reportPrice = useMemo(() => priceFor(reportPlan), [reportPlan, currency, status]);
   const proPeriod = billing === "annual" ? "/year" : "/month";
   const proCtaSuffix = billing === "annual" ? "/yr" : "/mo";
+  const notice = modeNotice(status);
+  const simulated = status?.mode === "simulate";
+  const ctaLabel = (fallback: string, price: string) =>
+    !status?.enabled ? "Checkout coming soon" : simulated ? `Simulate payment — ${price}` : `${fallback} — ${price}`;
+
+  /** Simulate mode: no Paystack — call verify() directly and grant the plan. */
+  const simulatePayment = async (plan: Plan) => {
+    if (!status?.enabled || status.mode !== "simulate") return;
+    if (!email.trim()) {
+      setMessage("Enter your email first.");
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const reference = `sim_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      const res = await apiPost<{ verified: boolean; simulated?: boolean; pro?: boolean }>("/payments/verify", {
+        reference,
+        plan: plan.id,
+        email: email.trim(),
+      });
+      if (res.verified) {
+        setPro(true);
+        setMessage(res.simulated ? "Simulated payment verified — Pro activated (dry run)." : "Payment verified — Pro activated. Thank you!");
+      } else {
+        setMessage("Payment could not be verified.");
+      }
+    } catch {
+      setMessage("Verification failed.");
+    }
+    setBusy(false);
+  };
 
   const startCheckout = async (plan: Plan) => {
     if (!status?.enabled) {
       setMessage("Checkout is not armed yet — payments are gated until the human flips the flag.");
+      return;
+    }
+    if (status.mode === "simulate") {
+      await simulatePayment(plan);
       return;
     }
     if (!email.trim()) {
@@ -148,6 +208,19 @@ const UpgradePro = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Unlock unlimited roadmaps, goal tracking, and community support.
           </p>
+          {notice && (
+            <div
+              className={`mt-4 mx-auto max-w-2xl rounded-md px-4 py-3 text-sm text-left ${
+                notice.tone === "live"
+                  ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                  : notice.tone === "warn"
+                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+                    : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {notice.text}
+            </div>
+          )}
           {status && !status.enabled && (
             <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
               Payments are gated right now (PAYMENTS_MODE is "{status.mode}") — checkout appears once the human arms it.
@@ -205,7 +278,7 @@ const UpgradePro = () => {
                 disabled={!status?.enabled || busy}
                 onClick={() => reportPlan && startCheckout(reportPlan)}
               >
-                {status?.enabled ? `Get yours — ${reportPrice.display}` : "Checkout coming soon"}
+                {ctaLabel("Get yours", reportPrice.display)}
               </Button>
             </CardFooter>
           </Card>
@@ -288,7 +361,7 @@ const UpgradePro = () => {
                 disabled={!status?.enabled || busy}
                 onClick={() => proPlan && startCheckout(proPlan)}
               >
-                {status?.enabled ? `Go Pro — ${proPrice.display}${proCtaSuffix}` : "Checkout coming soon"}
+                {ctaLabel("Go Pro", `${proPrice.display}${proCtaSuffix}`)}
               </Button>
             </CardFooter>
           </Card>
@@ -334,7 +407,7 @@ const UpgradePro = () => {
             disabled={!status?.enabled || busy}
             onClick={() => proPlan && startCheckout(proPlan)}
           >
-            {status?.enabled ? `Upgrade to Pro — ${proPrice.display}${proCtaSuffix}` : "Upgrade to Pro (coming soon)"}
+            {ctaLabel("Upgrade to Pro", `${proPrice.display}${proCtaSuffix}`)}
           </Button>
         </div>
       </div>

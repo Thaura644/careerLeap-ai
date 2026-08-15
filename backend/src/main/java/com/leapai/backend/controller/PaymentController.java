@@ -27,11 +27,20 @@ public class PaymentController {
         return new LinkedHashMap<>(paymentService.status());
     }
 
-    /** Server-side verification of a Paystack reference; grants the plan on the user's record. */
+    /** Human-facing readiness report: mode, whether armed, and what kind of keys
+     *  are configured (never the key material itself). */
+    @GetMapping("/readiness")
+    public Map<String, Object> readiness() {
+        return new LinkedHashMap<>(paymentService.readiness());
+    }
+
+    /** Server-side verification of a payment reference; grants the plan on the
+     *  user's record. In simulate mode the plan comes from the request body. */
     @PostMapping("/verify")
     public Map<String, Object> verify(@RequestBody Map<String, Object> body) {
         String reference = String.valueOf(body.getOrDefault("reference", ""));
-        return new LinkedHashMap<>(paymentService.verify(UserContext.require(), reference));
+        String plan = String.valueOf(body.getOrDefault("plan", ""));
+        return new LinkedHashMap<>(paymentService.verify(UserContext.require(), reference, plan));
     }
 
     /** Whether the authenticated user holds a Pro grant (persisted on their record). */
