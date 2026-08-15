@@ -28,10 +28,16 @@ import java.util.Map;
  *       over the user's own roadmap/goals/catalog for chat. Fallbacks are
  *       marked {@code "source": "engine"} — never "mock", never presented as
  *       AI output.</li>
- *   <li>{@code LLM_BASE_URL} — default {@code https://api.deepseek.com}.</li>
- *   <li>{@code LLM_MODEL} — default {@code deepseek-chat}.</li>
+ *   <li>{@code LLM_BASE_URL} — default {@code https://openrouter.ai/api/v1}.</li>
+ *   <li>{@code LLM_MODEL} — default {@code google/gemma-4-31b-it:free}.</li>
  *   <li>{@code LLM_TIMEOUT_SECONDS} — default 60.</li>
  * </ul>
+ *
+ * <p><b>Free models only.</b> The company key is an OpenRouter key to be used
+ * exclusively with free models. When the base URL is OpenRouter, a configured
+ * model that does not end in {@code :free} is refused (the service behaves as
+ * if unconfigured and uses the engine fallback, with a warning) — the key can
+ * never be silently pointed at a paid model.
  */
 @Service
 public class LlmService {
@@ -68,25 +74,38 @@ public class LlmService {
             RoadmapEngine roadmapEngine,
             RetrievalChatService retrievalChat,
             @Value("${LLM_API_KEY:}") String apiKey,
-            @Value("${LLM_BASE_URL:https://api.deepseek.com}") String baseUrl,
-            @Value("${LLM_MODEL:deepseek-chat}") String model,
+            @Value("${LLM_BASE_URL:https://openrouter.ai/api/v1}") String baseUrl,
+            @Value("${LLM_MODEL:google/gemma-4-31b-it:free}") String model,
             @Value("${LLM_TIMEOUT_SECONDS:60}") int timeoutSeconds) {
         this.objectMapper = objectMapper;
         this.roadmapEngine = roadmapEngine;
         this.retrievalChat = retrievalChat;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.baseUrl = (baseUrl == null || baseUrl.isBlank())
-                ? "https://api.deepseek.com"
+                ? "https://openrouter.ai/api/v1"
                 : baseUrl.replaceAll("/+$", "");
-        this.model = model == null || model.isBlank() ? "deepseek-chat" : model;
+        this.model = model == null || model.isBlank() ? "google/gemma-4-31b-it:free" : model.trim();
         this.timeoutSeconds = timeoutSeconds > 0 ? timeoutSeconds : 60;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
                 .build();
+        if (isOpenRouter() && !this.model.endsWith(":free")) {
+            log.warn("[llm] REFUSING model '{}' — OpenRouter key is for FREE models only. "
+                    + "Using the deterministic engine instead of this model.", this.model);
+        }
     }
 
+    private boolean isOpenRouter() {
+        return baseUrl.contains("openrouter.ai");
+    }
+
+    /** Configured only when a key exists AND (not OpenRouter OR the model is free).
+     *  This is the free-models-only guard: with the OpenRouter key, a paid model
+     *  is never called — the service falls back to the deterministic engine. */
     public boolean isConfigured() {
-        return !apiKey.isEmpty();
+        if (apiKey.isEmpty()) return false;
+        if (isOpenRouter() && !model.endsWith(":free")) return false;
+        return true;
     }
 
     /**

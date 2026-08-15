@@ -77,8 +77,8 @@ in-memory. Plans/prices are defined once in `PaymentService.status()` (kobo, NGN
 | Variable | Default | Purpose |
 |---|---|---|
 | `LLM_API_KEY` | *(unset)* | Provider key. When unset (or on failure), **real deterministic logic** runs instead: the `RoadmapEngine` for roadmaps and a retrieval responder over the user's own data for chat. Both are marked `"source": "engine"` — never "mock". |
-| `LLM_BASE_URL` | `https://api.deepseek.com` | Any OpenAI-compatible provider. |
-| `LLM_MODEL` | `deepseek-chat` | Model id on the provider. |
+| `LLM_BASE_URL` | `https://openrouter.ai/api/v1` | Any OpenAI-compatible provider. |
+| `LLM_MODEL` | `google/gemma-4-31b-it:free` | Model id on the provider. **Free models only:** the company key is an OpenRouter key; when the base URL is OpenRouter a model that does not end in `:free` is refused (engine fallback + warning), so the key can never hit a paid model. |
 | `LLM_TIMEOUT_SECONDS` | `60` | Request timeout. |
 
 Roadmap generation (persists the result):
