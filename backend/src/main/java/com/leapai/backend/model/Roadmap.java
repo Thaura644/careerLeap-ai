@@ -5,18 +5,15 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.Table;
-import java.time.Instant;
-
-/**
- * A persisted career roadmap. Content is the JSON payload the roadmap engine
- * (or LLM) produced, kept so a user's roadmap survives restarts and the
- * dashboard can show real progress against it.
- */
-@Entity
-@Table(name = "roadmaps")
-public class Roadmap {
+import java.time.Instant;    /**
+     * A persisted career roadmap. Content is the JSON payload the roadmap engine
+     * (or LLM) produced, kept so a user's roadmap survives restarts and the
+     * dashboard can show real progress against it.
+     */
+    @Entity
+    @Table(name = "roadmaps")
+    public class Roadmap {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,8 +38,13 @@ public class Roadmap {
     @Column(nullable = false, length = 16)
     private String source;
 
-    @Lob
-    @Column(nullable = false)
+    /**
+     * Plain TEXT, not a LOB: Hibernate 5.6 maps {@code @Lob String} to Postgres
+     * {@code oid} large objects, which cannot be streamed through Supabase's
+     * connection pooler ("Unable to access lob stream"). The roadmap JSON is a
+     * few KB, so TEXT is the right type and reads cleanly over the pooler.
+     */
+    @Column(nullable = false, columnDefinition = "text")
     private String content;
 
     @Column(nullable = false)
