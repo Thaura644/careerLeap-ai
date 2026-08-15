@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, ExternalLink, Loader2, RefreshCw } from "lucide-react";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { useAI } from "@/context/AIContext";
 import { Link } from "react-router-dom";
 
@@ -38,34 +38,57 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    // Build the request from the user's real profile (saved during onboarding).
-    // The backend merges whatever's missing with the user's saved profile, so
-    // an empty profile still yields a real roadmap — just not one personalized
-    // to role names the user never entered.
-    const request = {
-      currentRole: profile?.currentRole || undefined,
-      targetRole: profile?.targetRole || undefined,
-      timeframe: profile?.timeframe || undefined,
-      industry: profile?.industry || undefined,
-      yearsExperience: profile?.yearsExperience || undefined,
-      focusAreas: profile?.interests?.length ? profile.interests.slice(0, 3) : undefined,
-    };
-    apiPost<RoadmapResponse>("/insights/roadmap", request)
-      .then((res) => {
-        if (!cancelled) {
-          if (res.roadmap?.phases?.length) {
-            setRoadmap(res.roadmap);
-          } else {
-            setError("The roadmap came back empty. Please try again.");
+    // Load the saved roadmap first (instant, no LLM cost) — only generate a
+    // fresh one when the user has none. This makes the dashboard fast instead
+    // of burning an LLM call on every visit.
+    const tryLoad = () => {
+      apiGet<{ roadmap?: RoadmapResponse["roadmap"] }>("/insights/roadmap")
+        .then((res) => {
+          if (!cancelled) {
+            if (res.roadmap?.phases?.length) {
+              setRoadmap(res.roadmap);
+              setLoading(false);
+            } else {
+              generate();
+            }
           }
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError("Could not reach the server. It may be waking up — please retry.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+        })
+        .catch(() => {
+          if (!cancelled) generate();
+        });
+    };
+    const generate = () => {
+      if (cancelled) return;
+      // Build the request from the user's real profile (saved during onboarding).
+      // The backend merges whatever's missing with the user's saved profile, so
+      // an empty profile still yields a real roadmap — just not one personalized
+      // to role names the user never entered.
+      const request = {
+        currentRole: profile?.currentRole || undefined,
+        targetRole: profile?.targetRole || undefined,
+        timeframe: profile?.timeframe || undefined,
+        industry: profile?.industry || undefined,
+        yearsExperience: profile?.yearsExperience || undefined,
+        focusAreas: profile?.interests?.length ? profile.interests.slice(0, 3) : undefined,
+      };
+      apiPost<RoadmapResponse>("/insights/roadmap", request)
+        .then((res) => {
+          if (!cancelled) {
+            if (res.roadmap?.phases?.length) {
+              setRoadmap(res.roadmap);
+            } else {
+              setError("The roadmap came back empty. Please try again.");
+            }
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setError("Could not reach the server. It may be waking up — please retry.");
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    };
+    tryLoad();
     return () => {
       cancelled = true;
     };

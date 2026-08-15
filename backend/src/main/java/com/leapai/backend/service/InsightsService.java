@@ -57,6 +57,24 @@ public class InsightsService {
         return result;
     }
 
+    /** The most recently generated roadmap, deserialized, or {@code null}. */
+    public Map<String, Object> latestRoadmap(User user) {
+        Roadmap roadmap = roadmaps.findFirstByUserIdOrderByCreatedAtDesc(user.getId()).orElse(null);
+        if (roadmap == null) {
+            return Map.of("roadmap", null);
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            Map<String, Object> content = objectMapper.readValue(roadmap.getContent(),
+                    new TypeReference<Map<String, Object>>() {});
+            result.put("roadmap", content);
+        } catch (Exception e) {
+            result.put("roadmap", null);
+        }
+        result.put("source", "saved");
+        return result;
+    }
+
     @Transactional
     public Map<String, Object> generateRoadmap(User user, Map<String, Object> profile) {
         Map<String, Object> merged = new LinkedHashMap<>(profile);

@@ -12,7 +12,7 @@ interface DashboardHeaderProps {
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRoadmapGenerated }) => {
-  const { userName, loading } = useDashboard();
+  const { userName, loading, hasRoadmap } = useDashboard();
   const { profile } = useAI();
   const { toast } = useToast();
   const [generating, setGenerating] = useState(false);
@@ -83,9 +83,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRoadmapGener
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Generating…
           </>
-        ) : (
+        ) : hasRoadmap ? (
           <>
             Regenerate Roadmap <ArrowUpRight className="ml-2 h-4 w-4" />
+          </>
+        ) : (
+          <>
+            Generate my roadmap <ArrowUpRight className="ml-2 h-4 w-4" />
           </>
         )}
       </Button>

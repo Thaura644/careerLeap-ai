@@ -27,6 +27,16 @@ public class AiInsightsController {
     }
 
     /**
+     * The user's most recently generated roadmap, if one exists. Lets the
+     * dashboard load instantly instead of regenerating on every visit.
+     * Returns {@code {"roadmap": null}} when the user has no roadmap yet.
+     */
+    @GetMapping("/roadmap")
+    public Map<String, Object> getRoadmap() {
+        return insightsService.latestRoadmap(UserContext.require());
+    }
+
+    /**
      * Generate (and persist) a personalized career roadmap.
      * Profile is optional; missing fields fall back to the saved profile.
      * Response carries {@code source}: {@code llm} or {@code engine} — never mock.
