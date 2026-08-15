@@ -34,6 +34,12 @@ const Onboarding = () => {
   const [timeframe, setTimeframe] = useState("12 months");
   const [assessedSkills, setAssessedSkills] = useState<string[]>([]);
   const [resumeSkills, setResumeSkills] = useState<ResumeSkill[]>([]);
+  const [learningFormats, setLearningFormats] = useState<string[]>([
+    "Video Courses",
+    "Hands-on Projects & Coding Practice",
+  ]);
+  const [weeklyCommitment, setWeeklyCommitment] = useState("3–6 hours");
+  const [learningStyle, setLearningStyle] = useState("Project-driven");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -47,6 +53,9 @@ const Onboarding = () => {
       industry,
       timeframe,
       interests: assessedSkills.join(", "),
+      learningFormats: learningFormats.join(", "),
+      weeklyCommitment,
+      learningStyle,
     });
   };
 
@@ -253,35 +262,83 @@ const Onboarding = () => {
               {step === 5 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Learning Preferences</h2>
+                  <p className="text-sm text-muted-foreground -mt-3">
+                    These are used for real — they shape your roadmap's pace, the resources the
+                    library surfaces, and what the roadmap recommends.
+                  </p>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Preferred Learning Formats</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {[
-                          "Video Courses",
-                          "Interactive Tutorials",
-                          "Books & Documentation",
-                          "Articles & Blog Posts",
-                          "Podcasts",
-                          "Live Workshops",
-                        ].map((format) => (
-                          <div key={format} className="flex items-center space-x-2">
+                  <div className="space-y-2">
+                    <Label>Preferred Learning Formats</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {[
+                        { name: "Video Courses", desc: "Library courses and video series" },
+                        { name: "Books & Documentation", desc: "eBooks, docs, and reference guides" },
+                        { name: "Articles & Blog Posts", desc: "Concise guides and deep dives" },
+                        { name: "Podcasts", desc: "Podcast series from the library" },
+                        { name: "Live Workshops & Webinars", desc: "Live sessions and recorded talks" },
+                        { name: "Hands-on Projects & Coding Practice", desc: "Practice problems with a real judge" },
+                        { name: "Community & Discussion", desc: "Community groups and peer exchange" },
+                      ].map((format) => {
+                        const checked = learningFormats.includes(format.name);
+                        return (
+                          <div
+                            key={format.name}
+                            className={`flex items-start gap-2 rounded-md border p-2.5 cursor-pointer transition-colors ${
+                              checked
+                                ? "border-leap-purple bg-leap-purple/5"
+                                : "border-gray-200 hover:border-gray-300"
+                            }`}
+                            onClick={() =>
+                              setLearningFormats((prev) =>
+                                checked ? prev.filter((f) => f !== format.name) : [...prev, format.name]
+                              )
+                            }
+                          >
                             <input
                               type="checkbox"
-                              id={`format-${format}`}
-                              className="h-4 w-4 rounded border"
-                              defaultChecked={["Video Courses", "Interactive Tutorials"].includes(format)}
+                              checked={checked}
+                              readOnly
+                              className="h-4 w-4 rounded border mt-0.5"
                             />
-                            <Label htmlFor={`format-${format}`}>{format}</Label>
+                            <div>
+                              <Label className="cursor-pointer font-medium">{format.name}</Label>
+                              <p className="text-xs text-muted-foreground">{format.desc}</p>
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Preferences aren't persisted yet — they're used for the upcoming
-                        recommendation engine.
-                      </p>
+                        );
+                      })}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Weekly Time You Can Commit</Label>
+                    <RadioGroup value={weeklyCommitment} onValueChange={setWeeklyCommitment} className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {["<3 hours", "3–6 hours", "6–10 hours", "10+ hours"].map((option) => (
+                        <div key={option} className="flex items-center space-x-2">
+                          <RadioGroupItem value={option} id={`commitment-${option}`} />
+                          <Label htmlFor={`commitment-${option}`}>{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>How You Learn Best</Label>
+                    <RadioGroup value={learningStyle} onValueChange={setLearningStyle} className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {[
+                        { name: "Self-paced", desc: "Work through material at your own speed" },
+                        { name: "Structured curriculum", desc: "Follow a sequenced, step-by-step plan" },
+                        { name: "Project-driven", desc: "Learn by building real things" },
+                      ].map((option) => (
+                        <div key={option.name} className="flex items-start space-x-2">
+                          <RadioGroupItem value={option.name} id={`style-${option.name}`} className="mt-1" />
+                          <div>
+                            <Label htmlFor={`style-${option.name}`} className="font-medium">{option.name}</Label>
+                            <p className="text-xs text-muted-foreground">{option.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </RadioGroup>
                   </div>
                 </div>
               )}

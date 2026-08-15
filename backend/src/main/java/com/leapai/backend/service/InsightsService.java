@@ -66,6 +66,10 @@ public class InsightsService {
         merged.putIfAbsent("timeframe", nvl(user.getTimeframe(), "12 months"));
         merged.putIfAbsent("industry", nvl(user.getIndustry(), ""));
         merged.putIfAbsent("focusAreas", List.of());
+        // Learning preferences shape the roadmap's pace and resource mix.
+        merged.putIfAbsent("learningFormats", nvl(user.getLearningFormats(), ""));
+        merged.putIfAbsent("weeklyCommitment", nvl(user.getWeeklyCommitment(), ""));
+        merged.putIfAbsent("learningStyle", nvl(user.getLearningStyle(), ""));
 
         Map<String, Object> generated = llmService.generateRoadmap(merged);
 
@@ -97,10 +101,14 @@ public class InsightsService {
         String target = roadmap == null ? nvl(user.getTargetRole(), "") : roadmap.getTargetRole();
         String current = roadmap == null ? nvl(user.getCurrentRole(), "") : roadmap.getCurrentRole();
 
+        // Boost items whose type matches the user's preferred learning formats.
+        java.util.Set<String> preferred = preferredTypes(user.getLearningFormats());
+
         List<Resource> catalog = resources.findAll();
         List<Map<String, Object>> ranked = new ArrayList<>();
         for (Resource r : catalog) {
             double score = score(r, target, current);
+            if (preferred.contains(r.getType().toLowerCase(Locale.ROOT))) score += 15;
             Map<String, Object> dto = new LinkedHashMap<>();
             dto.put("id", String.valueOf(r.getId()));
             dto.put("title", r.getTitle());
@@ -132,6 +140,23 @@ public class InsightsService {
         if (all.contains("interview") && text.contains("interview")) score += 25;
         if (all.contains("communic") && text.contains("communic")) score += 25;
         return score;
+    }
+
+    /** Maps the user's preferred learning formats to library resource types. */
+    private java.util.Set<String> preferredTypes(String formats) {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        if (formats == null || formats.isBlank()) return out;
+        for (String f : formats.split(",")) {
+            switch (f.trim().toLowerCase(Locale.ROOT)) {
+                case "video courses": out.add("course"); break;
+                case "books & documentation": out.add("ebook"); out.add("guide"); break;
+                case "articles & blog posts": out.add("guide"); break;
+                case "podcasts": out.add("podcast"); break;
+                case "live workshops & webinars": out.add("workshop"); out.add("webinar"); break;
+                default: break;
+            }
+        }
+        return out;
     }
 
     private String topSkillGap(User user, Roadmap roadmap) {

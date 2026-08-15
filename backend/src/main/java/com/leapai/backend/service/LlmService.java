@@ -57,7 +57,10 @@ public class LlmService {
             + "\"duration\": string, \"focus\": string, \"skills\": [string], \"milestones\": [string], "
             + "\"resources\": [{\"title\": string, \"type\": string}]}]}}. Use 3-5 phases covering "
             + "assessment, skill development, real-world proof, and application/interview. Be specific "
-            + "to the user's current and target role.";
+            + "to the user's current and target role. Honor the user's learning preferences when "
+            + "choosing resources and pacing phases: preferred learning formats (e.g. video courses, "
+            + "podcasts, hands-on projects), weekly time commitment, and learning style (self-paced, "
+            + "structured, or project-driven).";
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;

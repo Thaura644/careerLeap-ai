@@ -68,6 +68,18 @@ public class User {
     @Column(name = "interests", columnDefinition = "text")
     private String interests;
 
+    /** Comma-separated preferred learning formats (e.g. "Video Courses, Podcasts"). */
+    @Column(name = "learning_formats", columnDefinition = "text")
+    private String learningFormats;
+
+    /** Weekly time commitment, e.g. "3–6 hours". */
+    @Column(name = "weekly_commitment", length = 40)
+    private String weeklyCommitment;
+
+    /** Learning style, e.g. "Self-paced", "Structured curriculum", "Project-driven". */
+    @Column(name = "learning_style", length = 60)
+    private String learningStyle;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -109,4 +121,13 @@ public class User {
 
     public String getInterests() { return interests; }
     public void setInterests(String interests) { this.interests = interests; }
+
+    public String getLearningFormats() { return learningFormats; }
+    public void setLearningFormats(String learningFormats) { this.learningFormats = learningFormats; }
+
+    public String getWeeklyCommitment() { return weeklyCommitment; }
+    public void setWeeklyCommitment(String weeklyCommitment) { this.weeklyCommitment = weeklyCommitment; }
+
+    public String getLearningStyle() { return learningStyle; }
+    public void setLearningStyle(String learningStyle) { this.learningStyle = learningStyle; }
 }

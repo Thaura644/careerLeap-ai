@@ -66,6 +66,11 @@ public class AuthController {
         // Skills the user self-assessed (comma-separated) drive roadmap focus.
         String interests = str(profile.get("interests"), user.getInterests());
         user.setInterests(interests);
+        // Learning preferences (formats, weekly commitment, style) shape the
+        // roadmap's pace and the resources surfaced to the user.
+        user.setLearningFormats(str(profile.get("learningFormats"), user.getLearningFormats()));
+        user.setWeeklyCommitment(str(profile.get("weeklyCommitment"), user.getWeeklyCommitment()));
+        user.setLearningStyle(str(profile.get("learningStyle"), user.getLearningStyle()));
         users.save(user);
         skillService.recordUsage(splitSkills(interests));
         Map<String, Object> result = new LinkedHashMap<>();
