@@ -21,6 +21,12 @@ interface AssessedSkill {
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(16.6);
+  // All fields live in state — the step DOM unmounts as the user advances, so
+  // reading inputs at the end would silently lose them.
+  const [currentRole, setCurrentRole] = useState("");
+  const [location, setLocation] = useState("");
+  const [targetRole, setTargetRole] = useState("");
+  const [aspirations, setAspirations] = useState("");
   const [yearsExperience, setYearsExperience] = useState("3-5");
   const [industry, setIndustry] = useState("technology");
   const [timeframe, setTimeframe] = useState("12 months");
@@ -29,13 +35,11 @@ const Onboarding = () => {
   const { toast } = useToast();
 
   const saveProfile = () => {
-    const val = (id: string) =>
-      (document.getElementById(id) as HTMLInputElement | null)?.value?.trim() || undefined;
     return apiPut("/auth/profile", {
-      currentRole: val("currentRole"),
-      targetRole: val("targetRole"),
-      location: val("location"),
-      aspirations: val("careerGoals"),
+      currentRole: currentRole.trim() || undefined,
+      targetRole: targetRole.trim() || undefined,
+      location: location.trim() || undefined,
+      aspirations: aspirations.trim() || undefined,
       yearsExperience,
       industry,
       timeframe,
@@ -123,7 +127,12 @@ const Onboarding = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="currentRole">Current Role</Label>
-                      <Input id="currentRole" placeholder="e.g. Frontend Developer" />
+                      <Input
+                        id="currentRole"
+                        placeholder="e.g. Frontend Developer"
+                        value={currentRole}
+                        onChange={(e) => setCurrentRole(e.target.value)}
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -160,7 +169,12 @@ const Onboarding = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="location">Location</Label>
-                      <Input id="location" placeholder="e.g. Lagos, Nigeria" />
+                      <Input
+                        id="location"
+                        placeholder="e.g. Lagos, Nigeria"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -173,7 +187,12 @@ const Onboarding = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="targetRole">Target Role</Label>
-                      <Input id="targetRole" placeholder="e.g. Staff Engineer" />
+                      <Input
+                        id="targetRole"
+                        placeholder="e.g. Staff Engineer"
+                        value={targetRole}
+                        onChange={(e) => setTargetRole(e.target.value)}
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -182,6 +201,8 @@ const Onboarding = () => {
                         id="careerGoals"
                         placeholder="Describe your professional aspirations in detail"
                         className="min-h-[100px]"
+                        value={aspirations}
+                        onChange={(e) => setAspirations(e.target.value)}
                       />
                     </div>
 
