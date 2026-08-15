@@ -273,7 +273,7 @@ const Onboarding = () => {
                     </p>
                     <Button
                       className="bg-leap-purple hover:bg-opacity-90 group"
-                      onClick={() => navigate("/dashboard")}
+                      onClick={nextStep}
                       size="lg"
                     >
                       Go to Dashboard
