@@ -83,6 +83,34 @@ const UpgradePro = () => {
   const [busy, setBusy] = useState(false);
   const [pro, setPro] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Live-money guard: verification is server-side and requires a session, so a
+  // logged-out visitor must never reach a real Paystack charge they can't get
+  // credited. The message renders right where the user clicked, not at the
+  // bottom of the page where it was invisible (the "it does nothing" bug).
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const emailRef = React.useRef<HTMLInputElement>(null);
+
+  /** Validates checkout preconditions and returns a readable error, or null.
+   *  Errors are scrolled into view and rendered inline next to the CTA. */
+  const checkoutError = (): string | null => {
+    if (signedIn === false) {
+      return "You need to be signed in to upgrade — verification is tied to your account.";
+    }
+    if (!status?.enabled) {
+      return "Checkout is not armed yet — payments are gated until the human flips the flag.";
+    }
+    if (!email.trim()) {
+      return "Enter your email first.";
+    }
+    return null;
+  };
+
+  const focusEmail = () => {
+    setTimeout(() => {
+      emailRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      emailRef.current?.focus();
+    }, 50);
+  };
 
   useEffect(() => {
     apiGet<PaymentStatus>("/payments/status")
@@ -95,8 +123,14 @@ const UpgradePro = () => {
       .catch(() => setStatus(null));
     // Real entitlement from the server — not a localStorage flag.
     apiGet<{ pro: boolean }>("/payments/me")
-      .then((res) => setPro(res.pro))
-      .catch(() => setPro(false));
+      .then((res) => {
+        setPro(res.pro);
+        setSignedIn(true);
+      })
+      .catch(() => {
+        setPro(false);
+        setSignedIn(false);
+      });
   }, []);
 
   const proMonthly = status?.plans.find((p) => p.id === "pro-monthly");
@@ -149,16 +183,24 @@ const UpgradePro = () => {
   };
 
   const startCheckout = async (plan: Plan) => {
-    if (!status?.enabled) {
-      setMessage("Checkout is not armed yet — payments are gated until the human flips the flag.");
+    // Guard before any money can move: signed in, armed, email present. Errors
+    // render inline next to the CTA and scroll it into view — never silently
+    // at the bottom of the page.
+    const error = checkoutError();
+    if (error) {
+      setMessage(error);
+      if (signedIn === false) {
+        // Not signed in: never open a real Paystack charge. Send to login.
+        window.location.href = "/login?next=/upgrade";
+        return;
+      }
+      if (!email.trim()) {
+        focusEmail();
+      }
       return;
     }
-    if (status.mode === "simulate") {
+    if (status?.mode === "simulate") {
       await simulatePayment(plan);
-      return;
-    }
-    if (!email.trim()) {
-      setMessage("Enter your email first.");
       return;
     }
     const p = plan.prices[currency] || plan.prices[status.currencies[0]];
@@ -250,6 +292,40 @@ const UpgradePro = () => {
           </div>
         )}
 
+        {/* One email field for every plan, always visible when checkout is
+            armed — the old field lived only on the Pro card, so clicking any
+            other CTA without it silently failed. The error message now renders
+            inline below the CTAs, next to where the user actually clicked. */}
+        {status?.enabled && (
+          <div className="mx-auto mb-10 max-w-xl">
+            <label htmlFor="checkout-email" className="mb-1.5 block text-sm font-medium">
+              Email for your receipt
+            </label>
+            <input
+              id="checkout-email"
+              ref={emailRef}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (message) setMessage(null);
+              }}
+              placeholder="you@example.com"
+              className="h-11 w-full rounded-md border bg-background px-3 text-sm"
+            />
+            {message && (
+              <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                {message}
+              </p>
+            )}
+            {signedIn === false && (
+              <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+                You're not signed in. Upgrade is tied to your account — you'll be sent to login first.
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Roadmap Report */}
           <Card>
@@ -277,7 +353,7 @@ const UpgradePro = () => {
                 </li>
               </ul>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex-col gap-2">
               <Button
                 className="w-full"
                 disabled={!status?.enabled || busy}
@@ -352,15 +428,6 @@ const UpgradePro = () => {
               </ul>
             </CardContent>
             <CardFooter className="flex-col gap-2">
-              {status?.enabled && (
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email for payment"
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                />
-              )}
               <Button
                 className="w-full bg-leap-purple hover:bg-opacity-90"
                 disabled={!status?.enabled || busy}
@@ -406,7 +473,6 @@ const UpgradePro = () => {
         </div>
 
         <div className="flex flex-col items-center gap-3 pb-10 text-center">
-          {message && <p className="text-sm text-muted-foreground">{message}</p>}
           <Button
             className="bg-leap-purple hover:bg-opacity-90 px-8 py-6 text-lg"
             disabled={!status?.enabled || busy}
