@@ -6,14 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock } from "lucide-react";
 import { EventType } from "@/context/ResourcesContext";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
 
 interface EventCardProps {
   event: EventType;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const { toast } = useToast();
   const { title, description, type, isPro, date, time, color } = event;
 
   const getEventColorClasses = (color: string) => {
@@ -63,21 +61,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
   const colorClasses = getEventColorClasses(color);
   
-  const handleRegisterClick = () => {
-    if (isPro) {
-      toast({
-        title: "Pro Event Registration",
-        description: "This is a premium event. Please upgrade to Pro to register.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Registration Successful",
-        description: `You have successfully registered for "${title}".`,
-      });
-    }
-  };
-
   return (
     <Card>
       <CardContent className="p-6">
@@ -125,12 +108,15 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
                 <Clock className="h-4 w-4" /> {time}
               </div>
             </div>
-            <Button 
-              size="sm" 
+            {/* Registration isn't wired to a backend yet — no fake success.
+                The button is honest about that instead of claiming a seat. */}
+            <Button
+              size="sm"
               className={isPro ? "bg-leap-purple hover:bg-opacity-90" : ""}
-              onClick={handleRegisterClick}
+              disabled
+              title="Event registration is not open yet"
             >
-              Register Now
+              Registration opens soon
             </Button>
           </div>
         </div>

@@ -1,19 +1,34 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResourcesSection } from "./ResourcesSection";
-import { Button } from "@/components/ui/button";
-import { useResources } from "@/context/ResourcesContext";
-import { EventCard } from "./EventCard";
+import { useResources, ResourceType } from "@/context/ResourcesContext";
 
-export const ResourceTabs: React.FC = () => {
-  const { 
-    trendingResources, 
-    recommendedResources, 
-    bookmarkedResources, 
-    completedResources, 
-    loading 
+const matches = (resource: ResourceType, query: string): boolean => {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return [resource.title, resource.type, resource.description || ""]
+    .join(" ")
+    .toLowerCase()
+    .includes(q);
+};
+
+interface ResourceTabsProps {
+  query?: string;
+}
+
+export const ResourceTabs: React.FC<ResourceTabsProps> = ({ query = "" }) => {
+  const {
+    trendingResources,
+    recommendedResources,
+    bookmarkedResources,
+    completedResources,
+    loading,
   } = useResources();
+
+  const filter = (list: ResourceType[]) => list.filter((r) => matches(r, query));
+
+  const noMatches = (list: ResourceType[]) =>
+    !loading && query.trim() !== "" && filter(list).length === 0;
 
   return (
     <Tabs defaultValue="trending" className="mb-8">
@@ -23,41 +38,24 @@ export const ResourceTabs: React.FC = () => {
         <TabsTrigger value="bookmarked">Bookmarked</TabsTrigger>
         <TabsTrigger value="completed">Completed</TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="trending" className="mt-6">
-        <ResourcesSection 
-          resources={trendingResources}
-          loading={loading}
-        />
-        
-        {!loading && trendingResources.length > 0 && (
-          <div className="text-center mt-8">
-            <Button variant="outline">Load More Resources</Button>
-          </div>
-        )}
+        <ResourcesSection resources={filter(trendingResources)} loading={loading} />
+        {noMatches(trendingResources) && <SearchEmptyState query={query} />}
       </TabsContent>
-      
+
       <TabsContent value="recommended" className="mt-6">
-        <ResourcesSection 
+        <ResourcesSection
           title="Based on Your Career Goals"
-          resources={recommendedResources.slice(0, 3)}
+          resources={filter(recommendedResources)}
           loading={loading}
         />
-        
-        <ResourcesSection 
-          title="Industry-Specific Resources"
-          resources={recommendedResources.slice(3, 6)}
-          loading={loading}
-        />
+        {noMatches(recommendedResources) && <SearchEmptyState query={query} />}
       </TabsContent>
-      
+
       <TabsContent value="bookmarked" className="mt-6">
-        <ResourcesSection 
-          resources={bookmarkedResources}
-          loading={loading}
-        />
-        
-        {!loading && bookmarkedResources.length === 0 && (
+        <ResourcesSection resources={filter(bookmarkedResources)} loading={loading} />
+        {!loading && query.trim() === "" && bookmarkedResources.length === 0 && (
           <div className="text-center p-8 border rounded-lg">
             <h3 className="text-xl font-bold mb-2">No bookmarks yet</h3>
             <p className="text-muted-foreground mb-4">
@@ -65,15 +63,12 @@ export const ResourceTabs: React.FC = () => {
             </p>
           </div>
         )}
+        {noMatches(bookmarkedResources) && <SearchEmptyState query={query} />}
       </TabsContent>
-      
+
       <TabsContent value="completed" className="mt-6">
-        <ResourcesSection 
-          resources={completedResources}
-          loading={loading}
-        />
-        
-        {!loading && completedResources.length === 0 && (
+        <ResourcesSection resources={filter(completedResources)} loading={loading} />
+        {!loading && query.trim() === "" && completedResources.length === 0 && (
           <div className="text-center p-8 border rounded-lg">
             <h3 className="text-xl font-bold mb-2">No completed resources</h3>
             <p className="text-muted-foreground mb-4">
@@ -81,7 +76,15 @@ export const ResourceTabs: React.FC = () => {
             </p>
           </div>
         )}
+        {noMatches(completedResources) && <SearchEmptyState query={query} />}
       </TabsContent>
     </Tabs>
   );
 };
+
+const SearchEmptyState: React.FC<{ query: string }> = ({ query }) => (
+  <div className="text-center p-8 border rounded-lg">
+    <h3 className="text-xl font-bold mb-2">No matches for “{query}”</h3>
+    <p className="text-muted-foreground">Try a different title, type, or description.</p>
+  </div>
+);

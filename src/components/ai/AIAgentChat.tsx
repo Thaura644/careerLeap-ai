@@ -23,7 +23,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
   showHeader = true,
   maxHeight = "400px"
 }) => {
-  const { sendMessage, messages, isProcessing, clearMessages } = useAI();
+  const { sendMessage, messages, isProcessing, newConversation } = useAI();
   const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -146,8 +146,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={clearMessages}
-                title="Clear conversation"
+                onClick={newConversation}
+                title="Start a new conversation"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
@@ -207,7 +207,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
         
         {!compact && (
           <div className="mt-2 flex justify-start">
-            <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs flex items-center gap-1"
+              onClick={newConversation}
+              disabled={isProcessing}
+            >
               <Plus className="h-3 w-3" />
               New conversation
             </Button>

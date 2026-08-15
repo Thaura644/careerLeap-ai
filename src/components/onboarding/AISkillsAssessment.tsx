@@ -14,7 +14,7 @@ import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Brain, CheckCheck } from "lucide-react";
+import { Search, Plus, CheckCheck } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -34,14 +34,6 @@ const skillFormSchema = z.object({
   ).min(1, "At least one skill is required"),
 });
 
-const defaultSkills = [
-  { name: "JavaScript", level: 50 },
-  { name: "React", level: 25 },
-  { name: "Node.js", level: 35 },
-  { name: "System Design", level: 15 },
-  { name: "Leadership", level: 20 },
-];
-
 const skillSuggestions = [
   "TypeScript", "Python", "Java", "C#", "SQL", "MongoDB", 
   "AWS", "Docker", "Kubernetes", "Git", "CI/CD", "TDD",
@@ -59,7 +51,8 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
   const form = useForm<z.infer<typeof skillFormSchema>>({
     resolver: zodResolver(skillFormSchema),
     defaultValues: {
-      skills: defaultSkills,
+      // Start empty — the user self-assesses; nothing is pre-filled for them.
+      skills: [],
     },
   });
 
@@ -131,19 +124,6 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
     onComplete(data.skills);
   };
   
-  const handleGenerateAI = () => {
-    form.setValue("skills", [
-      { name: "JavaScript", level: 65 },
-      { name: "React", level: 75 },
-      { name: "Node.js", level: 40 },
-      { name: "TypeScript", level: 55 },
-      { name: "System Design", level: 35 },
-      { name: "Leadership", level: 30 },
-      { name: "Git", level: 80 },
-      { name: "CI/CD", level: 45 },
-    ]);
-  };
-
   return (
     <div className={className}>
       <div className="text-center mb-6">
@@ -157,16 +137,11 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
         <div className="mb-6">
           <div className="flex justify-between">
             <h2 className="text-lg font-semibold mb-4">Your Skills</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center gap-1"
-              onClick={handleGenerateAI}
-            >
-              <Brain className="h-4 w-4" />
-              <span>AI Analyze Resume</span>
-            </Button>
           </div>
+          <p className="text-sm text-muted-foreground -mt-2 mb-4">
+            Add the skills you actually have and rate them honestly — this shapes your roadmap's
+            focus areas. (No resume analysis yet; this is your self-assessment.)
+          </p>
           
           <div className="flex gap-2 mb-6">
             <div className="relative flex-1">
@@ -249,10 +224,7 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
                 ))}
               </div>
               
-              <div className="flex justify-between pt-4">
-                <Button type="button" variant="outline">
-                  Back
-                </Button>
+              <div className="flex justify-end pt-4">
                 <Button type="submit" className="bg-leap-purple">
                   <CheckCheck className="mr-2 h-4 w-4" />
                   Complete Assessment

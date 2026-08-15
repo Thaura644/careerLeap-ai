@@ -1,23 +1,13 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Award, ChevronRight } from "lucide-react";
+import { Award } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { LineArt } from "@/components/common/LineArt";
 
 export const Achievements: React.FC = () => {
   const { achievements, loading } = useDashboard();
-  const { toast } = useToast();
-
-  const handleViewAll = () => {
-    toast({
-      title: "Achievements",
-      description: "Viewing all achievements",
-    });
-  };
 
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -50,8 +40,18 @@ export const Achievements: React.FC = () => {
               </div>
             </div>
           ))
+        ) : achievements.length === 0 ? (
+          <div className="text-center py-6">
+            <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center text-leap-purple">
+              <LineArt variant="climb" className="h-16 w-16" />
+            </div>
+            <p className="text-sm font-medium mb-1">No achievements yet</p>
+            <p className="text-sm text-muted-foreground">
+              Complete resources and goals to earn your first ones.
+            </p>
+          </div>
         ) : (
-          achievements.map(achievement => (
+          achievements.map((achievement) => (
             <div key={achievement.id} className="flex items-center">
               <div className={cn("p-2 rounded-full mr-3", getColorClasses(achievement.color))}>
                 <Award size={20} />
@@ -63,15 +63,6 @@ export const Achievements: React.FC = () => {
             </div>
           ))
         )}
-        
-        <Button 
-          variant="link" 
-          className="mt-2 px-0 text-leap-purple flex items-center"
-          onClick={handleViewAll}
-          disabled={loading}
-        >
-          View all achievements <ChevronRight size={16} />
-        </Button>
       </CardContent>
     </Card>
   );

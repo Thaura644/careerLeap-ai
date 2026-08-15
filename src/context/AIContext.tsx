@@ -18,6 +18,7 @@ interface AIContextType {
   updateUserProfile: (profile: Partial<AIUserProfile>) => Promise<void>;
   messages: AIMessage[];
   clearMessages: () => void;
+  newConversation: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -168,6 +169,17 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       } else {
         setMessages([]);
       }
+
+      // Surface real recommendations right away instead of waiting for a click.
+      apiPost<{ recommendations: RawRecommended[] }>("/insights/recommendations", {})
+        .then((res) => {
+          const mapped = (res.recommendations || []).map(mapRecommended);
+          setRecommendedResources(mapped);
+          setProfile((prev) => (prev ? { ...prev, recommendedResources: mapped } : prev));
+        })
+        .catch(() => {
+          // Recommendations are a nice-to-have; the empty state handles failure.
+        });
     } catch {
       setProfile(null);
       setMessages([]);
@@ -345,6 +357,18 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     setMessages([]);
   }, []);
 
+  // Start a fresh persisted conversation and drop the current transcript.
+  const newConversation = useCallback(async () => {
+    setMessages([]);
+    setCurrentConversation(null);
+    try {
+      const created = await apiPost<{ id: number }>("/ai/conversations", {});
+      setCurrentConversation(String(created.id));
+    } catch {
+      // A fresh conversation will be created on the next message anyway.
+    }
+  }, []);
+
   const value: AIContextType = {
     isProcessing,
     profile,
@@ -359,6 +383,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     updateUserProfile,
     messages,
     clearMessages,
+    newConversation,
     refreshProfile,
   };
 

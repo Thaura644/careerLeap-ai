@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { 
   Card, 
@@ -32,7 +33,9 @@ interface CommunityGroup {
 }
 
 const Community = () => {
-  const [tab, setTab] = useState("discussions");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "events" ? "events" : "discussions";
+  const [tab, setTab] = useState(initialTab);
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [groupsError, setGroupsError] = useState<string | null>(null);

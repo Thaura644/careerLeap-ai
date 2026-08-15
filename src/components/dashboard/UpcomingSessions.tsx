@@ -1,22 +1,13 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Users } from "lucide-react";
 import { useDashboard } from "@/context/DashboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export const UpcomingSessions: React.FC = () => {
   const { upcomingSessions, loading } = useDashboard();
-  const { toast } = useToast();
-
-  const handleSessionAction = (title: string) => {
-    toast({
-      title: "Session Action",
-      description: `Action taken for: ${title}`,
-    });
-  };
 
   const getSessionIcon = (type: string) => {
     switch (type) {
@@ -43,7 +34,7 @@ export const UpcomingSessions: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Upcoming Sessions</CardTitle>
+        <CardTitle className="text-lg">Upcoming Events</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
@@ -58,7 +49,7 @@ export const UpcomingSessions: React.FC = () => {
             </div>
           ))
         ) : (
-          upcomingSessions.map(session => (
+          upcomingSessions.map((session) => (
             <div key={session.id} className="flex items-start">
               <div className={`p-2 rounded-full mr-3 ${getSessionIconClasses(session.type)}`}>
                 {getSessionIcon(session.type)}
@@ -66,14 +57,11 @@ export const UpcomingSessions: React.FC = () => {
               <div>
                 <h3 className="font-medium">{session.title}</h3>
                 <p className="text-sm text-muted-foreground">{session.time}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2 text-xs"
-                  onClick={() => handleSessionAction(session.title)}
-                >
-                  {session.type === "mentor" ? "Join Meeting" : "View Details"}
-                </Button>
+                <Link to="/community?tab=events">
+                  <Button variant="outline" size="sm" className="mt-2 text-xs">
+                    View details
+                  </Button>
+                </Link>
               </div>
             </div>
           ))
@@ -81,10 +69,12 @@ export const UpcomingSessions: React.FC = () => {
 
         {!loading && upcomingSessions.length === 0 && (
           <div className="text-center p-4">
-            <p className="text-muted-foreground">No upcoming sessions</p>
-            <Button variant="outline" size="sm" className="mt-2">
-              Schedule a session
-            </Button>
+            <p className="text-muted-foreground">No upcoming events</p>
+            <Link to="/community?tab=events">
+              <Button variant="outline" size="sm" className="mt-2">
+                See the events calendar
+              </Button>
+            </Link>
           </div>
         )}
       </CardContent>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,28 +11,44 @@ import { useToast } from "@/components/ui/use-toast";
 import { AISkillsAssessment } from "@/components/onboarding/AISkillsAssessment";
 import { apiPut } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, ArrowRight, FileText, ChevronRight } from "lucide-react";
+import { CheckCircle2, ArrowRight } from "lucide-react";
+
+interface AssessedSkill {
+  name: string;
+  level: number;
+}
 
 const Onboarding = () => {
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(16.6);
+  const [yearsExperience, setYearsExperience] = useState("3-5");
+  const [industry, setIndustry] = useState("technology");
+  const [timeframe, setTimeframe] = useState("12 months");
+  const [assessedSkills, setAssessedSkills] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const saveProfile = () => {
+    const val = (id: string) =>
+      (document.getElementById(id) as HTMLInputElement | null)?.value?.trim() || undefined;
+    return apiPut("/auth/profile", {
+      currentRole: val("currentRole"),
+      targetRole: val("targetRole"),
+      location: val("location"),
+      aspirations: val("careerGoals"),
+      yearsExperience,
+      industry,
+      timeframe,
+      interests: assessedSkills.join(", "),
+    });
+  };
 
   const nextStep = () => {
     const nextStepNum = step + 1;
     if (nextStepNum > 6) {
       // Onboarding complete — persist the collected profile so the roadmap
       // engine (and everything else) works from real data, then continue.
-      const val = (id: string) =>
-        (document.getElementById(id) as HTMLInputElement | null)?.value?.trim() || undefined;
-      apiPut("/auth/profile", {
-        currentRole: val("currentRole"),
-        targetRole: val("targetRole"),
-        location: val("location"),
-        aspirations: val("careerGoals"),
-      }).catch(() => {
+      saveProfile().catch(() => {
         // Profile save is best-effort on completion; the app still proceeds.
       });
       toast({
@@ -56,8 +71,8 @@ const Onboarding = () => {
     setProgress(prevStepNum * 16.6);
   };
 
-  const handleSkillsComplete = (skills: any[]) => {
-    console.log("Skills assessment completed:", skills);
+  const handleSkillsComplete = (skills: AssessedSkill[]) => {
+    setAssessedSkills(skills.map((s) => s.name));
     nextStep();
   };
 
@@ -69,7 +84,7 @@ const Onboarding = () => {
             <span className="text-2xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
               Leap.ai
             </span>
-            
+
             <Button
               variant="ghost"
               onClick={() => {
@@ -87,7 +102,7 @@ const Onboarding = () => {
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold mb-2">Let's set up your career profile</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              This information helps us personalize your experience
+              This shapes the roadmap we generate for you
             </p>
           </div>
 
@@ -103,34 +118,19 @@ const Onboarding = () => {
             <CardContent className="pt-6">
               {step === 1 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
-                  
+                  <h2 className="text-xl font-semibold mb-4">Career Details</h2>
+
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input id="firstName" placeholder="e.g. John" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input id="lastName" placeholder="e.g. Doe" />
-                      </div>
-                    </div>
-
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" placeholder="e.g. john.doe@example.com" />
+                      <Label htmlFor="currentRole">Current Role</Label>
+                      <Input id="currentRole" placeholder="e.g. Frontend Developer" />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="currentRole">Current Role</Label>
-                        <Input id="currentRole" placeholder="e.g. Frontend Developer" />
-                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="yearsExperience">Years of Experience</Label>
-                        <Select defaultValue="0-2">
-                          <SelectTrigger>
+                        <Select value={yearsExperience} onValueChange={setYearsExperience}>
+                          <SelectTrigger id="yearsExperience">
                             <SelectValue placeholder="Select years" />
                           </SelectTrigger>
                           <SelectContent>
@@ -141,27 +141,26 @@ const Onboarding = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="industry">Industry</Label>
-                      <Select defaultValue="technology">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select industry" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="technology">Technology</SelectItem>
-                          <SelectItem value="finance">Finance</SelectItem>
-                          <SelectItem value="healthcare">Healthcare</SelectItem>
-                          <SelectItem value="education">Education</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2">
+                        <Label htmlFor="industry">Industry</Label>
+                        <Select value={industry} onValueChange={setIndustry}>
+                          <SelectTrigger id="industry">
+                            <SelectValue placeholder="Select industry" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Technology">Technology</SelectItem>
+                            <SelectItem value="Finance">Finance</SelectItem>
+                            <SelectItem value="Healthcare">Healthcare</SelectItem>
+                            <SelectItem value="Education">Education</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="location">Location</Label>
-                      <Input id="location" placeholder="e.g. San Francisco, CA" />
+                      <Input id="location" placeholder="e.g. Lagos, Nigeria" />
                     </div>
                   </div>
                 </div>
@@ -170,17 +169,17 @@ const Onboarding = () => {
               {step === 2 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Career Goals</h2>
-                  
+
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="targetRole">Target Role</Label>
-                      <Input id="targetRole" placeholder="e.g. Senior Developer" />
+                      <Input id="targetRole" placeholder="e.g. Staff Engineer" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="careerGoals">What are your main career goals?</Label>
-                      <Textarea 
-                        id="careerGoals" 
+                      <Textarea
+                        id="careerGoals"
                         placeholder="Describe your professional aspirations in detail"
                         className="min-h-[100px]"
                       />
@@ -188,90 +187,39 @@ const Onboarding = () => {
 
                     <div className="space-y-2">
                       <Label>Timeline for Next Career Move</Label>
-                      <RadioGroup defaultValue="6-12">
+                      <RadioGroup value={timeframe} onValueChange={setTimeframe}>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="0-6" id="timeline-1" />
+                          <RadioGroupItem value="6 months" id="timeline-1" />
                           <Label htmlFor="timeline-1">0-6 months</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="6-12" id="timeline-2" />
+                          <RadioGroupItem value="12 months" id="timeline-2" />
                           <Label htmlFor="timeline-2">6-12 months</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="1-2" id="timeline-3" />
+                          <RadioGroupItem value="2 years" id="timeline-3" />
                           <Label htmlFor="timeline-3">1-2 years</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="2+" id="timeline-4" />
-                          <Label htmlFor="timeline-4">2+ years</Label>
+                          <RadioGroupItem value="3+ years" id="timeline-4" />
+                          <Label htmlFor="timeline-4">3+ years</Label>
                         </div>
                       </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Top Career Priorities</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="priority-1" />
-                          <Label htmlFor="priority-1">Higher Salary</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="priority-2" />
-                          <Label htmlFor="priority-2">Work-Life Balance</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="priority-3" />
-                          <Label htmlFor="priority-3">Leadership Position</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="priority-4" />
-                          <Label htmlFor="priority-4">Technical Growth</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="priority-5" />
-                          <Label htmlFor="priority-5">Job Security</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="priority-6" />
-                          <Label htmlFor="priority-6">Remote Work</Label>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {step === 3 && (
-                <AISkillsAssessment onComplete={handleSkillsComplete} />
-              )}
+              {step === 3 && <AISkillsAssessment onComplete={handleSkillsComplete} />}
 
               {step === 4 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold mb-4">Resume Upload</h2>
-                  
-                  <div className="space-y-4">
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="font-medium mb-2">Upload your resume</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Our AI will analyze your experience and skills to personalize your career recommendations
-                      </p>
-                      <Input 
-                        type="file" 
-                        accept=".pdf,.doc,.docx"
-                        className="max-w-xs mx-auto"
-                      />
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 mt-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Checkbox id="skip-resume" />
-                        <Label htmlFor="skip-resume" className="font-medium">Skip this step</Label>
-                      </div>
-                      <p className="text-sm text-muted-foreground ml-6">
-                        You can always upload your resume later in your profile settings
-                      </p>
-                    </div>
+                  <h2 className="text-xl font-semibold mb-4">Resume</h2>
+                  <div className="border rounded-lg p-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Resume analysis isn't built yet, so we won't pretend to read one here. Your
+                      self-assessed skills from the previous step already shape your roadmap.
+                    </p>
                   </div>
                 </div>
               )}
@@ -279,103 +227,34 @@ const Onboarding = () => {
               {step === 5 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Learning Preferences</h2>
-                  
+
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label>Preferred Learning Formats</Label>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="format-1" defaultChecked />
-                          <Label htmlFor="format-1">Video Courses</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="format-2" defaultChecked />
-                          <Label htmlFor="format-2">Interactive Tutorials</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="format-3" />
-                          <Label htmlFor="format-3">Books & Documentation</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="format-4" />
-                          <Label htmlFor="format-4">Articles & Blog Posts</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="format-5" />
-                          <Label htmlFor="format-5">Podcasts</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="format-6" />
-                          <Label htmlFor="format-6">Live Workshops</Label>
-                        </div>
+                        {[
+                          "Video Courses",
+                          "Interactive Tutorials",
+                          "Books & Documentation",
+                          "Articles & Blog Posts",
+                          "Podcasts",
+                          "Live Workshops",
+                        ].map((format) => (
+                          <div key={format} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`format-${format}`}
+                              className="h-4 w-4 rounded border"
+                              defaultChecked={["Video Courses", "Interactive Tutorials"].includes(format)}
+                            />
+                            <Label htmlFor={`format-${format}`}>{format}</Label>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Weekly Learning Time</Label>
-                      <RadioGroup defaultValue="5-10">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="0-5" id="time-1" />
-                          <Label htmlFor="time-1">0-5 hours</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="5-10" id="time-2" />
-                          <Label htmlFor="time-2">5-10 hours</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="10-20" id="time-3" />
-                          <Label htmlFor="time-3">10-20 hours</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="20+" id="time-4" />
-                          <Label htmlFor="time-4">20+ hours</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Learning Difficulty Preference</Label>
-                      <Select defaultValue="intermediate">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select difficulty" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="beginner">Beginner - Fundamentals & Basics</SelectItem>
-                          <SelectItem value="intermediate">Intermediate - Building on Basics</SelectItem>
-                          <SelectItem value="advanced">Advanced - Complex Concepts</SelectItem>
-                          <SelectItem value="mixed">Mixed - Variety of Levels</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Favorite Learning Platforms</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="platform-1" defaultChecked />
-                          <Label htmlFor="platform-1">YouTube</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="platform-2" defaultChecked />
-                          <Label htmlFor="platform-2">Udemy</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="platform-3" />
-                          <Label htmlFor="platform-3">Coursera</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="platform-4" />
-                          <Label htmlFor="platform-4">DataCamp</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="platform-5" />
-                          <Label htmlFor="platform-5">Pluralsight</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox id="platform-6" />
-                          <Label htmlFor="platform-6">LinkedIn Learning</Label>
-                        </div>
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Preferences aren't persisted yet — they're used for the upcoming
+                        recommendation engine.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -389,75 +268,17 @@ const Onboarding = () => {
                     </div>
                     <h2 className="text-2xl font-semibold mb-2">You're all set!</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">
-                      We've created your personalized career roadmap based on your profile.
+                      Your profile is saved. Your personalized roadmap is generated from it on your
+                      dashboard.
                     </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-lg border">
-                    <h3 className="font-semibold mb-3">Your AI-generated career path:</h3>
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full bg-leap-purple"></div>
-                          <div className="w-0.5 h-full bg-leap-purple/30"></div>
-                        </div>
-                        <div className="pb-4">
-                          <h4 className="font-medium">Advanced JavaScript Concepts</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            First, strengthen your core JavaScript skills with focus on closures,
-                            promises, and asynchronous patterns
-                          </p>
-                          <Button variant="link" size="sm" className="text-leap-purple mt-1 h-auto p-0 flex items-center">
-                            View resources <ChevronRight className="h-3 w-3 ml-1" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700"></div>
-                          <div className="w-0.5 h-full bg-gray-200 dark:bg-gray-800"></div>
-                        </div>
-                        <div className="pb-4">
-                          <h4 className="font-medium">System Design Fundamentals</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Learn scalable architecture patterns and best practices for large applications
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700"></div>
-                          <div className="w-0.5 h-full bg-gray-200 dark:bg-gray-800"></div>
-                        </div>
-                        <div className="pb-4">
-                          <h4 className="font-medium">Team Leadership Skills</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Develop mentoring abilities and technical leadership to prepare for senior roles
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700"></div>
-                        </div>
-                        <div>
-                          <h4 className="font-medium">Advanced React Patterns</h4>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Master component composition, performance optimization, and state management
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-center mt-6">
-                      <Button className="bg-leap-purple group">
-                        Start your journey 
-                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </div>
+                    <Button
+                      className="bg-leap-purple hover:bg-opacity-90 group"
+                      onClick={() => navigate("/dashboard")}
+                      size="lg"
+                    >
+                      Go to Dashboard
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Button>
                   </div>
                 </div>
               )}
@@ -471,24 +292,12 @@ const Onboarding = () => {
                   ) : (
                     <div></div>
                   )}
-                  
+
                   {step !== 3 && (
                     <Button className="bg-leap-purple hover:bg-opacity-90" onClick={nextStep}>
                       Continue
                     </Button>
                   )}
-                </div>
-              )}
-              
-              {step === 6 && (
-                <div className="flex justify-center mt-8">
-                  <Button 
-                    className="bg-leap-purple hover:bg-opacity-90" 
-                    onClick={nextStep}
-                    size="lg"
-                  >
-                    Go to Dashboard
-                  </Button>
                 </div>
               )}
             </CardContent>

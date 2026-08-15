@@ -15,7 +15,6 @@ export interface SkillDataPoint {
 export interface OverviewCardData {
   title: string;
   value: string;
-  percentChange: number;
   progressValue: number;
   secondaryText?: string;
 }
@@ -33,6 +32,9 @@ export interface ResourceData {
   title: string;
   type: string;
   badge?: string;
+  description?: string;
+  duration?: string;
+  url?: string;
 }
 
 export interface AchievementData {

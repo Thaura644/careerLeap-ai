@@ -83,7 +83,7 @@ const goalFormSchema = z.object({
 type GoalFormValues = z.infer<typeof goalFormSchema>;
 
 export const AIGoalsManager: React.FC<AIGoalsManagerProps> = ({ className }) => {
-  const { profile, setGoal, updateGoal, deleteGoal, isProcessing } = useAI();
+  const { profile, setGoal, updateGoal, deleteGoal, isProcessing, generateRecommendations } = useAI();
   const [isEditing, setIsEditing] = useState(false);
   const [currentGoalId, setCurrentGoalId] = useState<string | null>(null);
   
@@ -451,13 +451,16 @@ export const AIGoalsManager: React.FC<AIGoalsManagerProps> = ({ className }) => 
         )}
       </CardContent>
       
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
+      <CardFooter>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs flex items-center gap-1"
+          onClick={generateRecommendations}
+          disabled={isProcessing}
+        >
           <Brain className="h-3 w-3" />
-          Get AI recommendations
-        </Button>
-        <Button variant="link" size="sm" className="text-xs text-leap-purple flex items-center">
-          View all goals <ChevronRight className="h-3 w-3 ml-1" />
+          {isProcessing ? "Finding resources…" : "Get AI recommendations"}
         </Button>
       </CardFooter>
     </Card>

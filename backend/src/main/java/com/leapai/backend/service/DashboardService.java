@@ -80,20 +80,17 @@ public class DashboardService {
                 : (double) userGoals.stream().mapToInt(Goal::getProgress).sum() / userGoals.size();
         cards.add(card("Goal Progress",
                 userGoals.isEmpty() ? "0%" : Math.round(goalProgress) + "%",
-                completedGoals > 0 ? (int) completedGoals : 0,
                 userGoals.isEmpty() ? 0 : (int) Math.round(goalProgress),
                 userGoals.isEmpty() ? "Add a goal to get started" : completedGoals + " completed"));
 
         cards.add(card("Resources Completed",
-                completed.size() + (completed.isEmpty() ? "" : ""),
-                completed.isEmpty() ? 0 : 1,
+                completed.isEmpty() ? "0" : String.valueOf(completed.size()),
                 completed.isEmpty() ? 0 : Math.min(100, completed.size() * 10),
                 completed.isEmpty() ? "Complete one to start your streak" : "Keep going"));
 
         int skillsProgress = roadmap == null ? 0 : 40;
         cards.add(card("Career Roadmap",
                 roadmap == null ? "Not generated" : "Active",
-                roadmap == null ? 0 : 1,
                 skillsProgress,
                 roadmap == null ? "Generate yours from your profile" : "Next: Phase 1 milestones"));
 
@@ -169,11 +166,15 @@ public class DashboardService {
         for (Resource r : ranked.stream().limit(3).collect(java.util.stream.Collectors.toList())) {
             boolean done = completed.stream().anyMatch(c -> c.getId().equals(r.getId()));
             boolean saved = bookmarked.stream().anyMatch(b -> b.getId().equals(r.getId()));
-            result.add(Map.of(
-                    "id", String.valueOf(r.getId()),
-                    "title", r.getTitle(),
-                    "type", r.getType(),
-                    "badge", done ? "Completed" : saved ? "Bookmarked" : "Recommended"));
+            Map<String, Object> dto = new LinkedHashMap<>();
+            dto.put("id", String.valueOf(r.getId()));
+            dto.put("title", r.getTitle());
+            dto.put("type", r.getType());
+            dto.put("badge", done ? "Completed" : saved ? "Bookmarked" : "Recommended");
+            dto.put("description", r.getDescription() == null ? "" : r.getDescription());
+            dto.put("duration", r.getDuration());
+            dto.put("url", "/resources");
+            result.add(dto);
         }
         return result;
     }
@@ -213,12 +214,11 @@ public class DashboardService {
         return result;
     }
 
-    private static Map<String, Object> card(String title, String value, int percentChange,
+    private static Map<String, Object> card(String title, String value,
                                             int progressValue, String secondaryText) {
         Map<String, Object> card = new LinkedHashMap<>();
         card.put("title", title);
         card.put("value", value);
-        card.put("percentChange", percentChange);
         card.put("progressValue", progressValue);
         card.put("secondaryText", secondaryText);
         return card;

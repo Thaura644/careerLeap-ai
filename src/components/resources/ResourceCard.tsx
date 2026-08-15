@@ -7,7 +7,6 @@ import {
   BookOpen, 
   Calendar, 
   Clock, 
-  ArrowUpRight, 
   Bookmark, 
   Lock,
   FileText,
@@ -15,6 +14,7 @@ import {
   Play,
   Star
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { ResourceType } from "@/context/ResourcesContext";
 import { useResources } from "@/context/ResourcesContext";
 import { cn } from "@/lib/utils";
@@ -60,17 +60,6 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
     });
   };
   
-  const handleResourceClick = (e: React.MouseEvent) => {
-    if (isPro) {
-      e.preventDefault();
-      toast({
-        title: "Pro Content Locked",
-        description: "Upgrade to Pro to access this resource.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -158,23 +147,26 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
         </div>
       </CardContent>
       <CardFooter>
-        <a 
-          href={isPro ? "/upgrade" : "#"} 
-          className="w-full"
-          onClick={handleResourceClick}
-        >
-          {isPro ? (
+        {isPro ? (
+          <Link to="/upgrade" className="w-full">
             <Button className="w-full bg-leap-purple hover:bg-opacity-90 flex items-center gap-2">
               <Lock className="h-4 w-4" />
               Unlock with Pro
             </Button>
-          ) : (
-            <Button className="w-full flex items-center gap-2" variant={isCompleted ? "outline" : "default"}>
-              {isCompleted ? "View Again" : "Start Learning"}
-              <ArrowUpRight className="h-4 w-4" />
-            </Button>
-          )}
-        </a>
+          </Link>
+        ) : (
+          // No fabricated "Start Learning": the linked content pages aren't
+          // built yet, so the card says so instead of sending users nowhere.
+          <Button
+            className="w-full"
+            variant={isCompleted ? "outline" : "default"}
+            disabled
+            title="Learning content for this entry is being added to the library"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            {isCompleted ? "Completed" : "Content coming soon"}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

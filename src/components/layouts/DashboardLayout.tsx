@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { apiGet } from "@/lib/api";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -60,6 +61,24 @@ const navItems: NavItem[] = [
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
+  const [fullName, setFullName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("leap_token")) return;
+    apiGet<{ user: { fullName: string } }>("/auth/me")
+      .then(({ user }) => setFullName(user.fullName))
+      .catch(() => {});
+  }, []);
+
+  const initials = fullName
+    ? fullName
+        .split(" ")
+        .filter(Boolean)
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "…";
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = location.pathname === item.href;
@@ -133,8 +152,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <ThemeToggle />
           <Button variant="ghost" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="" />
-              <AvatarFallback>AL</AvatarFallback>
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
           </Button>
         </div>
@@ -168,11 +186,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="hidden items-center justify-between border-b bg-background p-4 md:flex">
             <div></div>
             <div className="flex items-center gap-4">
+              {fullName && <span className="text-sm text-muted-foreground">{fullName}</span>}
               <ThemeToggle />
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="" />
-                  <AvatarFallback>AL</AvatarFallback>
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </Button>
             </div>

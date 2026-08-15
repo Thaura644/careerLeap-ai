@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -27,7 +26,7 @@ export const OverviewCards: React.FC = () => {
           </Card>
         ))
       ) : (
-        // Loaded cards
+        // Loaded cards — real numbers and honest context, no invented deltas.
         overviewCards.map((card, index) => (
           <Card key={index}>
             <CardHeader className="pb-2">
@@ -36,13 +35,7 @@ export const OverviewCards: React.FC = () => {
             <CardContent>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-2xl font-bold">{card.value}</span>
-                {card.percentChange > 0 ? (
-                  <span className="text-green-500 text-sm font-medium">+{card.percentChange}% from last week</span>
-                ) : card.percentChange < 0 ? (
-                  <span className="text-red-500 text-sm font-medium">{card.percentChange}% from last week</span>
-                ) : (
-                  <span className="text-blue-500 text-sm font-medium">{card.secondaryText || 'No change'}</span>
-                )}
+                <span className="text-sm text-muted-foreground">{card.secondaryText}</span>
               </div>
               <Progress value={card.progressValue} className="h-2" />
             </CardContent>

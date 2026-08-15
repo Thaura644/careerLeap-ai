@@ -3,10 +3,14 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Brain, BarChart, FileText } from "lucide-react";
+import { Crown, Brain, BarChart, FileText, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export const AIProFeatures: React.FC = () => {
+interface AIProFeaturesProps {
+  isPro?: boolean;
+}
+
+export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) => {
   return (
     <Card className="border border-dashed">
       <CardHeader className="pb-3">
@@ -27,28 +31,35 @@ export const AIProFeatures: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4 relative">
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center">
-          <div className="text-center p-6 max-w-md">
-            <Crown className="h-12 w-12 text-leap-purple mx-auto mb-3" />
-            <h3 className="text-xl font-bold mb-2">Unlock Advanced AI Features</h3>
-            <p className="text-muted-foreground mb-4">
-              Get unlimited AI insights, personalized career roadmaps, and interview preparation assistance.
-            </p>
-            <Link to="/upgrade">
-              <Button className="bg-leap-purple hover:bg-opacity-90 px-6">
-                See Pro Benefits
-              </Button>
-            </Link>
+        {!isPro && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center">
+            <div className="text-center p-6 max-w-md">
+              <Crown className="h-12 w-12 text-leap-purple mx-auto mb-3" />
+              <h3 className="text-xl font-bold mb-2">Unlock Advanced AI Features</h3>
+              <p className="text-muted-foreground mb-4">
+                Unlimited AI conversations, advanced insights, and Pro-gated resources.
+              </p>
+              <Link to="/upgrade">
+                <Button className="bg-leap-purple hover:bg-opacity-90 px-6">
+                  See Pro Benefits
+                </Button>
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Pro Features (blurred) */}
+        {/* Pro Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {isPro && (
+            <div className="flex items-center gap-2 text-sm font-medium text-green-600 col-span-full">
+              <Check className="h-4 w-4" /> Pro is active on your account — these are included.
+            </div>
+          )}
           <div className="border rounded-lg p-4">
             <Brain className="h-8 w-8 text-leap-purple mb-2" />
             <h3 className="font-semibold">Advanced Career Insights</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Get personalized recommendations based on your unique career trajectory
+              Personalized recommendations based on your career trajectory
             </p>
           </div>
           
@@ -56,7 +67,7 @@ export const AIProFeatures: React.FC = () => {
             <BarChart className="h-8 w-8 text-leap-purple mb-2" />
             <h3 className="font-semibold">Skills Gap Analysis</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              AI-powered analysis of your skills compared to industry standards
+              Analysis of your skills against the roadmap focus areas
             </p>
           </div>
           
@@ -64,7 +75,7 @@ export const AIProFeatures: React.FC = () => {
             <FileText className="h-8 w-8 text-leap-purple mb-2" />
             <h3 className="font-semibold">Interview Preparation</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Personalized mock interviews and feedback for your target roles
+              Preparation guidance for your target roles
             </p>
           </div>
         </div>

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, RefreshCw, ExternalLink, BookOpen, FileText, Calendar, Play, Clock } from "lucide-react";
+import { RefreshCw, ExternalLink, BookOpen, FileText, Calendar, Play, Clock, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAI } from "@/context/AIContext";
 import { RecommendedResource } from "@/types/ai";
 import { cn } from "@/lib/utils";
@@ -177,9 +178,11 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
       </CardContent>
       
       <CardFooter className={cn(compact ? "p-3" : "")}>
-        <Button variant="link" className="text-leap-purple ml-auto flex items-center">
-          View all resources <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+        <Link to="/resources" className="ml-auto">
+          <Button variant="link" className="text-leap-purple flex items-center">
+            View all resources <ArrowRight className="h-4 w-4 ml-1" />
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );
