@@ -95,20 +95,47 @@ public class InsightsService {
         return result;
     }
 
-    /** Real recommendations from the library catalog, scored against the user's profile. */
+    /**
+     * Real recommendations from the library catalog, scored by a multi-signal
+     * engine against the user's real profile: role relevance, skill-gap match,
+     * learning-format preference, difficulty fit, popularity, and trending.
+     * Each signal is normalized 0..1 and weighted; the composite score is
+     * explainable (every item carries the reasons it won), and the top list is
+     * diversified so one format can't dominate.
+     */
     public Map<String, Object> recommendations(User user) {
         Roadmap roadmap = roadmaps.findFirstByUserIdOrderByCreatedAtDesc(user.getId()).orElse(null);
         String target = roadmap == null ? nvl(user.getTargetRole(), "") : roadmap.getTargetRole();
         String current = roadmap == null ? nvl(user.getCurrentRole(), "") : roadmap.getCurrentRole();
-
-        // Boost items whose type matches the user's preferred learning formats.
+        List<String> interests = csvList(user.getInterests());
         java.util.Set<String> preferred = preferredTypes(user.getLearningFormats());
+        double experience = yearsExperience(user.getYearsExperience());
+        int maxReviews = 0;
+        for (Resource r : resources.findAll()) maxReviews = Math.max(maxReviews, r.getReviews());
 
         List<Resource> catalog = resources.findAll();
-        List<Map<String, Object>> ranked = new ArrayList<>();
+        List<ScoredResource> scored = new ArrayList<>();
         for (Resource r : catalog) {
-            double score = score(r, target, current);
-            if (preferred.contains(r.getType().toLowerCase(Locale.ROOT))) score += 15;
+            String text = (r.getTitle() + " " + nvl(r.getDescription(), "") + " " + r.getType()
+                    + " " + r.getCategory()).toLowerCase(Locale.ROOT);
+
+            double roleRelevance = roleRelevance(text, target, current);
+            double skillGap = skillGap(text, interests);
+            double format = preferred.contains(r.getType().toLowerCase(Locale.ROOT)) ? 1.0 : 0.0;
+            double difficulty = difficultyFit(r.isPro(), experience);
+            double popularity = popularity(r.getRating(), r.getReviews(), maxReviews);
+            double trending = "TRENDING".equalsIgnoreCase(r.getCategory()) ? 1.0 : 0.0;
+
+            // Weights sum to 1.0: profile-first, then engagement signals.
+            double score = 100.0 * (0.30 * roleRelevance
+                    + 0.25 * skillGap
+                    + 0.15 * format
+                    + 0.10 * difficulty
+                    + 0.10 * popularity
+                    + 0.10 * trending);
+
+            List<String> reasons = reasons(r, roleRelevance, skillGap, format, trending);
+
             Map<String, Object> dto = new LinkedHashMap<>();
             dto.put("id", String.valueOf(r.getId()));
             dto.put("title", r.getTitle());
@@ -118,28 +145,122 @@ public class InsightsService {
             dto.put("difficulty", r.isPro() ? "advanced" : "intermediate");
             dto.put("estimatedTime", r.getDuration());
             dto.put("relevanceScore", Math.round(score * 100.0) / 100.0);
-            ranked.add(dto);
+            dto.put("reasons", reasons);
+            scored.add(new ScoredResource(dto, score, r.getType().toLowerCase(Locale.ROOT)));
         }
-        ranked.sort(Comparator.comparingDouble(
-                (Map<String, Object> dto) -> ((Number) dto.get("relevanceScore")).doubleValue()).reversed());
+
+        scored.sort(Comparator.comparingDouble((ScoredResource s) -> s.score).reversed());
+        List<Map<String, Object>> diverse = diversify(scored, 6, 2);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("recommendations", ranked.stream().limit(6).collect(java.util.stream.Collectors.toList()));
+        result.put("recommendations", diverse);
+        result.put("explanation", "Scored by role relevance (30%), skill-gap match (25%), "
+                + "learning format (15%), difficulty fit (10%), popularity (10%), and trending (10%).");
         return result;
     }
 
-    private double score(Resource r, String target, String current) {
-        String text = (r.getTitle() + " " + nvl(r.getDescription(), "")).toLowerCase(Locale.ROOT);
-        double score = r.getRating() * 10.0;
+    /** Role relevance: how much of the target+current role's vocabulary is in
+     *  the item. Each distinct role keyword that appears earns credit, so one
+     *  strong match ("engineer" for a Staff Engineer target) is meaningful
+     *  instead of being diluted by the generic words around it. */
+    private double roleRelevance(String text, String target, String current) {
         String all = (target + " " + current).toLowerCase(Locale.ROOT);
-        if (all.contains("design") && text.contains("design")) score += 25;
-        if (all.contains("lead") && (text.contains("lead") || text.contains("management"))) score += 25;
-        if (all.contains("data") && text.contains("data")) score += 25;
-        if (all.contains("product") && text.contains("product")) score += 25;
-        if (all.contains("architect") && (text.contains("architect") || text.contains("system"))) score += 25;
-        if (all.contains("interview") && text.contains("interview")) score += 25;
-        if (all.contains("communic") && text.contains("communic")) score += 25;
-        return score;
+        String[] words = all.split("[^a-z]+");
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        int hits = 0;
+        for (String w : words) {
+            if (w.length() < 4) continue;
+            if (!seen.add(w)) continue;
+            if (text.contains(w)) hits++;
+        }
+        if (seen.isEmpty()) return 0.3; // no role vocabulary yet — mild neutral signal
+        return Math.min(1.0, hits * 0.4);
+    }
+
+    /** Skill-gap match: the fraction of the user's self-assessed skills covered. */
+    private double skillGap(String text, List<String> interests) {
+        if (interests.isEmpty()) return 0.0;
+        int hits = 0;
+        for (String skill : interests) {
+            if (skill.length() < 3) continue;
+            if (text.contains(skill.toLowerCase(Locale.ROOT))) hits++;
+        }
+        return Math.min(1.0, hits / (double) Math.min(4, interests.size()));
+    }
+
+    /** Difficulty fit: senior users get advanced/pro content, juniors get foundations. */
+    private double difficultyFit(boolean isPro, double experienceYears) {
+        if (experienceYears < 0) return 0.5; // unknown experience — neutral
+        if (experienceYears >= 6) return isPro ? 1.0 : 0.4;
+        if (experienceYears >= 3) return isPro ? 0.6 : 0.8;
+        return isPro ? 0.2 : 1.0; // junior
+    }
+
+    /** Popularity: rating weighted by review count, log-scaled so one hit item
+     *  can't drown out everything else, normalized against the catalog max. */
+    private double popularity(double rating, int reviews, int maxReviews) {
+        double ratingPart = rating / 5.0;
+        double reviewPart = maxReviews <= 0 ? 0 : Math.log(1 + reviews) / Math.log(1 + maxReviews);
+        return 0.5 * ratingPart + 0.5 * reviewPart;
+    }
+
+    /** Human-readable "why this item" reasons for the UI. */
+    private List<String> reasons(Resource r, double role, double skill, double format, double trending) {
+        List<String> reasons = new ArrayList<>();
+        if (role >= 0.66) reasons.add("Strong match for your target role");
+        else if (role >= 0.33) reasons.add("Relevant to your career path");
+        if (skill >= 0.33) reasons.add("Covers skills you're building");
+        if (format > 0) reasons.add("Matches your preferred learning format");
+        if (trending > 0) reasons.add("Trending in the library");
+        if (reasons.isEmpty()) reasons.add("Highly rated in the library");
+        return reasons;
+    }
+
+    /** Greedy diversity: at most {@code maxPerType} items of each format in the
+     *  final list, keeping the best-scored items of each format. */
+    private List<Map<String, Object>> diversify(List<ScoredResource> scored, int limit, int maxPerType) {
+        java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (ScoredResource s : scored) {
+            int used = counts.getOrDefault(s.type, 0);
+            if (used >= maxPerType) continue;
+            counts.put(s.type, used + 1);
+            out.add(s.dto);
+            if (out.size() >= limit) break;
+        }
+        return out;
+    }
+
+    private static final class ScoredResource {
+        final Map<String, Object> dto;
+        final double score;
+        final String type;
+        ScoredResource(Map<String, Object> dto, double score, String type) {
+            this.dto = dto;
+            this.score = score;
+            this.type = type;
+        }
+    }
+
+    /** Parses "0-2" / "3-5" / "6-10" / "10+" style experience strings. */
+    private double yearsExperience(String value) {
+        if (value == null || value.isBlank()) return -1;
+        String[] parts = value.replace("+", "").split("[^0-9]+");
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            return Double.parseDouble(part);
+        }
+        return -1;
+    }
+
+    private List<String> csvList(String value) {
+        List<String> out = new ArrayList<>();
+        if (value == null || value.isBlank()) return out;
+        for (String part : value.split(",")) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) out.add(trimmed.toLowerCase(Locale.ROOT));
+        }
+        return out;
     }
 
     /** Maps the user's preferred learning formats to library resource types. */

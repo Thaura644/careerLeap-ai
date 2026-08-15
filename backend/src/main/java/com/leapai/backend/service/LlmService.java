@@ -208,6 +208,60 @@ public class LlmService {
         }
     }
 
+    private static final String SYSTEM_FLASHCARD_PROMPT =
+            "You are Leap.ai's flashcard writer. Turn the user's real career roadmap and skills "
+            + "into a spaced-repetition study deck: questions a professional preparing for their "
+            + "target role must be able to answer from memory. Respond with ONLY valid JSON, no "
+            + "markdown, in exactly this shape: {\"cards\": [{\"front\": string, \"back\": string, "
+            + "\"topic\": string}]}. Produce 8-12 cards. Front is a short, precise question or prompt "
+            + "(one line). Back is the concise answer (2-4 sentences, concrete, from the roadmap "
+            + "content and common professional knowledge). Topic is the phase or skill it belongs to. "
+            + "Never invent facts that contradict the roadmap content provided; if the roadmap is "
+            + "empty, ask the user to complete their profile rather than fabricating a plan.";
+
+    /**
+     * Structured flashcard generation from the user's real roadmap + skills.
+     * Returns a list of {@code {"front", "back", "topic"}} maps, or an empty
+     * list when the LLM is unavailable or the response cannot be parsed (the
+     * caller falls back to its deterministic deck builder).
+     */
+    public List<Map<String, Object>> generateFlashcards(Map<String, Object> roadmap, List<String> skills, String targetRole) {
+        if (!isConfigured()) {
+            return List.of();
+        }
+        try {
+            Map<String, Object> context = new LinkedHashMap<>();
+            context.put("roadmap", roadmap);
+            context.put("skills", skills);
+            context.put("targetRole", targetRole == null ? "" : targetRole);
+            List<Map<String, Object>> messages = List.of(
+                    Map.of("role", "system", "content", SYSTEM_FLASHCARD_PROMPT),
+                    Map.of("role", "user", "content",
+                            "User context (JSON):\n" + objectMapper.writeValueAsString(context)));
+            String text = complete(messages, 0.3, 2000);
+            JsonNode node = extractJson(text);
+            if (node == null || !node.has("cards") || !node.get("cards").isArray()) {
+                return List.of();
+            }
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (JsonNode item : node.get("cards")) {
+                String front = item.path("front").asText("").trim();
+                String back = item.path("back").asText("").trim();
+                if (front.isEmpty() || back.isEmpty()) continue;
+                Map<String, Object> card = new LinkedHashMap<>();
+                card.put("front", front);
+                card.put("back", back);
+                card.put("topic", item.path("topic").asText("General").trim());
+                out.add(card);
+                if (out.size() >= 12) break;
+            }
+            return out;
+        } catch (Exception e) {
+            log.warn("[llm] flashcard generation failed: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
     /** Pulls a JSON object out of a model response, tolerating markdown fences. */
     private JsonNode extractJson(String text) {
         if (text == null) return null;

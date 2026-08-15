@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, CornerDownLeft, ArrowUpDown, FileText, LayoutDashboard, BookOpen, Users, Lightbulb, Settings, Crown, X } from "lucide-react";
+import { Search, CornerDownLeft, ArrowUpDown, FileText, LayoutDashboard, BookOpen, Users, Lightbulb, Settings, Crown, X, Code2, Brain } from "lucide-react";
 import { apiGet } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +24,8 @@ type Result = PageResult | ResourceResult;
 const PAGES: PageResult[] = [
   { type: "page", title: "Dashboard", subtitle: "Your roadmap and progress", to: "/dashboard", icon: LayoutDashboard },
   { type: "page", title: "Resources", subtitle: "Learning library", to: "/resources", icon: BookOpen },
+  { type: "page", title: "Practice", subtitle: "Coding problems with a real judge", to: "/practice", icon: Code2 },
+  { type: "page", title: "Flashcards", subtitle: "Spaced-repetition study cards", to: "/flashcards", icon: Brain },
   { type: "page", title: "Community", subtitle: "Groups and discussions", to: "/community", icon: Users },
   { type: "page", title: "AI Insights", subtitle: "Skill gaps and recommendations", to: "/insights", icon: Lightbulb },
   { type: "page", title: "Settings", subtitle: "Profile and account", to: "/settings", icon: Settings },

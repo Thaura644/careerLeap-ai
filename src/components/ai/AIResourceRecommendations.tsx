@@ -158,6 +158,22 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
                         </Badge>
                       </div>
                       
+                      {resource.reasons && resource.reasons.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {resource.reasons.slice(0, 3).map((reason) => (
+                            <span
+                              key={reason}
+                              className="inline-flex items-center rounded-full bg-leap-purple/10 dark:bg-leap-purple/20 px-2 py-0.5 text-[10px] font-medium text-leap-purple"
+                            >
+                              {reason}
+                            </span>
+                          ))}
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {Math.round(resource.relevanceScore)}% match
+                          </span>
+                        </div>
+                      )}
+                      
                       <Button 
                         variant="link" 
                         size="sm" 

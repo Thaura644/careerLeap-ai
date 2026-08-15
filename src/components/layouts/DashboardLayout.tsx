@@ -12,6 +12,8 @@ import {
   Crown, 
   MenuIcon, 
   X,
+  Code2,
+  Brain,
   Search as SearchIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,16 @@ const navItems: NavItem[] = [
     title: "Resources",
     href: "/resources",
     icon: BookOpen,
+  },
+  {
+    title: "Practice",
+    href: "/practice",
+    icon: Code2,
+  },
+  {
+    title: "Flashcards",
+    href: "/flashcards",
+    icon: Brain,
   },
   {
     title: "Community",

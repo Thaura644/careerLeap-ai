@@ -71,6 +71,7 @@ interface RawRecommended {
   difficulty: string;
   estimatedTime: string;
   relevanceScore: number;
+  reasons?: string[];
 }
 
 // --- Mappers ---------------------------------------------------------------
@@ -96,6 +97,7 @@ const mapRecommended = (r: RawRecommended): RecommendedResource => ({
   difficulty: (r.difficulty as RecommendedResource["difficulty"]) || "intermediate",
   estimatedTime: r.estimatedTime,
   relevanceScore: r.relevanceScore,
+  reasons: r.reasons || [],
 });
 
 export const AIContext = createContext<AIContextType | undefined>(undefined);

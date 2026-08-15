@@ -24,6 +24,8 @@ export interface RecommendedResource {
   estimatedTime: string;
   thumbnail?: string;
   relevanceScore: number;
+  /** Human-readable "why this item" reasons from the scoring engine. */
+  reasons?: string[];
 }
 
 export interface CareerGoal {

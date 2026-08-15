@@ -13,6 +13,9 @@ import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import UpgradePro from "./pages/UpgradePro";
+import Practice from "./pages/Practice";
+import PracticeProblem from "./pages/PracticeProblem";
+import Flashcards from "./pages/Flashcards";
 import Resources from "./pages/Resources";
 import Settings from "./pages/Settings";
 import Community from "./pages/Community";
@@ -88,6 +91,9 @@ const App = () => {
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/upgrade" element={<UpgradePro />} />
+                <Route path="/practice" element={<Practice />} />
+                <Route path="/practice/:slug" element={<PracticeProblem />} />
+                <Route path="/flashcards" element={<Flashcards />} />
                 <Route path="/resources" element={<Resources />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/community" element={<Community />} />
