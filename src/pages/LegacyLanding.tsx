@@ -1,7 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiGet } from "@/lib/api";
+
+/** Prices served by GET /api/payments/status — the single source of truth. */
+type CurrencyPrice = { displayPrice: string; amountMinor: number };
+type PlanStatus = { id: string; label: string; prices: Record<string, CurrencyPrice> };
+type PaymentStatus = { mode: string; enabled: boolean; currencies: string[]; plans: PlanStatus[] };
+
+const FREE_PLAN = {
+  name: "Early Access",
+  price: "$0",
+  period: "free plan",
+  cta: "Start free",
+  to: "/onboarding",
+  features: ["Sample roadmap generator", "Community access", "No card, no spam"],
+};
+
+/** Fallback if the status fetch fails (offline/cold start) — mirrors backend pricing. */
+const FALLBACK_PLANS = [
+  {
+    name: "Roadmap Report",
+    price: "$12",
+    period: "one-time · also ₦15,000",
+    cta: "Get yours",
+    to: "/upgrade",
+    features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"],
+  },
+  {
+    name: "Pro",
+    price: "$8",
+    period: "per month · also ₦10,000 · or $80/yr",
+    cta: "Go Pro",
+    to: "/upgrade",
+    features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support", "Annual billing = 2 months free"],
+  },
+];
 
 const phases = [
   {
@@ -77,32 +112,7 @@ const featureList = [
   },
 ];
 
-const plans = [
-  {
-    name: "Early Access",
-    price: "$0",
-    period: "free while we build",
-    cta: "Start free",
-    to: "/onboarding",
-    features: ["Sample roadmap generator", "Community access", "No card, no spam"],
-  },
-  {
-    name: "Roadmap Report",
-    price: "$12",
-    period: "one-time · also ₦15,000",
-    cta: "Get yours",
-    to: "/upgrade",
-    features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"],
-  },
-  {
-    name: "Pro",
-    price: "$8",
-    period: "per month · also ₦10,000 · or $80/yr",
-    cta: "Go Pro",
-    to: "/upgrade",
-    features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support", "Annual billing = 2 months free"],
-  },
-];
+
 
 const footerLinks: { label: string; to: string }[][] = [
   [
@@ -127,6 +137,53 @@ const footerLinks: { label: string; to: string }[][] = [
 
 const LegacyLanding = () => {
   const [open, setOpen] = useState(false);
+  const [paidPlans, setPaidPlans] = useState<typeof FALLBACK_PLANS>(FALLBACK_PLANS);
+
+  // Pull the live prices from the backend so the landing always shows the
+  // real values (single source of truth: /api/payments/status). Falls back to
+  // FALLBACK_PLANS if the fetch fails (offline / backend cold start).
+  useEffect(() => {
+    let active = true;
+    apiGet<PaymentStatus>("/payments/status")
+      .then((status) => {
+        if (!active || !Array.isArray(status.plans)) return;
+        const report = status.plans.find((p) => p.id === "roadmap-report");
+        const monthly = status.plans.find((p) => p.id === "pro-monthly");
+        const annual = status.plans.find((p) => p.id === "pro-annual");
+        const usd = (p?: PlanStatus) => (p && p.prices["USD"]?.displayPrice) || "";
+        const ngn = (p?: PlanStatus) => (p && p.prices["NGN"]?.displayPrice) || "";
+        const next: typeof FALLBACK_PLANS = [];
+        if (report) {
+          next.push({
+            name: "Roadmap Report",
+            price: usd(report),
+            period: `one-time${ngn(report) ? ` · also ${ngn(report)}` : ""}`,
+            cta: "Get yours",
+            to: "/upgrade",
+            features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"],
+          });
+        }
+        if (monthly) {
+          next.push({
+            name: "Pro",
+            price: usd(monthly),
+            period: `per month${ngn(monthly) ? ` · also ${ngn(monthly)}` : ""}${usd(annual) ? ` · or ${usd(annual)}/yr` : ""}`,
+            cta: "Go Pro",
+            to: "/upgrade",
+            features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support", "Annual billing = 2 months free"],
+          });
+        }
+        if (next.length === 2) setPaidPlans(next);
+      })
+      .catch(() => {
+        /* keep fallback */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const plans = [FREE_PLAN, ...paidPlans];
 
   const navLinks = (
     <>
@@ -193,7 +250,7 @@ const LegacyLanding = () => {
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-14 px-5 py-20 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
-                Early access · free while we build
+                Live now · free to start
               </p>
               <h1 className="mt-5 font-display text-[40px] font-medium leading-[1.05] tracking-tight sm:text-[56px]">
                 The gap between Senior and Staff was never more{" "}
@@ -222,7 +279,7 @@ const LegacyLanding = () => {
                 </Button>
               </div>
               <p className="mt-5 text-[13px] text-stone-500">
-                Free during early access. No card, no spam — delete your account anytime.
+                Free to start. No card, no spam — delete your account anytime.
               </p>
             </div>
 
@@ -365,8 +422,8 @@ const LegacyLanding = () => {
               ))}
             </div>
             <p className="mt-6 text-[12px] text-stone-500">
-              Launch pricing. Checkout goes live the day we flip it — you'll see it happen in the
-              changelog before anyone is charged.
+              Checkout is live — pay securely with Paystack in NGN, USD, GHS, ZAR, or KES. The
+              free plan is free forever; upgrade when it's useful.
             </p>
           </div>
         </section>
