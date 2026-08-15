@@ -43,7 +43,10 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/ai/**",
                         "/api/goals/**",
                         "/api/payments/verify",
-                        "/api/payments/me")
+                        "/api/payments/me",
+                        "/api/practice/**",
+                        "/api/skills/**",
+                        "/api/resume/**")
                 .excludePathPatterns("/api/health", "/api/payments/status");
     }
 }

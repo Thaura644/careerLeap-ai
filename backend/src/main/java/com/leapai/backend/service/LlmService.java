@@ -161,12 +161,74 @@ public class LlmService {
         }
     }
 
+    private static final String SYSTEM_RESUME_PROMPT =
+            "You are Leap.ai's resume parser. Extract the professional and technical skills "
+            + "mentioned in the resume text. Respond with ONLY valid JSON, no markdown, in exactly "
+            + "this shape: {\"skills\": [{\"name\": string, \"category\": string}]}. Normalize names "
+            + "(e.g. 'JS' to 'JavaScript' when unambiguous), remove duplicates, and return at most 30. "
+            + "If the text contains no recognizable skills, return {\"skills\": []}. Never invent "
+            + "skills that are not in the text.";
+
+    /**
+     * Structured skill extraction from resume text. Returns a list of
+     * {@code {"name": ..., "category": ...}} maps. When the LLM is unavailable
+     * or the response cannot be parsed, returns an empty list (caller decides
+     * how to report that honestly).
+     */
+    public List<Map<String, String>> extractSkillsFromResume(String resumeText) {
+        if (!isConfigured() || resumeText == null || resumeText.isBlank()) {
+            return List.of();
+        }
+        try {
+            List<Map<String, Object>> messages = List.of(
+                    Map.of("role", "system", "content", SYSTEM_RESUME_PROMPT),
+                    Map.of("role", "user", "content",
+                            "Resume text:\n" + truncate(resumeText, 20000)));
+            String text = complete(messages, 0.2, 1200);
+            JsonNode node = extractJson(text);
+            if (node == null || !node.has("skills") || !node.get("skills").isArray()) {
+                return List.of();
+            }
+            List<Map<String, String>> out = new ArrayList<>();
+            for (JsonNode item : node.get("skills")) {
+                String name = item.path("name").asText("").trim();
+                if (name.isEmpty()) continue;
+                Map<String, String> skill = new LinkedHashMap<>();
+                skill.put("name", name.length() > 80 ? name.substring(0, 80) : name);
+                skill.put("category", item.path("category").asText("Other").trim());
+                out.add(skill);
+            }
+            return out;
+        } catch (Exception e) {
+            log.warn("[llm] resume skill extraction failed: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /** Pulls a JSON object out of a model response, tolerating markdown fences. */
+    private JsonNode extractJson(String text) {
+        if (text == null) return null;
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+        if (start < 0 || end <= start) return null;
+        try {
+            return objectMapper.readTree(text.substring(start, end + 1));
+        } catch (Exception e) {
+            log.warn("[llm] could not parse structured response: {}", e.getMessage());
+            return null;
+        }
+    }
+
     private String complete(List<Map<String, Object>> messages) throws Exception {
+        return complete(messages, 0.7, 2000);
+    }
+
+    private String complete(List<Map<String, Object>> messages, double temperature, int maxTokens) throws Exception {
         Map<String, Object> payload = Map.of(
                 "model", model,
                 "messages", messages,
-                "temperature", 0.7,
-                "max_tokens", 2000);
+                "temperature", temperature,
+                "max_tokens", maxTokens);
         String body = objectMapper.writeValueAsString(payload);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/chat/completions"))

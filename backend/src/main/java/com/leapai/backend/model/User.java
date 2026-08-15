@@ -64,6 +64,10 @@ public class User {
     @Column(length = 1000)
     private String aspirations;
 
+    /** Comma-separated skill names the user self-assessed (drives roadmap focus). */
+    @Column(name = "interests", columnDefinition = "text")
+    private String interests;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -102,4 +106,7 @@ public class User {
 
     public String getAspirations() { return aspirations; }
     public void setAspirations(String aspirations) { this.aspirations = aspirations; }
+
+    public String getInterests() { return interests; }
+    public void setInterests(String interests) { this.interests = interests; }
 }

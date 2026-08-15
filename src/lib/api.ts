@@ -38,9 +38,23 @@ async function fetchWithTimeout(path: string, init: RequestInit): Promise<Respon
   }
 }
 
+/** Reads a server-provided error message from a failed response body. */
+async function errorMessage(path: string, res: Response): Promise<Error> {
+  let msg = `Request to ${path} failed (${res.status})`;
+  try {
+    const body = await res.json();
+    if (body && typeof body.error === "string" && body.error.trim()) {
+      msg = body.error;
+    }
+  } catch {
+    /* keep generic message */
+  }
+  return new Error(msg);
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetchWithTimeout(path, { method: "GET", headers: withHeaders() });
-  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
+  if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
 
@@ -50,7 +64,7 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     headers: withHeaders(),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
+  if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
 
@@ -60,12 +74,25 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
     headers: withHeaders(),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`PUT ${path} failed: ${res.status}`);
+  if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
 
 export async function apiDelete<T>(path: string): Promise<T> {
   const res = await fetchWithTimeout(path, { method: "DELETE", headers: withHeaders() });
-  if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
+  if (!res.ok) throw await errorMessage(path, res);
+  return res.json();
+}
+
+/** Multipart POST (file uploads). The auth header is added but Content-Type
+ *  is left to the browser so the boundary is set correctly. */
+export async function apiPostMultipart<T>(path: string, formData: FormData): Promise<T> {
+  const token = getAuthToken();
+  const res = await fetchWithTimeout(path, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }

@@ -75,6 +75,9 @@ public class AuthService {
         u.put("timeframe", nvl(user.getTimeframe(), null));
         u.put("industry", nvl(user.getIndustry(), null));
         u.put("yearsExperience", nvl(user.getYearsExperience(), null));
+        u.put("location", nvl(user.getLocation(), null));
+        u.put("aspirations", nvl(user.getAspirations(), null));
+        u.put("interests", nvl(user.getInterests(), null));
         return u;
     }
 

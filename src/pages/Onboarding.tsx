@@ -20,7 +20,7 @@ interface AssessedSkill {
 
 const Onboarding = () => {
   const [step, setStep] = useState(1);
-  const [progress, setProgress] = useState(16.6);
+  const [progress, setProgress] = useState(20);
   // All fields live in state — the step DOM unmounts as the user advances, so
   // reading inputs at the end would silently lose them.
   const [currentRole, setCurrentRole] = useState("");
@@ -49,7 +49,7 @@ const Onboarding = () => {
 
   const nextStep = () => {
     const nextStepNum = step + 1;
-    if (nextStepNum > 6) {
+    if (nextStepNum > 5) {
       // Onboarding complete — persist the collected profile so the roadmap
       // engine (and everything else) works from real data, then continue.
       saveProfile().catch(() => {
@@ -65,14 +65,14 @@ const Onboarding = () => {
       return;
     }
     setStep(nextStepNum);
-    setProgress(nextStepNum * 16.6);
+    setProgress(nextStepNum * 20);
   };
 
   const prevStep = () => {
     const prevStepNum = step - 1;
     if (prevStepNum < 1) return;
     setStep(prevStepNum);
-    setProgress(prevStepNum * 16.6);
+    setProgress(prevStepNum * 20);
   };
 
   const handleSkillsComplete = (skills: AssessedSkill[]) => {
@@ -113,7 +113,7 @@ const Onboarding = () => {
           <div className="mb-8">
             <Progress value={progress} className="h-2" />
             <div className="flex justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
-              <span>Step {step} of 6</span>
+              <span>Step {step} of 5</span>
               <span>{Math.round(progress)}% Complete</span>
             </div>
           </div>
@@ -235,18 +235,6 @@ const Onboarding = () => {
 
               {step === 4 && (
                 <div className="space-y-6">
-                  <h2 className="text-xl font-semibold mb-4">Resume</h2>
-                  <div className="border rounded-lg p-6 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Resume analysis isn't built yet, so we won't pretend to read one here. Your
-                      self-assessed skills from the previous step already shape your roadmap.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Learning Preferences</h2>
 
                   <div className="space-y-4">
@@ -281,7 +269,7 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step === 6 && (
+              {step === 5 && (
                 <div className="space-y-6">
                   <div className="text-center">
                     <div className="flex justify-center mb-4">
@@ -304,7 +292,7 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step < 6 && (
+              {step < 5 && (
                 <div className="flex justify-between mt-8">
                   {step > 1 ? (
                     <Button variant="outline" onClick={prevStep}>
