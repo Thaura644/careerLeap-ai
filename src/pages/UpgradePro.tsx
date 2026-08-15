@@ -174,22 +174,27 @@ const UpgradePro = () => {
         currency,
         ref: reference,
         metadata: { plan: plan.id },
-        callback: async (response: { reference: string }) => {
-          try {
-            const res = await apiPost<{ verified: boolean; pro?: boolean }>("/payments/verify", {
-              reference: response.reference,
-              email: email.trim(),
-            });
-            if (res.verified) {
-              setPro(true);
-              setMessage("Payment verified — Pro activated. Thank you!");
-            } else {
-              setMessage("Payment could not be verified. Contact support if you were charged.");
+        // NOTE: Paystack's validator rejects async functions as `callback`
+        // ("Attribute callback must be a valid function") — keep this sync and
+        // run the async verification inside.
+        callback: (response: { reference: string }) => {
+          (async () => {
+            try {
+              const res = await apiPost<{ verified: boolean; pro?: boolean }>("/payments/verify", {
+                reference: response.reference,
+                email: email.trim(),
+              });
+              if (res.verified) {
+                setPro(true);
+                setMessage("Payment verified — Pro activated. Thank you!");
+              } else {
+                setMessage("Payment could not be verified. Contact support if you were charged.");
+              }
+            } catch {
+              setMessage("Verification failed. Contact support if you were charged.");
             }
-          } catch {
-            setMessage("Verification failed. Contact support if you were charged.");
-          }
-          setBusy(false);
+            setBusy(false);
+          })();
         },
         onClose: () => setBusy(false),
       });
