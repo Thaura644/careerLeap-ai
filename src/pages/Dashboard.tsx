@@ -6,8 +6,6 @@ import { ActivityChart } from "@/components/dashboard/ActivityChart";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { SidebarContent } from "@/components/dashboard/SidebarContent";
 import { DashboardProvider } from "@/context/DashboardContext";
-import { AIProvider } from "@/context/AIContext";
-import { AIAgentChat } from "@/components/ai/AIAgentChat";
 import { AIGoalsManager } from "@/components/ai/AIGoalsManager";
 import { AIResourceRecommendations } from "@/components/ai/AIResourceRecommendations";
 
@@ -23,12 +21,11 @@ const Dashboard = () => {
   };
 
   return (
-    <AIProvider>
-      <DashboardProvider>
-        <DashboardLayout>
-          <div className="mx-auto max-w-6xl">
-            <DashboardHeader onRoadmapGenerated={handleRoadmapGenerated} />
-            <OverviewCards />
+    <DashboardProvider>
+      <DashboardLayout>
+        <div className="mx-auto max-w-6xl">
+          <DashboardHeader onRoadmapGenerated={handleRoadmapGenerated} />
+          <OverviewCards />
 
             {/* Main Content */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -36,7 +33,6 @@ const Dashboard = () => {
               <div className="lg:col-span-2">
                 <ActivityChart />
                 <div className="mb-8">
-                  <AIAgentChat className="mb-6" />
                   <AIResourceRecommendations />
                 </div>
                 <DashboardTabs
@@ -53,9 +49,8 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </DashboardLayout>
-      </DashboardProvider>
-    </AIProvider>
+      </DashboardLayout>
+    </DashboardProvider>
   );
 };
 

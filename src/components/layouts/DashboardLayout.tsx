@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { GlobalSearch, openGlobalSearch } from "@/components/search/GlobalSearch";
+import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
 import { apiGet } from "@/lib/api";
 
 interface DashboardLayoutProps {
@@ -217,6 +218,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       <GlobalSearch />
+      <FloatingAssistant />
     </div>
   );
 }
