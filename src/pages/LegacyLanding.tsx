@@ -267,7 +267,7 @@ const LegacyLanding = () => {
                   className="h-11 rounded-none bg-stone-900 px-6 text-sm hover:bg-stone-700"
                 >
                   <Link to="/onboarding">
-                    Build my roadmap <ArrowRight className="ml-2 h-4 w-4" />
+                    Get my career plan <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button
@@ -443,7 +443,7 @@ const LegacyLanding = () => {
                 className="h-11 rounded-none bg-stone-50 px-7 text-sm text-stone-900 hover:bg-white"
               >
                 <Link to="/onboarding">
-                  Build my roadmap <ArrowRight className="ml-2 h-4 w-4" />
+                  Get my career plan <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
