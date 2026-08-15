@@ -341,8 +341,8 @@ const Settings = () => {
                     <div>
                       <p className="font-medium text-yellow-800 dark:text-yellow-500">Data Export & Deletion</p>
                       <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                        You can request a copy of your data or delete your account at any time by
-                        emailing support. Account deletion permanently removes your data.
+                        You can request a copy of your data or delete your account at any time
+                        through the contact page. Account deletion permanently removes your data.
                       </p>
                     </div>
                   </div>
