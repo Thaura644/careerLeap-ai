@@ -11,11 +11,13 @@ import {
   Settings, 
   Crown, 
   MenuIcon, 
-  X 
+  X,
+  Search as SearchIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { GlobalSearch, openGlobalSearch } from "@/components/search/GlobalSearch";
 import { apiGet } from "@/lib/api";
 
 interface DashboardLayoutProps {
@@ -158,22 +160,42 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
 
-      {/* Desktop navigation */}
-      <div className="flex flex-1">
-        <aside className="hidden w-64 flex-col border-r bg-background md:flex">
-          <div className="flex h-14 items-center border-b px-4">
+      {/* Desktop navigation — sticky sidebar with its own scroll. The user
+          icon and global search stay pinned; only the nav list scrolls. */}
+      <div className="flex flex-1 items-start">
+        <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-background md:flex">
+          <div className="flex h-14 shrink-0 items-center border-b px-4">
             <Link to="/" className="flex items-center gap-2">
               <span className="text-xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
                 Leap.ai
               </span>
             </Link>
+            <Button variant="ghost" size="icon" className="ml-auto rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+            </Button>
           </div>
-          <nav className="grid gap-1 p-4">
+
+          <div className="shrink-0 border-b px-4 py-3">
+            <button
+              type="button"
+              onClick={openGlobalSearch}
+              className="flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-leap-purple hover:text-foreground"
+            >
+              <SearchIcon className="h-4 w-4" />
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="rounded border px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+            </button>
+          </div>
+
+          <nav className="grid flex-1 gap-1 overflow-y-auto p-4">
             {navItems.map((item) => (
               <NavLink key={item.href} item={item} />
             ))}
           </nav>
-          <div className="mt-auto p-4">
+
+          <div className="shrink-0 border-t p-4">
             <Link to="/upgrade">
               <Button className="w-full bg-leap-purple hover:bg-opacity-90">
                 <Crown className="mr-2 h-4 w-4" />
@@ -188,16 +210,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center gap-4">
               {fullName && <span className="text-sm text-muted-foreground">{fullName}</span>}
               <ThemeToggle />
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-              </Button>
             </div>
           </div>
           <div className="p-4">{children}</div>
         </main>
       </div>
+
+      <GlobalSearch />
     </div>
   );
 }
