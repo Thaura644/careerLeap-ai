@@ -92,6 +92,13 @@ public class PaymentService {
                 "GHS", price("GH\u20B5100", 10_000L),
                 "ZAR", price("R145", 14_500L),
                 "KES", price("KSh 1,050", 105_000L))));
+        // Annual = 10 months' price (two months free) in every currency.
+        plans.add(plan("pro-annual", "Pro — annual", Map.of(
+                "NGN", price("\u20A6100,000", 10_000_000L),
+                "USD", price("$80", 8_000L),
+                "GHS", price("GH\u20B51,000", 100_000L),
+                "ZAR", price("R1,450", 145_000L),
+                "KES", price("KSh 10,500", 1_050_000L))));
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("mode", mode);
@@ -133,11 +140,16 @@ public class PaymentService {
                 return Map.of("verified", false, "status", shown);
             }
             String planId = data.path("metadata").path("plan").asText("pro-monthly");
-            user.setPlan(User.Plan.PRO);
-            users.save(user);
-            log.info("[payments] VERIFIED live charge {} for {} (granted {})",
-                    reference, user.getEmail(), planId);
-            return Map.of("verified", true, "pro", true,
+            // Only the Pro plans grant the Pro entitlement. The Roadmap Report is
+            // a one-time product and must never flip a subscription.
+            boolean grantsPro = "pro-monthly".equals(planId) || "pro-annual".equals(planId);
+            if (grantsPro) {
+                user.setPlan(User.Plan.PRO);
+                users.save(user);
+            }
+            log.info("[payments] VERIFIED live charge {} for {} (plan {}, grantedPro {})",
+                    reference, user.getEmail(), planId, grantsPro);
+            return Map.of("verified", true, "pro", grantsPro,
                     "email", user.getEmail(), "reference", reference, "plan", planId,
                     "grantedAt", Instant.now().toString());
         } catch (Exception e) {

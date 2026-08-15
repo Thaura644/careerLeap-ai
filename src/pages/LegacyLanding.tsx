@@ -97,10 +97,10 @@ const plans = [
   {
     name: "Pro",
     price: "$8",
-    period: "per month · also ₦10,000",
+    period: "per month · also ₦10,000 · or $80/yr",
     cta: "Go Pro",
     to: "/upgrade",
-    features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support"],
+    features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support", "Annual billing = 2 months free"],
   },
 ];
 

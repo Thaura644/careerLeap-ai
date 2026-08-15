@@ -54,6 +54,7 @@ function detectCurrency(): Currency {
 const UpgradePro = () => {
   const [status, setStatus] = useState<PaymentStatus | null>(null);
   const [currency, setCurrency] = useState<Currency>("USD");
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [pro, setPro] = useState(false);
@@ -74,8 +75,12 @@ const UpgradePro = () => {
       .catch(() => setPro(false));
   }, []);
 
-  const proPlan = status?.plans.find((p) => p.id === "pro-monthly");
+  const proMonthly = status?.plans.find((p) => p.id === "pro-monthly");
+  const proAnnual = status?.plans.find((p) => p.id === "pro-annual");
   const reportPlan = status?.plans.find((p) => p.id === "roadmap-report");
+  // The billing toggle picks which Pro plan gets charged; fall back to monthly
+  // if the backend hasn't served the annual plan yet.
+  const proPlan = billing === "annual" ? proAnnual || proMonthly : proMonthly;
 
   const priceFor = (plan?: Plan) => {
     if (!plan || !status) return { display: "—", amount: 0 };
@@ -84,6 +89,8 @@ const UpgradePro = () => {
   };
   const proPrice = useMemo(() => priceFor(proPlan), [proPlan, currency, status]);
   const reportPrice = useMemo(() => priceFor(reportPlan), [reportPlan, currency, status]);
+  const proPeriod = billing === "annual" ? "/year" : "/month";
+  const proCtaSuffix = billing === "annual" ? "/yr" : "/mo";
 
   const startCheckout = async (plan: Plan) => {
     if (!status?.enabled) {
@@ -213,9 +220,39 @@ const UpgradePro = () => {
               <CardDescription>Unlimited roadmaps + goal tracking + community support</CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Monthly / annual toggle */}
+              <div className="grid grid-cols-2 gap-1 rounded-md border p-1 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setBilling("monthly")}
+                  className={`h-9 rounded text-sm font-medium transition-colors ${
+                    billing === "monthly"
+                      ? "bg-leap-purple text-white"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBilling("annual")}
+                  className={`h-9 rounded text-sm font-medium transition-colors ${
+                    billing === "annual"
+                      ? "bg-leap-purple text-white"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  Annual · save 2 months
+                </button>
+              </div>
               <div className="mb-4">
                 <span className="text-3xl font-bold">{proPrice.display}</span>
-                <span className="text-muted-foreground">/month</span>
+                <span className="text-muted-foreground">{proPeriod}</span>
+                {billing === "annual" && (
+                  <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300">
+                    {proMonthly ? `≈ ${proMonthly.prices[currency]?.displayPrice || proMonthly.prices[status.currencies[0]]?.displayPrice}/mo` : "2 months free"}
+                  </span>
+                )}
               </div>
               <ul className="space-y-2">
                 <li className="flex items-start">
@@ -251,7 +288,7 @@ const UpgradePro = () => {
                 disabled={!status?.enabled || busy}
                 onClick={() => proPlan && startCheckout(proPlan)}
               >
-                {status?.enabled ? `Go Pro — ${proPrice.display}/mo` : "Checkout coming soon"}
+                {status?.enabled ? `Go Pro — ${proPrice.display}${proCtaSuffix}` : "Checkout coming soon"}
               </Button>
             </CardFooter>
           </Card>
@@ -264,6 +301,13 @@ const UpgradePro = () => {
               <h3 className="font-bold mb-2">Can I cancel my Pro subscription at any time?</h3>
               <p className="text-muted-foreground">
                 Yes — cancel anytime and the plan stays active until the end of the period you paid for.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-bold mb-2">Is there a discount for paying annually?</h3>
+              <p className="text-muted-foreground">
+                Yes — Pro annual is 10 months' price billed once a year (two months free).
+                Toggle Monthly / Annual above to see the price in your currency.
               </p>
             </div>
             <div>
@@ -290,7 +334,7 @@ const UpgradePro = () => {
             disabled={!status?.enabled || busy}
             onClick={() => proPlan && startCheckout(proPlan)}
           >
-            {status?.enabled ? `Upgrade to Pro — ${proPrice.display}/mo` : "Upgrade to Pro (coming soon)"}
+            {status?.enabled ? `Upgrade to Pro — ${proPrice.display}${proCtaSuffix}` : "Upgrade to Pro (coming soon)"}
           </Button>
         </div>
       </div>
