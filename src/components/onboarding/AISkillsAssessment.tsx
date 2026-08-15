@@ -1,28 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Search,
-  Plus,
-  CheckCheck,
-  FileUp,
-  Sparkles,
-  Loader2,
-  X,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import { apiGet, apiPost, apiPostMultipart } from "@/lib/api";
+import { Search, Plus, CheckCheck, Loader2, X, Sparkles } from "lucide-react";
+import { apiGet, apiPost } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export interface AssessedSkill {
   name: string;
   level: number;
+}
+
+export interface ResumeSkill {
+  name: string;
+  category: string;
+  inCatalog?: boolean;
 }
 
 interface CatalogSkill {
@@ -32,14 +27,10 @@ interface CatalogSkill {
   usageCount?: number;
 }
 
-interface ResumeSkill {
-  name: string;
-  category: string;
-  inCatalog: boolean;
-}
-
 interface AISkillsAssessmentProps {
   onComplete: (skills: AssessedSkill[]) => void;
+  /** Skills the AI found in the user's resume (from the Resume step). */
+  resumeSkills?: ResumeSkill[];
   className?: string;
 }
 
@@ -69,6 +60,7 @@ const getProgressColor = (level: number) => {
 
 export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
   onComplete,
+  resumeSkills = [],
   className,
 }) => {
   const [skills, setSkills] = useState<AssessedSkill[]>([]);
@@ -77,15 +69,6 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
   const [searching, setSearching] = useState(false);
   const [popular, setPopular] = useState<CatalogSkill[]>([]);
   const [createError, setCreateError] = useState("");
-
-  // Resume import
-  const [resumeOpen, setResumeOpen] = useState(false);
-  const [resumeText, setResumeText] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [resumeError, setResumeError] = useState("");
-  const [resumeSkills, setResumeSkills] = useState<ResumeSkill[]>([]);
-  const [resumeSource, setResumeSource] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasSkill = (name: string) =>
     skills.some((s) => s.name.toLowerCase() === name.toLowerCase());
@@ -166,48 +149,7 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
     }
   };
 
-  const handleResumeAnalyze = async (text: string) => {
-    if (!text.trim()) return;
-    setAnalyzing(true);
-    setResumeError("");
-    setResumeSkills([]);
-    try {
-      const res = await apiPost<{ ok: boolean; skills: ResumeSkill[]; source: string }>(
-        "/resume/analyze",
-        { text }
-      );
-      setResumeSkills(res.skills || []);
-      setResumeSource(res.source || "llm");
-    } catch (err) {
-      setResumeError(err instanceof Error ? err.message : "Could not analyze the resume.");
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  const handleResumeFile = async (file: File) => {
-    setAnalyzing(true);
-    setResumeError("");
-    setResumeSkills([]);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await apiPostMultipart<{ ok: boolean; skills: ResumeSkill[]; source: string }>(
-        "/resume/analyze",
-        fd
-      );
-      setResumeSkills(res.skills || []);
-      setResumeSource(res.source || "llm");
-    } catch (err) {
-      setResumeError(err instanceof Error ? err.message : "Could not read that file.");
-    } finally {
-      setAnalyzing(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const addResumeSkill = (skill: ResumeSkill) => addSkill(skill.name);
-  const addAllResumeSkills = () => {
+  const addAllResume = () => {
     resumeSkills.forEach((s) => addSkill(s.name));
   };
 
@@ -218,129 +160,52 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold mb-2">Assess Your Skills</h1>
         <p className="text-gray-600">
-          Select from the skill library, add your own, or import from your resume — then rate
-          them honestly to shape your roadmap.
+          Select from the skill library, add your own, or use what your resume showed — then
+          rate them honestly to shape your roadmap.
         </p>
       </div>
 
       <Card className="p-6">
-        {/* Resume import */}
-        <div className="mb-6 border border-dashed border-gray-300 rounded-md">
-          <button
-            type="button"
-            onClick={() => setResumeOpen((v) => !v)}
-            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-900"
-          >
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <Sparkles className="h-4 w-4 text-leap-purple" />
-              Import skills from your resume (AI)
-            </span>
-            {resumeOpen ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
-          </button>
-
-          {resumeOpen && (
-            <div className="px-4 pb-4 space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Upload a PDF or TXT, or paste your resume. The AI finds the skills it mentions
-                — then you add the ones you actually have.
+        {/* From your resume */}
+        {resumeSkills.length > 0 && (
+          <div className="mb-6 rounded-md border border-leap-purple/20 bg-leap-purple/5 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="flex items-center gap-1.5 text-sm font-medium">
+                <Sparkles className="h-4 w-4 text-leap-purple" />
+                From your resume — add the ones you actually have
               </p>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.txt"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleResumeFile(f);
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={analyzing}
-                >
-                  <FileUp className="mr-1.5 h-4 w-4" /> Upload PDF / TXT
-                </Button>
-                <span className="text-xs text-muted-foreground">or</span>
-                <Textarea
-                  placeholder="Paste your resume text here…"
-                  className="min-h-[90px] text-sm"
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => handleResumeAnalyze(resumeText)}
-                  disabled={analyzing || resumeText.trim().length < 40}
-                >
-                  {analyzing ? (
-                    <>
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Analyzing…
-                    </>
-                  ) : (
-                    <>Analyze</>
-                  )}
-                </Button>
-              </div>
-
-              {resumeError && <p className="text-xs text-red-600">{resumeError}</p>}
-
-              {resumeSkills.length > 0 && (
-                <div className="rounded-md border border-leap-purple/20 bg-leap-purple/5 p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-medium">
-                      AI found {resumeSkills.length} skill
-                      {resumeSkills.length === 1 ? "" : "s"} in your resume — add the ones you
-                      have
-                    </p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={addAllResumeSkills}
-                    >
-                      Add all
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {resumeSkills.map((s) => {
-                      const added = hasSkill(s.name);
-                      return (
-                        <Badge
-                          key={s.name}
-                          variant={added ? "default" : "outline"}
-                          className={cn(
-                            "cursor-pointer select-none",
-                            !added && "hover:border-leap-purple hover:text-leap-purple"
-                          )}
-                          onClick={() => !added && addResumeSkill(s)}
-                        >
-                          {s.name}
-                          {added ? " ✓" : " +"}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">
-                    {resumeSource === "llm"
-                      ? "Extracted by AI from your resume."
-                      : "Skills found in your resume."}
-                  </p>
-                </div>
-              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={addAllResume}
+              >
+                Add all
+              </Button>
             </div>
-          )}
-        </div>
+            <div className="flex flex-wrap gap-1.5">
+              {resumeSkills.map((s) => {
+                const added = hasSkill(s.name);
+                return (
+                  <Badge
+                    key={s.name}
+                    variant={added ? "default" : "outline"}
+                    className={cn(
+                      "cursor-pointer select-none",
+                      !added && "hover:border-leap-purple hover:text-leap-purple"
+                    )}
+                    onClick={() => !added && addSkill(s.name)}
+                  >
+                    {s.name}
+                    <span className="ml-1.5 text-[10px] text-muted-foreground">{s.category}</span>
+                    {added ? " ✓" : " +"}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Search / create */}
         <div className="mb-6">
@@ -436,11 +301,14 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
         <div className="space-y-4">
           {skills.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No skills yet — search, create, or import from your resume to get started.
+              No skills yet — search, create, or use what your resume found to get started.
             </p>
           )}
           {skills.map((skill, index) => (
-            <div key={`${skill.name}-${index}`} className="space-y-2 border border-gray-100 dark:border-gray-800 rounded-md p-3">
+            <div
+              key={`${skill.name}-${index}`}
+              className="space-y-2 border border-gray-100 dark:border-gray-800 rounded-md p-3"
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">{skill.name}</span>
                 <button

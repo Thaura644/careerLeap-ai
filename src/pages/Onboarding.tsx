@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { AISkillsAssessment } from "@/components/onboarding/AISkillsAssessment";
+import type { ResumeSkill } from "@/components/onboarding/AISkillsAssessment";
+import ResumeAnalysis from "@/components/onboarding/ResumeAnalysis";
 import { apiPut } from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, ArrowRight } from "lucide-react";
@@ -20,7 +22,7 @@ interface AssessedSkill {
 
 const Onboarding = () => {
   const [step, setStep] = useState(1);
-  const [progress, setProgress] = useState(20);
+  const [progress, setProgress] = useState(16.6);
   // All fields live in state — the step DOM unmounts as the user advances, so
   // reading inputs at the end would silently lose them.
   const [currentRole, setCurrentRole] = useState("");
@@ -31,6 +33,7 @@ const Onboarding = () => {
   const [industry, setIndustry] = useState("technology");
   const [timeframe, setTimeframe] = useState("12 months");
   const [assessedSkills, setAssessedSkills] = useState<string[]>([]);
+  const [resumeSkills, setResumeSkills] = useState<ResumeSkill[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -49,7 +52,7 @@ const Onboarding = () => {
 
   const nextStep = () => {
     const nextStepNum = step + 1;
-    if (nextStepNum > 5) {
+    if (nextStepNum > 6) {
       // Onboarding complete — persist the collected profile so the roadmap
       // engine (and everything else) works from real data, then continue.
       saveProfile().catch(() => {
@@ -65,14 +68,14 @@ const Onboarding = () => {
       return;
     }
     setStep(nextStepNum);
-    setProgress(nextStepNum * 20);
+    setProgress(nextStepNum * 16.6);
   };
 
   const prevStep = () => {
     const prevStepNum = step - 1;
     if (prevStepNum < 1) return;
     setStep(prevStepNum);
-    setProgress(prevStepNum * 20);
+    setProgress(prevStepNum * 16.6);
   };
 
   const handleSkillsComplete = (skills: AssessedSkill[]) => {
@@ -113,7 +116,7 @@ const Onboarding = () => {
           <div className="mb-8">
             <Progress value={progress} className="h-2" />
             <div className="flex justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
-              <span>Step {step} of 5</span>
+              <span>Step {step} of 6</span>
               <span>{Math.round(progress)}% Complete</span>
             </div>
           </div>
@@ -231,9 +234,23 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step === 3 && <AISkillsAssessment onComplete={handleSkillsComplete} />}
+              {step === 3 && (
+                <ResumeAnalysis
+                  onComplete={(skills) => {
+                    setResumeSkills(skills);
+                    nextStep();
+                  }}
+                />
+              )}
 
               {step === 4 && (
+                <AISkillsAssessment
+                  resumeSkills={resumeSkills}
+                  onComplete={handleSkillsComplete}
+                />
+              )}
+
+              {step === 5 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Learning Preferences</h2>
 
@@ -269,7 +286,7 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step === 5 && (
+              {step === 6 && (
                 <div className="space-y-6">
                   <div className="text-center">
                     <div className="flex justify-center mb-4">
@@ -292,7 +309,7 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step < 5 && (
+              {step < 6 && (
                 <div className="flex justify-between mt-8">
                   {step > 1 ? (
                     <Button variant="outline" onClick={prevStep}>
@@ -302,7 +319,7 @@ const Onboarding = () => {
                     <div></div>
                   )}
 
-                  {step !== 3 && (
+                  {step !== 3 && step !== 4 && (
                     <Button className="bg-leap-purple hover:bg-opacity-90" onClick={nextStep}>
                       Continue
                     </Button>
