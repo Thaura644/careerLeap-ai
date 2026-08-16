@@ -49,7 +49,7 @@ public class Event {
     private String joinUrl;
 
     /** True while the host is broadcasting the session live. */
-    @Column(name = "is_live", nullable = false)
+    @Column(name = "is_live", nullable = false, columnDefinition = "boolean not null default false")
     private boolean isLive = false;
 
     public Long getId() { return id; }

@@ -52,7 +52,7 @@ public class Resource {
 
     /** Where the resource came from: "library" (seeded), "open" (imported
      *  from the open-source engine), or "creator" (created by a Pro member). */
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 20, columnDefinition = "varchar(20) not null default 'library'")
     private String source = "library";
 
     /** Creator account that made this resource (source=CREATOR only). */
