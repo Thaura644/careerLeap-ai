@@ -1,9 +1,14 @@
-name: Keep backend awake
+name: Keep backend awake (fallback — primary is pg_cron on Supabase)
 
-# Render's free tier spins the web service down after ~15 minutes of
-# inactivity and the first request then pays a 30-60s cold start (or can even
-# fail while the instance boots). Pinging the health endpoint every 10 minutes
-# keeps the instance warm so signup/login and every API call stay fast.
+# NOTE: The primary keep-alive is a pg_cron job in the Supabase database
+# (`cron.schedule('leap-keep-alive', '*/10 * * * *', ...)` calling
+# net.http_get on the health endpoint). It runs 24/7 with no external
+# dependencies and is not subject to this repo's GitHub Actions billing.
+#
+# This workflow is a redundant fallback. It will not run while the GitHub
+# account has an active billing lock ("The job was not started because your
+# account is locked due to a billing issue.") — resolve that on the account
+# to re-enable it, or rely on the pg_cron job which is already live.
 on:
   schedule:
     - cron: "*/10 * * * *"

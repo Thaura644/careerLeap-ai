@@ -55,10 +55,15 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
 
         int limit = defaultPerMinute;
-        if (path.startsWith("/api/auth/")) {
-            limit = authPerMinute;
-        } else if (path.startsWith("/api/ai/chat")) {
+        if (path.startsWith("/api/ai/chat")) {
             limit = chatPerMinute;
+        } else if (path.startsWith("/api/auth/login")
+                || path.startsWith("/api/auth/signup")
+                || path.startsWith("/api/auth/profile") && isWrite(request)) {
+            // Credential endpoints get the strict brute-force limit. Read-only
+            // auth calls (/auth/me, GET /auth/profile) are fired by several
+            // components on every page load and must not share it.
+            limit = authPerMinute;
         }
 
         String key = clientIp(request) + "|" + path;
@@ -96,6 +101,11 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                 it.remove();
             }
         }
+    }
+
+    private static boolean isWrite(HttpServletRequest request) {
+        String m = request.getMethod().toUpperCase();
+        return "POST".equals(m) || "PUT".equals(m) || "PATCH".equals(m) || "DELETE".equals(m);
     }
 
     private static String clientIp(HttpServletRequest request) {
