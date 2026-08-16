@@ -134,8 +134,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <SheetContent side="left" className="w-64 p-0">
             <div className="flex h-14 items-center border-b px-4">
               <Link to="/" className="flex items-center gap-2">
-                <span className="text-xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
-                  Leap.ai
+                <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
+                  Leap<span className="text-stone-400">.ai</span>
                 </span>
               </Link>
               <Button 
@@ -161,8 +161,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </SheetContent>
         </Sheet>
         <Link to="/" className="flex items-center gap-2">
-          <span className="text-xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
-            Leap.ai
+          <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
+            Leap<span className="text-stone-400">.ai</span>
           </span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
@@ -177,8 +177,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-background md:flex">
           <div className="flex h-14 shrink-0 items-center border-b px-4">
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
-                Leap.ai
+              <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
+                Leap<span className="text-stone-400">.ai</span>
               </span>
             </Link>
             <div className="ml-auto">

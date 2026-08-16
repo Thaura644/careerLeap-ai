@@ -63,13 +63,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// LeapAI brand colors
+				// LeapAI brand colors — stone editorial palette (matches landing + auth)
 				leap: {
-					navy: '#0A2463',
-					purple: '#5F4BB6',
-					teal: '#26C6DA',
-					light: '#F5F7FA',
-					dark: '#1E293B'
+					navy: '#1C1917',
+					purple: '#57534E',
+					teal: '#A8A29E',
+					light: '#FAF9F7',
+					dark: '#1C1917'
 				}
 			},
 			borderRadius: {

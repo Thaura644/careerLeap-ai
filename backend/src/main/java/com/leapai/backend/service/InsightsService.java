@@ -4,11 +4,16 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leapai.backend.model.Goal;
 import com.leapai.backend.model.Resource;
+import com.leapai.backend.model.ResourceProgress;
 import com.leapai.backend.model.Roadmap;
+import com.leapai.backend.model.Submission;
 import com.leapai.backend.model.User;
+import com.leapai.backend.repository.FlashcardRepository;
 import com.leapai.backend.repository.GoalRepository;
+import com.leapai.backend.repository.ResourceProgressRepository;
 import com.leapai.backend.repository.ResourceRepository;
 import com.leapai.backend.repository.RoadmapRepository;
+import com.leapai.backend.repository.SubmissionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,14 +38,22 @@ public class InsightsService {
     private final RoadmapRepository roadmaps;
     private final GoalRepository goals;
     private final ResourceRepository resources;
+    private final ResourceProgressRepository resourceProgress;
+    private final SubmissionRepository submissions;
+    private final FlashcardRepository flashcards;
     private final ObjectMapper objectMapper;
 
     public InsightsService(LlmService llmService, RoadmapRepository roadmaps, GoalRepository goals,
-                           ResourceRepository resources, ObjectMapper objectMapper) {
+                           ResourceRepository resources, ResourceProgressRepository resourceProgress,
+                           SubmissionRepository submissions, FlashcardRepository flashcards,
+                           ObjectMapper objectMapper) {
         this.llmService = llmService;
         this.roadmaps = roadmaps;
         this.goals = goals;
         this.resources = resources;
+        this.resourceProgress = resourceProgress;
+        this.submissions = submissions;
+        this.flashcards = flashcards;
         this.objectMapper = objectMapper;
     }
 
@@ -88,8 +101,28 @@ public class InsightsService {
         merged.putIfAbsent("learningFormats", nvl(user.getLearningFormats(), ""));
         merged.putIfAbsent("weeklyCommitment", nvl(user.getWeeklyCommitment(), ""));
         merged.putIfAbsent("learningStyle", nvl(user.getLearningStyle(), ""));
+        // Real user data that makes the roadmap unique to them: self-assessed
+        // skills, career goals, motivation, challenges, and actual progress.
+        merged.putIfAbsent("skills", csvList(nvl(user.getInterests(), "")));
+        merged.putIfAbsent("yearsExperience", nvl(user.getYearsExperience(), ""));
+        merged.putIfAbsent("aspirations", nvl(user.getAspirations(), ""));
+        merged.putIfAbsent("motivation", nvl(user.getMotivation(), ""));
+        merged.putIfAbsent("challenges", csvList(nvl(user.getChallenges(), "")));
+        merged.putIfAbsent("employmentStatus", nvl(user.getEmploymentStatus(), ""));
+        merged.putIfAbsent("workMode", nvl(user.getWorkMode(), ""));
+        merged.put("goals", goals.findByUserIdOrderByCreatedAtAsc(user.getId()).stream()
+                .map(g -> g.getTitle() + (g.getDescription() == null || g.getDescription().isBlank()
+                        ? "" : " — " + g.getDescription()))
+                .toList());
+        merged.put("progress", userProgress(user));
 
         Map<String, Object> generated = llmService.generateRoadmap(merged, user.getId());
+
+        // Honest failure: don't persist a broken/empty roadmap — surface the
+        // error so the UI can tell the user to retry.
+        if ("error".equals(generated.get("source"))) {
+            return generated;
+        }
 
         Roadmap roadmap = new Roadmap();
         roadmap.setUserId(user.getId());
@@ -359,6 +392,25 @@ public class InsightsService {
             path.add("Bookmark two resources and start one");
         }
         return path;
+    }
+
+    /** Real progress the user has actually made — fed to the LLM so the
+     *  roadmap can pace itself against it (e.g. "you've solved 3 problems
+     *  already; next is X"). Every number comes from the user's own rows. */
+    private Map<String, Object> userProgress(User user) {
+        Map<String, Object> p = new LinkedHashMap<>();
+        long completedResources = resourceProgress.findByUserId(user.getId()).stream()
+                .filter(ResourceProgress::isCompleted).count();
+        long accepted = submissions.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
+                .filter(s -> "ACCEPTED".equalsIgnoreCase(s.getVerdict())).count();
+        long total = submissions.findByUserIdOrderByCreatedAtDesc(user.getId()).size();
+        long dueCards = flashcards.findByUserIdAndDueAtLessThanEqualOrderByDueAtAsc(
+                user.getId(), java.time.Instant.now()).size();
+        p.put("resourcesCompleted", completedResources);
+        p.put("practiceSolved", accepted);
+        p.put("practiceAttempted", total);
+        p.put("flashcardsDue", dueCards);
+        return p;
     }
 
     private static String nvl(String value, String fallback) {

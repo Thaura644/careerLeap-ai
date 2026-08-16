@@ -25,11 +25,9 @@ import java.util.Map;
  * <p>Configuration is read from environment variables:
  * <ul>
  *   <li>{@code LLM_API_KEY} — required for real generation. When unset, the
- *       service falls back to real deterministic logic instead: the
- *       {@link RoadmapEngine} for roadmaps and a retrieval-based responder
- *       over the user's own roadmap/goals/catalog for chat. Fallbacks are
- *       marked {@code "source": "engine"} — never "mock", never presented as
- *       AI output.</li>
+ *       roadmap endpoint returns an honest error rather than a canned plan;
+ *       chat falls back to a retrieval-based responder over the user's own
+ *       roadmap/goals/catalog. No fabricated or templated output, ever.</li>
  *   <li>{@code LLM_BASE_URL} — default {@code https://openrouter.ai/api/v1}.</li>
  *   <li>{@code LLM_MODEL} — default {@code google/gemma-4-31b-it:free}.</li>
  *   <li>{@code LLM_TIMEOUT_SECONDS} — default 60.</li>
@@ -38,8 +36,8 @@ import java.util.Map;
  * <p><b>Free models only.</b> The company key is an OpenRouter key to be used
  * exclusively with free models. When the base URL is OpenRouter, a configured
  * model that does not end in {@code :free} is refused (the service behaves as
- * if unconfigured and uses the engine fallback, with a warning) — the key can
- * never be silently pointed at a paid model.
+ * if unconfigured, with a warning) — the key can never be silently pointed at
+ * a paid model.
  */
 @Service
 public class LlmService {
@@ -54,19 +52,23 @@ public class LlmService {
 
     private static final String SYSTEM_ROADMAP_PROMPT =
             "You are Leap.ai's career roadmap engine. Given a user profile as JSON, produce a "
-            + "personalized career roadmap. Respond with ONLY valid JSON, no markdown, in exactly "
+            + "deeply personalized career roadmap. Respond with ONLY valid JSON, no markdown, in exactly "
             + "this shape: {\"roadmap\": {\"summary\": string, \"phases\": [{\"title\": string, "
             + "\"duration\": string, \"focus\": string, \"skills\": [string], \"milestones\": [string], "
             + "\"resources\": [{\"title\": string, \"type\": string}]}]}}. Use 3-5 phases covering "
-            + "assessment, skill development, real-world proof, and application/interview. Be specific "
-            + "to the user's current and target role. Honor the user's learning preferences when "
-            + "choosing resources and pacing phases: preferred learning formats (e.g. video courses, "
-            + "podcasts, hands-on projects), weekly time commitment, and learning style (self-paced, "
-            + "structured, or project-driven).";
+            + "assessment, skill development, real-world proof, and application/interview.\n"
+            + "The profile contains the user's REAL data: current and target role, self-assessed "
+            + "skills with proficiency, career goals, motivation, challenges, years of experience, "
+            + "learning preferences, and progress made so far. Build the roadmap FROM that data — "
+            + "reference their actual skills and gaps, their stated goals, their motivation, and "
+            + "their weekly commitment when pacing phases. Every phase must be specific to THIS "
+            + "user: name the exact skills they listed as gaps, tie milestones to their goals, and "
+            + "pick resources that fit their preferred learning formats. Never return generic "
+            + "placeholder phases; if the profile is thin, say so in the summary and still build "
+            + "the best plan from what exists. Never invent credentials, employers, or statistics.";
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
-    private final RoadmapEngine roadmapEngine;
     private final RetrievalChatService retrievalChat;
     private final AiContextService aiContext;
     private final TokenUsageRepository tokenUsage;
@@ -78,7 +80,6 @@ public class LlmService {
 
     public LlmService(
             ObjectMapper objectMapper,
-            RoadmapEngine roadmapEngine,
             RetrievalChatService retrievalChat,
             AiContextService aiContext,
             TokenUsageRepository tokenUsage,
@@ -87,7 +88,6 @@ public class LlmService {
             @Value("${LLM_MODEL:google/gemma-4-31b-it:free}") String model,
             @Value("${LLM_TIMEOUT_SECONDS:60}") int timeoutSeconds) {
         this.objectMapper = objectMapper;
-        this.roadmapEngine = roadmapEngine;
         this.retrievalChat = retrievalChat;
         this.aiContext = aiContext;
         this.tokenUsage = tokenUsage;
@@ -191,10 +191,17 @@ public class LlmService {
         return null;
     }
 
-    /** Structured roadmap. LLM when configured; otherwise the deterministic engine. */
+    /**
+     * Structured roadmap, generated only by the LLM from the user's real data.
+     * There is deliberately no template fallback: if the model is unavailable
+     * or the call fails, we return an honest error so the UI can tell the user
+     * to retry — never a canned plan presented as personalized.
+     */
     public Map<String, Object> generateRoadmap(Map<String, Object> profile, Long userId) {
         if (!isConfigured()) {
-            return roadmapEngine.generate(profile);
+            log.warn("[llm] roadmap requested but no LLM key configured — refusing to fabricate");
+            return Map.of("source", "error", "error",
+                    "Roadmap generation needs the AI model to be configured. Please try again later.");
         }
         try {
             String userJson = objectMapper.writeValueAsString(profile);
@@ -209,8 +216,9 @@ public class LlmService {
             result.put("roadmap", objectMapper.convertValue(roadmap, Map.class));
             return result;
         } catch (Exception e) {
-            log.warn("[llm] roadmap generation failed, falling back to engine: {}", e.getMessage());
-            return roadmapEngine.generate(profile);
+            log.warn("[llm] roadmap generation failed: {}", e.getMessage());
+            return Map.of("source", "error", "error",
+                    "The AI couldn't build your roadmap right now. Please try again in a moment.");
         }
     }
 

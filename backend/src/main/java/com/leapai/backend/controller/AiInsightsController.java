@@ -37,9 +37,10 @@ public class AiInsightsController {
     }
 
     /**
-     * Generate (and persist) a personalized career roadmap.
-     * Profile is optional; missing fields fall back to the saved profile.
-     * Response carries {@code source}: {@code llm} or {@code engine} — never mock.
+     * Generate (and persist) a personalized career roadmap built only by the
+     * LLM from the user's real data. Profile is optional; missing fields fall
+     * back to the saved profile. Response carries {@code source}: {@code llm},
+     * or {@code error} when generation failed — never a canned plan.
      */
     @PostMapping("/roadmap")
     public Map<String, Object> generateRoadmap(@RequestBody(required = false) Map<String, Object> profile) {

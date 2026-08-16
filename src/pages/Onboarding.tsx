@@ -174,12 +174,12 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col">
-      <header className="bg-white dark:bg-background shadow-sm py-4 dark:border-b">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b bg-white py-4">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
-              Leap.ai
+            <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
+              Leap<span className="text-stone-400">.ai</span>
             </span>
 
             <Button variant="ghost" onClick={skipIfAccountExists}>
