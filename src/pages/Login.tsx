@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,27 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 // Social-login icons; unused while the social buttons are commented out.
 // import { Github, Twitter } from "lucide-react";
-import { apiPost, ApiTimeoutError } from "@/lib/api";
+import { apiPost, ApiError, ApiTimeoutError } from "@/lib/api";
 import { saveAuthSession } from "@/lib/authSession";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [remember, setRemember] = useState(true);
+
+  // Where to go after login: the protected route the visitor was turned away
+  // from (?next=... from ProtectedRoute, or ?next=/upgrade from the upgrade
+  // CTA), falling back to the dashboard. Only internal paths are honored.
+  const redirectAfterLogin = (): string => {
+    const next = searchParams.get("next");
+    if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+    const from = (location.state as { from?: string } | null)?.from;
+    if (from && from.startsWith("/") && !from.startsWith("//")) return from;
+    return "/dashboard";
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,9 +49,9 @@ const Login = () => {
       window.dispatchEvent(new Event("leap:auth-change"));
       toast({
         title: "Login successful",
-        description: "Redirecting to your dashboard...",
+        description: "Redirecting...",
       });
-      navigate("/dashboard");
+      navigate(redirectAfterLogin(), { replace: true });
     } catch (error) {
       if (error instanceof ApiTimeoutError) {
         toast({
@@ -47,10 +60,18 @@ const Login = () => {
             "The free server is starting up — this can take up to a minute. Just click Log in again in a few seconds.",
           variant: "destructive",
         });
+      } else if (error instanceof ApiError) {
+        // The server's own words — "Invalid email or password" only when the
+        // credentials were actually rejected, not for every failure.
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid credentials or the service is unavailable. Please try again.",
+          description: "Could not reach the server. Check your connection and try again.",
           variant: "destructive",
         });
       }

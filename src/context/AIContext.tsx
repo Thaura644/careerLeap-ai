@@ -118,6 +118,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     if (!getAuthToken()) {
       setProfile(null);
       setMessages([]);
+      setRecommendedResources([]);
       setCurrentConversation(null);
       return;
     }
@@ -191,6 +192,22 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   useEffect(() => {
     refreshProfile();
+  }, [refreshProfile]);
+
+  // Re-sync whenever the session changes — login, logout, or a different
+  // account signing in on this browser. Without this, the provider (which
+  // wraps the whole app and never unmounts) would keep the previous account's
+  // profile — e.g. their target role showing under the next user's name on the
+  // dashboard. `leap:auth-change` covers same-tab switches; the native
+  // `storage` event covers another tab changing the session.
+  useEffect(() => {
+    const sync = () => refreshProfile();
+    window.addEventListener("leap:auth-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("leap:auth-change", sync);
+      window.removeEventListener("storage", sync);
+    };
   }, [refreshProfile]);
 
   const sendMessage = useCallback(

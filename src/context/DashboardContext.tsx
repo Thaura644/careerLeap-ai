@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { apiGet } from "@/lib/api";
 import { getAuthToken, getAuthUser } from "@/lib/authSession";
 
@@ -77,52 +77,71 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const clearData = useCallback(() => {
+    setActivityData([]);
+    setSkillsData([]);
+    setOverviewCards([]);
+    setUpcomingSessions([]);
+    setOnlineResources([]);
+    setAchievements([]);
+    setUserName("there");
+    setHasRoadmap(false);
+    setError(null);
+  }, []);
+
+  const fetchDashboardData = useCallback(async () => {
+    // Not logged in? Skip the protected call entirely (it would just 401).
+    if (!getAuthToken()) {
+      clearData();
+      setLoading(false);
+      return;
+    }
     const localUser = getAuthUser();
     if (localUser?.fullName) setUserName(localUser.fullName.split(" ")[0]);
+    try {
+      const data = await apiGet<{
+        userName: string;
+        activityData: ActivityDataPoint[];
+        skillsData: SkillDataPoint[];
+        overviewCards: OverviewCardData[];
+        upcomingSessions: SessionData[];
+        onlineResources: ResourceData[];
+        achievements: AchievementData[];
+        hasRoadmap: boolean;
+      }>("/dashboard");
 
-    const fetchDashboardData = async () => {
-      // Not logged in? Skip the protected call entirely (it would just 401).
-      if (!getAuthToken()) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const data = await apiGet<{
-          userName: string;
-          activityData: ActivityDataPoint[];
-          skillsData: SkillDataPoint[];
-          overviewCards: OverviewCardData[];
-          upcomingSessions: SessionData[];
-          onlineResources: ResourceData[];
-          achievements: AchievementData[];
-          hasRoadmap: boolean;
-        }>("/dashboard");
+      setActivityData(data.activityData || []);
+      setSkillsData(data.skillsData || []);
+      setOverviewCards(data.overviewCards || []);
+      setUpcomingSessions(data.upcomingSessions || []);
+      setOnlineResources(data.onlineResources || []);
+      setAchievements(data.achievements || []);
+      setUserName(data.userName || "there");
+      setHasRoadmap(data.hasRoadmap || false);
+      setError(null);
+    } catch (err) {
+      // Honest empty state — the dashboard shows real numbers or nothing.
+      clearData();
+      setError("Could not load your dashboard. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [clearData]);
 
-        setActivityData(data.activityData || []);
-        setSkillsData(data.skillsData || []);
-        setOverviewCards(data.overviewCards || []);
-        setUpcomingSessions(data.upcomingSessions || []);
-        setOnlineResources(data.onlineResources || []);
-        setAchievements(data.achievements || []);
-        setUserName(data.userName || "there");
-        setHasRoadmap(data.hasRoadmap || false);
-      } catch (err) {
-        // Honest empty state — the dashboard shows real numbers or nothing.
-        setActivityData([]);
-        setSkillsData([]);
-        setOverviewCards([]);
-        setUpcomingSessions([]);
-        setOnlineResources([]);
-        setAchievements([]);
-        setError("Could not load your dashboard. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  // Load on mount, then re-sync whenever the session changes (login, logout,
+  // or a different account signing in). Without this the dashboard would keep
+  // showing the previous account's data — the very bug where the next user's
+  // name renders with the old user's roadmap underneath.
+  useEffect(() => {
     fetchDashboardData();
-  }, []);
+    const sync = () => fetchDashboardData();
+    window.addEventListener("leap:auth-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("leap:auth-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [fetchDashboardData]);
 
   return (
     <DashboardContext.Provider value={{

@@ -80,10 +80,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [fullName, setFullName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getAuthToken()) return;
-    apiGet<{ user: { fullName: string } }>("/auth/me")
-      .then(({ user }) => setFullName(user.fullName))
-      .catch(() => {});
+    const load = () => {
+      if (!getAuthToken()) {
+        setFullName(null);
+        return;
+      }
+      apiGet<{ user: { fullName: string } }>("/auth/me")
+        .then(({ user }) => setFullName(user.fullName))
+        .catch(() => {});
+    };
+    load();
+    // Re-fetch when the session changes (login/logout/account switch) so the
+    // header name never shows the previous account's.
+    window.addEventListener("leap:auth-change", load);
+    window.addEventListener("storage", load);
+    return () => {
+      window.removeEventListener("leap:auth-change", load);
+      window.removeEventListener("storage", load);
+    };
   }, []);
 
   const NavLink = ({ item }: { item: NavItem }) => {

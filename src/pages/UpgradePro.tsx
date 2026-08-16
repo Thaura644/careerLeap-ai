@@ -154,6 +154,20 @@ const UpgradePro = () => {
   const ctaLabel = (fallback: string, price: string) =>
     !status?.enabled ? "Checkout coming soon" : simulated ? `Simulate payment — ${price}` : `${fallback} — ${price}`;
 
+  /** "≈ $8.33/mo" — the annual price expressed as a per-month figure, so the
+   *  discount is legible without trusting the label. */
+  const monthlyEquivalent = (plan: Plan | undefined, c: Currency) => {
+    if (!plan) return "";
+    const p = plan.prices[c];
+    if (!p) return "";
+    const num = parseFloat(p.displayPrice.replace(/[^\d.,]/g, "").replace(/,/g, ""));
+    if (!isFinite(num) || num <= 0) return "";
+    const prefix = p.displayPrice.replace(/[\d.,\s]/g, "");
+    const perMonth = num / 12;
+    const shown = c === "USD" ? `$${perMonth.toFixed(2)}` : `${prefix}${Math.round(perMonth).toLocaleString()}`;
+    return `≈ ${shown}/mo`;
+  };
+
   /** Simulate mode: no Paystack — call verify() directly and grant the plan. */
   const simulatePayment = async (plan: Plan) => {
     if (!status?.enabled || status.mode !== "simulate") return;
@@ -253,7 +267,9 @@ const UpgradePro = () => {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold mb-3">Upgrade to Pro</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Unlock unlimited roadmaps, goal tracking, and community support.
+            The roadmap is free. Pro unlocks what roadmap.sh and AI agents can't give you: the
+            full practice engine, real-world scenarios, interview &amp; exam prep, and live
+            creator content.
           </p>
           {notice && (
             <div
@@ -327,11 +343,11 @@ const UpgradePro = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          {/* Roadmap Report */}
+          {/* Career Audit */}
           <Card>
             <CardHeader>
-              <CardTitle>Roadmap Report</CardTitle>
-              <CardDescription>One personalized career roadmap, yours to keep</CardDescription>
+              <CardTitle>Career Audit</CardTitle>
+              <CardDescription>One-time deep review of your profile and the gap to your target</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-4">
@@ -341,15 +357,19 @@ const UpgradePro = () => {
               <ul className="space-y-2">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>One personalized roadmap</span>
+                  <span>Full profile + resume review</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>Delivered instantly</span>
+                  <span>Skill-gap analysis, in priority order</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>Yours to keep</span>
+                  <span>Personalized action plan</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Delivered instantly, yours to keep</span>
                 </li>
               </ul>
             </CardContent>
@@ -359,7 +379,7 @@ const UpgradePro = () => {
                 disabled={!status?.enabled || busy}
                 onClick={() => reportPlan && startCheckout(reportPlan)}
               >
-                {ctaLabel("Get yours", reportPrice.display)}
+                {ctaLabel("Get your audit", reportPrice.display)}
               </Button>
             </CardFooter>
           </Card>
@@ -371,7 +391,7 @@ const UpgradePro = () => {
             </div>
             <CardHeader>
               <CardTitle>Pro</CardTitle>
-              <CardDescription>Unlimited roadmaps + goal tracking + community support</CardDescription>
+              <CardDescription>Everything, unlocked — practice, prep, creators, live sessions</CardDescription>
             </CardHeader>
             <CardContent>
               {/* Monthly / annual toggle */}
@@ -396,7 +416,7 @@ const UpgradePro = () => {
                       : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
-                  Annual · save 2 months
+                  Annual · save ~30%
                 </button>
               </div>
               <div className="mb-4">
@@ -404,22 +424,34 @@ const UpgradePro = () => {
                 <span className="text-muted-foreground">{proPeriod}</span>
                 {billing === "annual" && (
                   <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300">
-                    {proMonthly ? `≈ ${proMonthly.prices[currency]?.displayPrice || proMonthly.prices[status.currencies[0]]?.displayPrice}/mo` : "2 months free"}
+                    {monthlyEquivalent(proAnnual, currency) || "≈ 30% off monthly"}
                   </span>
                 )}
               </div>
               <ul className="space-y-2">
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>Everything in Roadmap Report</span>
+                  <span>Everything in Free</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>Unlimited roadmaps</span>
+                  <span>Full practice library — every topic, real code judge</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
-                  <span>Goal tracking + insights</span>
+                  <span>Real-world scenarios: case studies, build projects, interview &amp; exam prep tracks</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Unlimited roadmaps + goal tracking + AI insights</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Live workshops, webinars &amp; courses from creators</span>
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
+                  <span>Publish your own resources &amp; go live as a creator</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-2 shrink-0" />
@@ -449,9 +481,19 @@ const UpgradePro = () => {
               </p>
             </div>
             <div>
+              <h3 className="font-bold mb-2">Why pay when roadmaps are free on roadmap.sh or from AI agents?</h3>
+              <p className="text-muted-foreground">
+                Fair question — and the roadmap itself is free here. You pay for what a static
+                roadmap can't do: a practice engine with a real code judge, real-world case
+                studies and build projects, interview &amp; exam prep tracks, an AI assistant
+                that knows your profile and progress, and live workshops and courses from
+                creators. Free users get a real taste of each; Pro unlocks the full library.
+              </p>
+            </div>
+            <div>
               <h3 className="font-bold mb-2">Is there a discount for paying annually?</h3>
               <p className="text-muted-foreground">
-                Yes — Pro annual is 10 months' price billed once a year (two months free).
+                Yes — Pro annual is $100/yr, about 30% off the monthly rate (≈ $8.33/mo).
                 Toggle Monthly / Annual above to see the price in your currency.
               </p>
             </div>

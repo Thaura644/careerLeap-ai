@@ -129,25 +129,26 @@ public class PaymentService {
     public Map<String, Object> status() {
         List<Map<String, Object>> plans = new ArrayList<>();
         // Single source of truth for pricing, per currency. Amounts are minor units.
-        plans.add(plan("roadmap-report", "Roadmap Report", Map.of(
+        // Career Audit = one-time full profile review + gap analysis + action plan.
+        plans.add(plan("roadmap-report", "Career Audit", Map.of(
                 "NGN", price("\u20A615,000", 1_500_000L),
                 "USD", price("$12", 1_200L),
                 "GHS", price("GH\u20B5150", 15_000L),
                 "ZAR", price("R220", 22_000L),
                 "KES", price("KSh 1,600", 160_000L))));
         plans.add(plan("pro-monthly", "Pro — monthly", Map.of(
-                "NGN", price("\u20A610,000", 1_000_000L),
-                "USD", price("$8", 800L),
-                "GHS", price("GH\u20B5100", 10_000L),
-                "ZAR", price("R145", 14_500L),
-                "KES", price("KSh 1,050", 105_000L))));
-        // Annual = 10 months' price (two months free) in every currency.
+                "NGN", price("\u20A615,000", 1_500_000L),
+                "USD", price("$12", 1_200L),
+                "GHS", price("GH\u20B5150", 15_000L),
+                "ZAR", price("R220", 22_000L),
+                "KES", price("KSh 1,600", 160_000L))));
+        // Annual ≈ 30% off the monthly rate (≈ $8.33/mo equivalent) in every currency.
         plans.add(plan("pro-annual", "Pro — annual", Map.of(
-                "NGN", price("\u20A6100,000", 10_000_000L),
-                "USD", price("$80", 8_000L),
-                "GHS", price("GH\u20B51,000", 100_000L),
-                "ZAR", price("R1,450", 145_000L),
-                "KES", price("KSh 10,500", 1_050_000L))));
+                "NGN", price("\u20A6125,000", 12_500_000L),
+                "USD", price("$100", 10_000L),
+                "GHS", price("GH\u20B51,250", 125_000L),
+                "ZAR", price("R1,850", 185_000L),
+                "KES", price("KSh 13,000", 1_300_000L))));
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("mode", mode);
@@ -280,7 +281,7 @@ public class PaymentService {
                 "grantedAt", Instant.now().toString());
     }
 
-    /** Only the Pro plans grant the Pro entitlement. The Roadmap Report is a
+    /** Only the Pro plans grant the Pro entitlement. The Career Audit is a
      *  one-time product and must never flip a subscription. */
     private static boolean isProPlan(String planId) {
         return "pro-monthly".equals(planId) || "pro-annual".equals(planId);

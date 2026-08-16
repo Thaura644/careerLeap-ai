@@ -342,22 +342,27 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
           ))}
         </div>
 
-        <div className="flex justify-end pt-6">
-          <Button
-            type="button"
-            className="bg-leap-purple"
-            disabled={!canComplete}
-            onClick={() => onComplete(skills)}
-          >
-            <CheckCheck className="mr-2 h-4 w-4" />
-            Complete Assessment
+        <div className="flex justify-between items-center pt-6">
+          <Button type="button" variant="outline" onClick={() => onComplete([])}>
+            Skip for now
           </Button>
+          <div className="text-right">
+            <Button
+              type="button"
+              className="bg-leap-purple"
+              disabled={!canComplete}
+              onClick={() => onComplete(skills)}
+            >
+              <CheckCheck className="mr-2 h-4 w-4" />
+              Complete Assessment
+            </Button>
+            {!canComplete && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Add at least one skill, or skip — you can always add them later.
+              </p>
+            )}
+          </div>
         </div>
-        {!canComplete && (
-          <p className="text-right text-xs text-muted-foreground mt-2">
-            Add at least one skill to continue.
-          </p>
-        )}
       </Card>
     </div>
   );

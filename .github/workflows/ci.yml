@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    name: Frontend (typecheck + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build
+
+  backend:
+    name: Backend (compile + smoke test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - name: Compile
+        run: mvn -q -DskipTests compile
+      - name: Smoke test (boot + /api/health)
+        run: |
+          mvn -q -DskipTests spring-boot:run > /tmp/backend.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/api/health > /tmp/health.json 2>/dev/null; then
+              echo "Backend is up:"; cat /tmp/health.json; exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend failed to start within 120s. Last log lines:"; tail -30 /tmp/backend.log
+          exit 1

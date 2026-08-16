@@ -11,31 +11,50 @@ type PlanStatus = { id: string; label: string; prices: Record<string, CurrencyPr
 type PaymentStatus = { mode: string; enabled: boolean; currencies: string[]; plans: PlanStatus[] };
 
 const FREE_PLAN = {
-  name: "Early Access",
+  name: "Free",
   price: "$0",
-  period: "free plan",
+  period: "Early Access",
   cta: "Start free",
   to: "/onboarding",
-  features: ["Sample roadmap generator", "Community access", "No card, no spam"],
+  features: [
+    "Personalized career roadmap",
+    "Practice problems tied to your roadmap — real code judge",
+    "Trial real-world scenarios: case study, build, interview, exam",
+    "Community access",
+    "No card, no spam",
+  ],
 };
 
 /** Fallback if the status fetch fails (offline/cold start) — mirrors backend pricing. */
 const FALLBACK_PLANS = [
   {
-    name: "Roadmap Report",
+    name: "Career Audit",
     price: "$12",
     period: "one-time · also ₦15,000",
-    cta: "Get yours",
+    cta: "Get your audit",
     to: "/upgrade",
-    features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"],
+    features: [
+      "Full profile + resume review",
+      "Skill-gap analysis, in priority order",
+      "Personalized action plan",
+      "Delivered instantly, yours to keep",
+    ],
   },
   {
     name: "Pro",
-    price: "$8",
-    period: "per month · also ₦10,000 · or $80/yr",
+    price: "$12",
+    period: "per month · also ₦15,000 · or $100/yr",
     cta: "Go Pro",
     to: "/upgrade",
-    features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support", "Annual billing = 2 months free"],
+    features: [
+      "Everything in Free",
+      "Full practice library — every topic, real code judge",
+      "Real-world scenarios: case studies, build projects, interview & exam prep tracks",
+      "Unlimited roadmaps + goal tracking + AI insights",
+      "Live workshops, webinars & courses from creators",
+      "Publish your own resources & go live as a creator",
+      "Community support",
+    ],
   },
 ];
 
@@ -156,12 +175,17 @@ const LegacyLanding = () => {
         const next: typeof FALLBACK_PLANS = [];
         if (report) {
           next.push({
-            name: "Roadmap Report",
+            name: "Career Audit",
             price: usd(report),
             period: `one-time${ngn(report) ? ` · also ${ngn(report)}` : ""}`,
-            cta: "Get yours",
+            cta: "Get your audit",
             to: "/upgrade",
-            features: ["One personalized roadmap", "Delivered instantly", "Yours to keep"],
+            features: [
+              "Full profile + resume review",
+              "Skill-gap analysis, in priority order",
+              "Personalized action plan",
+              "Delivered instantly, yours to keep",
+            ],
           });
         }
         if (monthly) {
@@ -171,10 +195,18 @@ const LegacyLanding = () => {
             period: `per month${ngn(monthly) ? ` · also ${ngn(monthly)}` : ""}${usd(annual) ? ` · or ${usd(annual)}/yr` : ""}`,
             cta: "Go Pro",
             to: "/upgrade",
-            features: ["Unlimited roadmaps", "Goal tracking + insights", "Community support", "Annual billing = 2 months free"],
+            features: [
+              "Everything in Free",
+              "Full practice library — every topic, real code judge",
+              "Real-world scenarios: case studies, build projects, interview & exam prep tracks",
+              "Unlimited roadmaps + goal tracking + AI insights",
+              "Live workshops, webinars & courses from creators",
+              "Publish your own resources & go live as a creator",
+              "Community support",
+            ],
           });
         }
-        if (next.length === 2) setPaidPlans(next);
+        if (next.length >= 1) setPaidPlans(next);
       })
       .catch(() => {
         /* keep fallback */
@@ -377,7 +409,7 @@ const LegacyLanding = () => {
                 <div
                   key={plan.name}
                   className={
-                    i === 1
+                    i === plans.length - 1
                       ? "border border-stone-900 bg-white p-7"
                       : "border border-stone-300 bg-[#FAF9F7] p-7"
                   }
@@ -402,7 +434,7 @@ const LegacyLanding = () => {
                   <Button
                     asChild
                     className={
-                      i === 1
+                      i === plans.length - 1
                         ? "mt-8 h-10 w-full rounded-none bg-stone-900 text-[13px] hover:bg-stone-700"
                         : "mt-8 h-10 w-full rounded-none border border-stone-300 bg-transparent text-[13px] text-stone-800 hover:bg-stone-100"
                     }
@@ -413,8 +445,10 @@ const LegacyLanding = () => {
               ))}
             </div>
             <p className="mt-6 text-[12px] text-stone-500">
-              Checkout is live — pay securely with Paystack in NGN, USD, GHS, ZAR, or KES. The
-              free plan is free forever; upgrade when it's useful.
+              Roadmaps are free — you pay for what roadmap.sh and AI agents can't give you: a
+              practice engine with a real judge, real-world scenarios, interview & exam prep
+              tracks, and live content from creators. Checkout is live via Paystack in NGN, USD,
+              GHS, ZAR, or KES. The free plan is free forever; upgrade when it's useful.
             </p>
           </div>
         </section>

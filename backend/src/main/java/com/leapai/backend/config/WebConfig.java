@@ -10,14 +10,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
+    private final RateLimitInterceptor rateLimitInterceptor;
 
     // Injected via @Value so the placeholder is resolved (allowedOriginPatterns
     // does not interpolate ${...} itself).
     @Value("${LEAP_APP_ORIGIN:https://career-leap-ai.vercel.app}")
     private String appOrigin;
 
-    public WebConfig(AuthInterceptor authInterceptor) {
+    public WebConfig(AuthInterceptor authInterceptor, RateLimitInterceptor rateLimitInterceptor) {
         this.authInterceptor = authInterceptor;
+        this.rateLimitInterceptor = rateLimitInterceptor;
     }
 
     @Override
@@ -32,6 +34,11 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // Rate limiting runs first so unauthenticated hammering is caught too.
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/health");
+
         registry.addInterceptor(authInterceptor)
                 .addPathPatterns(
                         "/api/auth/me",

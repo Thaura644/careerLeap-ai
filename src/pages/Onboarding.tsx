@@ -13,7 +13,7 @@ import type { ResumeSkill } from "@/components/onboarding/AISkillsAssessment";
 import ResumeAnalysis from "@/components/onboarding/ResumeAnalysis";
 import { PrivacyConsentDialog } from "@/components/auth/PrivacyConsentDialog";
 import { apiPut } from "@/lib/api";
-import { clearAuthSession } from "@/lib/authSession";
+import { clearAuthSession, getAuthToken } from "@/lib/authSession";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
@@ -49,9 +49,10 @@ const Onboarding = () => {
   const [motivation, setMotivation] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  // Consent is asked once, right after onboarding, and remembered: only users
-  // who haven't accepted (or deliberately declined) are asked again.
-  const [showConsent, setShowConsent] = useState(() => !localStorage.getItem("leap_privacy_consent"));
+  // Consent is asked once, right after onboarding completes (or when the user
+  // skips the flow), and remembered — it must never block the very first step
+  // of onboarding, so it starts closed.
+  const [showConsent, setShowConsent] = useState(false);
 
   const leaveApp = () => {
     setShowConsent(false);
@@ -60,10 +61,49 @@ const Onboarding = () => {
     navigate("/");
   };
 
+  /** Save whatever profile data has been collected so far (best-effort). */
+  const savePartialProfile = () => {
+    // Only bother persisting if at least one real field was filled in.
+    const hasData =
+      currentRole.trim() || targetRole.trim() || location.trim() || aspirations.trim() ||
+      assessedSkills.length > 0 || challenges.length > 0 || motivation.trim();
+    if (!hasData) return;
+    saveProfile().catch(() => {
+      // Best-effort — the user chose to skip; the app still proceeds.
+    });
+  };
+
   const acceptConsent = () => {
     localStorage.setItem("leap_privacy_consent", new Date().toISOString());
     setShowConsent(false);
     navigate("/dashboard");
+  };
+
+  /**
+   * "Skip for now" — abandon the guided flow and enter the app. The account
+   * must already exist (or be created) so the dashboard is reachable: an
+   * unauthenticated visitor is sent to sign up first; a signed-in user gets
+   * their partial profile saved and lands on the dashboard.
+   */
+  const skipOnboarding = () => {
+    if (!localStorage.getItem("leap_privacy_consent")) {
+      // Entering the app is itself the consent — record it so the gate never
+      // comes back, then take the user to the dashboard (never sign them out).
+      localStorage.setItem("leap_privacy_consent", new Date().toISOString());
+    }
+    savePartialProfile();
+    navigate("/dashboard");
+  };
+
+  const skipIfAccountExists = () => {
+    if (getAuthToken()) {
+      skipOnboarding();
+    } else {
+      // No account yet — create one first, then they reach the dashboard.
+      // The state flag tells signup to skip onboarding on the way back, so
+      // the user isn't bounced right back into this flow.
+      navigate("/signup", { state: { skipOnboarding: true } });
+    }
   };
 
   const saveProfile = () => {
@@ -133,16 +173,7 @@ const Onboarding = () => {
               Leap.ai
             </span>
 
-            <Button
-              variant="ghost"
-              onClick={() => {
-                if (!localStorage.getItem("leap_privacy_consent")) {
-                  setShowConsent(true);
-                } else {
-                  navigate("/dashboard");
-                }
-              }}
-            >
+            <Button variant="ghost" onClick={skipIfAccountExists}>
               Skip for now
             </Button>
           </div>

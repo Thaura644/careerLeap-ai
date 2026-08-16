@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.Date;
 @Service
 public class JwtService {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
     private final String secret;
     private final long ttlSeconds;
 
@@ -28,8 +32,21 @@ public class JwtService {
         this.ttlSeconds = ttlSeconds;
     }
 
+    private static final String DEV_FALLBACK = "dev-only-change-me-in-production-0123456789abcdef";
+
     @PostConstruct
     void init() {
+        // Fail loud when the signing key is the known dev fallback: tokens are
+        // forgeable if this ships to production as-is.
+        if (DEV_FALLBACK.equals(secret)) {
+            log.error("JWT_SECRET is unset (using the development default). "
+                    + "Set a long random JWT_SECRET environment variable before going live "
+                    + "— otherwise auth tokens can be forged.");
+        }
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            log.error("JWT_SECRET is too short ({} bytes). Use at least 32 bytes of random "
+                    + "entropy — short keys can be brute-forced.", secret.getBytes(StandardCharsets.UTF_8).length);
+        }
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

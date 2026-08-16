@@ -53,7 +53,7 @@ const sections: { title: string; body: React.ReactNode }[] = [
       <div className="space-y-3 text-[14px] leading-relaxed text-stone-600">
         <p>
           The free plan costs nothing and stays free. Paid plans (Pro monthly, Pro annual,
-          and one-time Roadmap Reports) are billed securely through{" "}
+          and the one-time Career Audit) are billed securely through{" "}
           <strong className="text-stone-800">Paystack</strong> in the currency you choose.
           Payment details are handled entirely by Paystack — we never store your card.
         </p>

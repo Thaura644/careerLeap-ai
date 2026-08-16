@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AIProvider } from "@/context/AIContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -75,16 +76,17 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/upgrade" element={<UpgradePro />} />
-                <Route path="/practice" element={<Practice />} />
-                <Route path="/practice/:slug" element={<PracticeProblem />} />
-                <Route path="/practice/scenario/:slug" element={<PracticeScenario />} />
-                <Route path="/flashcards" element={<Flashcards />} />
-                <Route path="/resources" element={<Resources />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/insights" element={<AIInsights />} />
+                {/* Authenticated area — everything below requires a session. */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/upgrade" element={<ProtectedRoute><UpgradePro /></ProtectedRoute>} />
+                <Route path="/practice" element={<ProtectedRoute><Practice /></ProtectedRoute>} />
+                <Route path="/practice/:slug" element={<ProtectedRoute><PracticeProblem /></ProtectedRoute>} />
+                <Route path="/practice/scenario/:slug" element={<ProtectedRoute><PracticeScenario /></ProtectedRoute>} />
+                <Route path="/flashcards" element={<ProtectedRoute><Flashcards /></ProtectedRoute>} />
+                <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+                <Route path="/insights" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />

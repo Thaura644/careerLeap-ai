@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 // Social-login icons; unused while the social buttons are commented out.
 // import { Github, Twitter } from "lucide-react";
-import { apiPost, ApiTimeoutError } from "@/lib/api";
+import { apiPost, ApiError, ApiTimeoutError } from "@/lib/api";
 import { saveAuthSession } from "@/lib/authSession";
 
 const Signup = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // "Skip for now" on onboarding sends the user here to create an account
+  // first; after signing up they should go straight to the dashboard instead
+  // of being bounced back into onboarding.
+  const skippedOnboarding = Boolean((location.state as { skipOnboarding?: boolean } | null)?.skipOnboarding);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,6 +44,17 @@ const Signup = () => {
       // when the browser closes.
       saveAuthSession(response.token, response.user, true);
       window.dispatchEvent(new Event("leap:auth-change"));
+      if (skippedOnboarding) {
+        // Entering the app directly is itself consent for the privacy gate —
+        // record it so the dialog never blocks a later visit.
+        localStorage.setItem("leap_privacy_consent", new Date().toISOString());
+        toast({
+          title: "Account created successfully",
+          description: "Welcome to Leap.ai! Redirecting to your dashboard...",
+        });
+        navigate("/dashboard");
+        return;
+      }
       toast({
         title: "Account created successfully",
         description: "Welcome to Leap.ai! Redirecting to onboarding...",
@@ -52,10 +68,16 @@ const Signup = () => {
             "The free server is starting up — this can take up to a minute. Just click Create account again in a few seconds.",
           variant: "destructive",
         });
+      } else if (error instanceof ApiError) {
+        toast({
+          title: "Signup failed",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Signup failed",
-          description: "Could not create your account. Check the details and try again.",
+          description: "Could not reach the server. Check your connection and try again.",
           variant: "destructive",
         });
       }

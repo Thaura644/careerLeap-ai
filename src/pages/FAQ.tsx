@@ -4,11 +4,15 @@ import StaticPageShell from "./StaticPageShell";
 const faqs: { q: string; a: string }[] = [
   {
     q: "Is Leap.ai really free?",
-    a: "Yes. The free plan is free forever — no card, no trial countdown. It includes a sample roadmap generator, community access, and nothing to pay. Paid plans exist for people who want unlimited roadmaps and goal tracking, but free isn't a bait.",
+    a: "Yes. The free plan is free forever — no card, no trial countdown. It includes your personalized roadmap, recommended practice problems with a real code judge, trial real-world scenarios, and community access. Paid plans exist for people who want the full practice library, interview & exam prep, and creator content — free isn't a bait.",
+  },
+  {
+    q: "Why pay when roadmaps are free on roadmap.sh or from AI agents?",
+    a: "Because the roadmap itself is free here. You pay for what a static roadmap can't do: a practice engine with a real code judge, real-world case studies and build projects, interview & exam prep tracks, an AI assistant that knows your profile and progress, and live workshops and courses from creators. Free users get a real taste of each; Pro unlocks the full library.",
   },
   {
     q: "How much do paid plans cost?",
-    a: "Roadmap Report is a one-time $12 (also ₦15,000) for a single personalized roadmap. Pro is $8/month (also ₦10,000) or $80/year — annual is two months free — for unlimited roadmaps and goal tracking. Prices show in your currency at checkout.",
+    a: "Career Audit is a one-time $12 (also ₦15,000) — a full profile + resume review with a prioritized skill-gap analysis and action plan. Pro is $12/month (also ₦15,000) or $100/year (≈ 30% off) for the full practice library, real-world scenarios, unlimited roadmaps, goal tracking, AI insights, and creator tools. Prices show in your currency at checkout.",
   },
   {
     q: "How does the roadmap generator work?",
@@ -20,7 +24,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How do payments work?",
-    a: "Checkout is live and handled by Paystack in NGN, USD, GHS, ZAR, or KES. Card details never touch our servers. Subscriptions renew monthly/yearly until you cancel; the one-time report is a single charge.",
+    a: "Checkout is live and handled by Paystack in NGN, USD, GHS, ZAR, or KES. Card details never touch our servers. Subscriptions renew monthly/yearly until you cancel; the one-time Career Audit is a single charge.",
   },
   {
     q: "What is the practice problem set?",
