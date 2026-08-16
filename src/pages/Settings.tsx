@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, User, Bell, Globe, Shield, Mail, Save, AlertTriangle, Receipt } from "lucide-react";
 import BillingTab from "@/components/settings/BillingTab";
-import { apiGet, apiPut } from "@/lib/api";
+import { apiGet, apiPut, ApiError, ApiTimeoutError } from "@/lib/api";
+import { clearAuthSession } from "@/lib/authSession";
 import { useToast } from "@/hooks/use-toast";
 
 interface MeUser {
@@ -29,8 +31,13 @@ interface MeUser {
 
 const Settings = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [user, setUser] = useState<MeUser | null>(null);
   const [loading, setLoading] = useState(true);
+  // "session" = the token was rejected (stale/expired) — send to login.
+  // "unavailable" = transient failure (cold start / network) — offer retry.
+  const [loadError, setLoadError] = useState<"session" | "unavailable" | null>(null);
+  const [loadRetrying, setLoadRetrying] = useState(false);
 
   // Editable profile fields (the only ones the backend accepts).
   const [currentRole, setCurrentRole] = useState("");
@@ -42,8 +49,10 @@ const Settings = () => {
   const [aspirations, setAspirations] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    apiGet<{ user: MeUser }>("/auth/me")
+  const loadAccount = useCallback(() => {
+    setLoading(true);
+    setLoadError(null);
+    return apiGet<{ user: MeUser }>("/auth/me")
       .then(({ user }) => {
         setUser(user);
         setCurrentRole(user.currentRole || "");
@@ -54,11 +63,25 @@ const Settings = () => {
         setTimeframe(user.timeframe || "");
         setAspirations(user.aspirations || "");
       })
-      .catch(() => {
+      .catch((err) => {
         setUser(null);
+        // A rejected token means the stored session is stale — clear it and
+        // take the user to login so they can actually sign in again instead of
+        // hitting a dead end. Transient failures get a retry instead.
+        if (err instanceof ApiError && err.status === 401) {
+          clearAuthSession();
+          window.dispatchEvent(new Event("leap:auth-change"));
+          navigate("/login?next=/settings", { replace: true });
+          return;
+        }
+        setLoadError(err instanceof ApiTimeoutError ? "unavailable" : "unavailable");
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [navigate]);
+
+  useEffect(() => {
+    loadAccount();
+  }, [loadAccount]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -110,8 +133,25 @@ const Settings = () => {
   if (!user) {
     return (
       <DashboardLayout>
-        <div className="max-w-5xl mx-auto py-16 text-center text-muted-foreground">
-          <p>Could not load your account. Please sign in again.</p>
+        <div className="max-w-5xl mx-auto py-16 text-center">
+          <p className="text-muted-foreground">Could not load your account.</p>
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loadRetrying}
+              onClick={() => {
+                setLoadRetrying(true);
+                loadAccount().finally(() => setLoadRetrying(false));
+              }}
+            >
+              {loadRetrying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Try again
+            </Button>
+            <Link to="/login?next=/settings" className="text-sm font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600">
+              Sign in again
+            </Link>
+          </div>
         </div>
       </DashboardLayout>
     );
