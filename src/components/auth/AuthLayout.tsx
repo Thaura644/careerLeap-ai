@@ -23,17 +23,17 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
       <div className="w-full lg:w-1/2 flex flex-col justify-center p-8 md:p-16">
         <div className="mx-auto w-full max-w-md">
           <Link to="/" className="inline-block mb-8">
-            <span className="text-2xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
+            <span className="text-2xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple dark:from-leap-purple dark:to-leap-teal bg-clip-text text-transparent">
               Leap.ai
             </span>
           </Link>
 
           <h1 className="text-3xl font-bold mb-2">{title}</h1>
-          <p className="text-gray-600 mb-8">{description}</p>
+          <p className="text-muted-foreground mb-8">{description}</p>
 
           {children}
 
-          <div className="mt-8 text-center text-gray-500">
+          <div className="mt-8 text-center text-muted-foreground">
             {linkText.split(' ')[0]}{' '}
             <Link to={linkHref} className="text-leap-purple hover:underline font-medium">
               {linkText.split(' ').slice(1).join(' ')}

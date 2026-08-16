@@ -12,7 +12,9 @@ import {
   FileText,
   Globe,
   Play,
-  Star
+  Star,
+  ExternalLink,
+  UserRound
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResourceType } from "@/context/ResourcesContext";
@@ -124,7 +126,7 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
         </Button>
       </div>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <Badge 
             variant="outline" 
             className="flex items-center gap-1 bg-muted/50"
@@ -132,13 +134,28 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
             {getTypeIcon(type)}
             {type}
           </Badge>
-          <div className="flex items-center text-sm">
-            <Star className="h-4 w-4 text-yellow-500 mr-1" />
-            <span>{rating}</span>
-            <span className="text-muted-foreground ml-1">({reviews})</span>
+          <div className="flex items-center gap-2">
+            {resource.source === "open" && (
+              <Badge variant="outline" className="text-[10px] text-green-600 dark:text-green-400 border-green-300 dark:border-green-800">
+                <Globe className="h-3 w-3 mr-0.5" /> Open source
+              </Badge>
+            )}
+            {resource.source === "creator" && (
+              <Badge variant="outline" className="text-[10px] text-leap-purple border-leap-purple/40">
+                <UserRound className="h-3 w-3 mr-0.5" /> Creator
+              </Badge>
+            )}
+            <div className="flex items-center text-sm">
+              <Star className="h-4 w-4 text-yellow-500 mr-1" />
+              <span>{rating}</span>
+              <span className="text-muted-foreground ml-1">({reviews})</span>
+            </div>
           </div>
         </div>
         <CardTitle className="text-lg mt-2">{title}</CardTitle>
+        {resource.createdByName && (
+          <CardDescription className="text-xs">by {resource.createdByName}</CardDescription>
+        )}
       </CardHeader>
       <CardContent className="pb-2">
         <div className="flex items-center text-sm text-muted-foreground">
@@ -154,6 +171,18 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
               Unlock with Pro
             </Button>
           </Link>
+        ) : resource.url ? (
+          // The resource engine cataloged a real destination — open it.
+          <Button
+            className="w-full"
+            variant={isCompleted ? "outline" : "default"}
+            asChild
+          >
+            <a href={resource.url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              {isCompleted ? "Completed — open again" : "Open resource"}
+            </a>
+          </Button>
         ) : (
           // No fabricated "Start Learning": the linked content pages aren't
           // built yet, so the card says so instead of sending users nowhere.

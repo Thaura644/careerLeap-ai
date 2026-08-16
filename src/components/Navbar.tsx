@@ -18,12 +18,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm py-4 sticky top-0 z-50">
+    <nav className="bg-background border-b border-border shadow-sm py-4 sticky top-0 z-50">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-leap-navy to-leap-purple dark:from-leap-purple dark:to-leap-teal bg-clip-text text-transparent">
                 Leap.ai
               </span>
             </Link>
@@ -32,7 +32,7 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-1 hover:text-leap-purple">
+              <DropdownMenuTrigger className="flex items-center gap-1 text-foreground hover:text-leap-purple">
                 Features <ChevronDown size={16} />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -43,20 +43,23 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Link to="/how-it-works" className="hover:text-leap-purple">
+            <Link to="/how-it-works" className="text-foreground hover:text-leap-purple">
               How It Works
             </Link>
-            <Link to="/pricing" className="hover:text-leap-purple">
+            <Link to="/pricing" className="text-foreground hover:text-leap-purple">
               Pricing
             </Link>
-            <Link to="/resources" className="hover:text-leap-purple">
+            <Link to="/resources" className="text-foreground hover:text-leap-purple">
               Resources
             </Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/login">
-              <Button variant="outline" className="border-leap-navy text-leap-navy hover:bg-leap-navy hover:text-white">
+              <Button
+                variant="outline"
+                className="border-leap-navy text-leap-navy hover:bg-leap-navy hover:text-white dark:border-leap-purple dark:text-leap-purple dark:hover:bg-leap-purple"
+              >
                 Log In
               </Button>
             </Link>
@@ -69,7 +72,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button onClick={toggleMenu} className="text-leap-navy">
+            <button onClick={toggleMenu} className="text-foreground">
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
@@ -79,21 +82,24 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4">
             <div className="flex flex-col space-y-3">
-              <Link to="/features" className="py-2 hover:text-leap-purple" onClick={toggleMenu}>
+              <Link to="/features" className="py-2 text-foreground hover:text-leap-purple" onClick={toggleMenu}>
                 Features
               </Link>
-              <Link to="/how-it-works" className="py-2 hover:text-leap-purple" onClick={toggleMenu}>
+              <Link to="/how-it-works" className="py-2 text-foreground hover:text-leap-purple" onClick={toggleMenu}>
                 How It Works
               </Link>
-              <Link to="/pricing" className="py-2 hover:text-leap-purple" onClick={toggleMenu}>
+              <Link to="/pricing" className="py-2 text-foreground hover:text-leap-purple" onClick={toggleMenu}>
                 Pricing
               </Link>
-              <Link to="/resources" className="py-2 hover:text-leap-purple" onClick={toggleMenu}>
+              <Link to="/resources" className="py-2 text-foreground hover:text-leap-purple" onClick={toggleMenu}>
                 Resources
               </Link>
               <div className="pt-2 flex flex-col space-y-3">
                 <Link to="/login" onClick={toggleMenu}>
-                  <Button variant="outline" className="w-full border-leap-navy text-leap-navy">
+                  <Button
+                    variant="outline"
+                    className="w-full border-leap-navy text-leap-navy dark:border-leap-purple dark:text-leap-purple"
+                  >
                     Log In
                   </Button>
                 </Link>

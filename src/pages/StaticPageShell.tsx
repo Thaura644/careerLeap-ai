@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { AuthMenu } from "@/components/auth/AuthMenu";
 
 const footerLinks: { label: string; to: string }[][] = [
   [
@@ -49,13 +49,10 @@ const StaticPageShell = ({ children }: StaticPageShellProps) => {
               Resources
             </Link>
           </div>
-          <div className="hidden items-center gap-4 md:flex">
-            <Link to="/login" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
-              Log in
-            </Link>
-            <Button asChild className="h-9 rounded-none bg-stone-900 px-4 text-[13px] hover:bg-stone-700">
-              <Link to="/signup">Sign up</Link>
-            </Button>
+          {/* Signed out: Log in / Sign up. Signed in: avatar + verified badge
+              with Dashboard / Profile / Sign out. */}
+          <div className="hidden md:block">
+            <AuthMenu />
           </div>
         </nav>
       </header>

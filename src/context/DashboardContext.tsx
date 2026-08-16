@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { apiGet } from "@/lib/api";
+import { getAuthToken, getAuthUser } from "@/lib/authSession";
 
 // Define types for dashboard data
 export interface ActivityDataPoint {
@@ -77,19 +78,12 @@ export const DashboardProvider = ({ children }: DashboardProviderProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const localUser = localStorage.getItem("leap_user");
-    if (localUser) {
-      try {
-        const parsed = JSON.parse(localUser);
-        if (parsed?.fullName) setUserName(parsed.fullName.split(" ")[0]);
-      } catch {
-        // noop
-      }
-    }
+    const localUser = getAuthUser();
+    if (localUser?.fullName) setUserName(localUser.fullName.split(" ")[0]);
 
     const fetchDashboardData = async () => {
       // Not logged in? Skip the protected call entirely (it would just 401).
-      if (!localStorage.getItem("leap_token")) {
+      if (!getAuthToken()) {
         setLoading(false);
         return;
       }

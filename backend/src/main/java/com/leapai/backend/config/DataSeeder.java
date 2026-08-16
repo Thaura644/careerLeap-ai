@@ -40,6 +40,11 @@ public class DataSeeder implements CommandLineRunner {
             seedResources();
             log.info("[seed] loaded {} library resources", resources.count());
         }
+        if (resources.findBySourceOrderByIdDesc("open").isEmpty()) {
+            seedOpenResources();
+            log.info("[seed] loaded {} open-source resources",
+                    resources.findBySourceOrderByIdDesc("open").size());
+        }
         if (events.count() == 0) {
             seedEvents();
             log.info("[seed] loaded {} events", events.count());
@@ -78,6 +83,32 @@ public class DataSeeder implements CommandLineRunner {
                 "Failure modes, recovery, and designing for real-world outages."));
     }
 
+    /** Real open-source learning materials (source=OPEN) so the resource engine
+     *  has known-good links in the library from day one. */
+    private void seedOpenResources() {
+        resources.save(openResource("System Design Primer", "Guide",
+                "https://github.com/donnemartin/system-design-primer", "GitHub",
+                "The canonical open-source intro to large-scale system design."));
+        resources.save(openResource("freeCodeCamp — System Design Concepts Course", "Course",
+                "https://www.youtube.com/watch?v=F2FmTdLtb_4", "YouTube",
+                "A free, complete video walkthrough of system design fundamentals."));
+        resources.save(openResource("CS50x — Introduction to Computer Science", "Course",
+                "https://cs50.harvard.edu/x/", "Course site",
+                "Harvard's free course that builds problem-solving fundamentals."));
+        resources.save(openResource("The Odin Project", "Course",
+                "https://www.theodinproject.com/", "Course site",
+                "Free, project-driven full-stack curriculum."));
+        resources.save(openResource("PostgreSQL Documentation", "Docs",
+                "https://www.postgresql.org/docs/", "Docs",
+                "The official docs — indexing, transactions, query planning."));
+        resources.save(openResource("Google SRE Book", "Book",
+                "https://sre.google/sre-book/table-of-contents/", "Book",
+                "Free — the blueprint for running reliable production systems."));
+        resources.save(openResource("Kaggle Learn", "Course",
+                "https://www.kaggle.com/learn", "Kaggle",
+                "Free micro-courses on Python, SQL, ML, and visualization."));
+    }
+
     private void seedEvents() {
         events.save(event("Career Transition Strategies",
                 "How to move between roles or industries without starting over.",
@@ -104,6 +135,22 @@ public class DataSeeder implements CommandLineRunner {
         r.setPro(isPro);
         r.setCategory(category);
         r.setDescription(description);
+        return r;
+    }
+
+    private static Resource openResource(String title, String type, String url, String source,
+                                         String description) {
+        Resource r = new Resource();
+        r.setTitle(title);
+        r.setType(type);
+        r.setUrl(url);
+        r.setSource("open");
+        r.setCategory("OTHER");
+        r.setDescription(description);
+        r.setRating(0);
+        r.setReviews(0);
+        r.setDuration("Open source");
+        r.setPro(false);
         return r;
     }
 

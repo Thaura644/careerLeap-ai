@@ -5,10 +5,67 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Brain, Send, RefreshCw, Zap, Plus } from "lucide-react";
+import { Brain, Send, RefreshCw, Zap, Plus, Eye } from "lucide-react";
 import { useAI } from "@/context/AIContext";
+import { apiGet } from "@/lib/api";
 import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
+
+/** What the AI can see about the user — the grounding strip under the header.
+ *  Loaded from the backend so it always reflects real account data. */
+const ContextStrip: React.FC = () => {
+  const [ctx, setCtx] = useState<{
+    profile?: Record<string, unknown>;
+    roadmap?: { phases?: unknown[] } | null;
+    goals?: unknown[];
+    practice?: { solved?: number; total?: number };
+    resourcesCompleted?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiGet<typeof ctx>("/ai/context")
+      .then((d) => {
+        if (!cancelled) setCtx(d);
+      })
+      .catch(() => {
+        if (!cancelled) setCtx(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!ctx) return null;
+  const profile = ctx.profile || {};
+  const phases = ctx.roadmap?.phases?.length ?? 0;
+  const goalCount = ctx.goals?.length ?? 0;
+  const solved = ctx.practice?.solved ?? 0;
+  const bits: string[] = [];
+  if (String(profile.currentRole || "") && String(profile.targetRole || "")) {
+    bits.push(`${profile.currentRole} → ${profile.targetRole}`);
+  }
+  if (phases > 0) bits.push(`${phases} roadmap phases`);
+  if (goalCount > 0) bits.push(`${goalCount} goal${goalCount === 1 ? "" : "s"}`);
+  if (solved > 0) bits.push(`${solved} problems solved`);
+  if (bits.length === 0) {
+    bits.push("your profile, once you complete onboarding");
+  }
+
+  return (
+    <div className="border-b bg-muted/40 px-4 py-2">
+      <div className="flex items-start gap-2">
+        <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0 text-leap-purple" />
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground">I can see:</span> {bits.join(" · ")}
+        </p>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Ask me to do things too — set a goal, update your target role, mark a resource complete.
+      </p>
+    </div>
+  );
+};
 
 interface AIAgentChatProps {
   className?: string;
@@ -157,10 +214,16 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
       )}
       
       <CardContent className={cn(
-        "flex-1 flex flex-col p-0",
+        "flex-1 flex flex-col p-0 min-h-0",
         compact ? "px-3 pb-3" : "px-6 pb-6"
       )}>
-        <ScrollArea className={cn("pr-4", `max-h-[${maxHeight}]`)}>
+        <div className="shrink-0">
+          <ContextStrip />
+        </div>
+        <ScrollArea
+          className="min-h-0 flex-1 pr-4"
+          style={{ maxHeight: maxHeight === "none" ? undefined : maxHeight }}
+        >
           <div className={cn("space-y-4", compact ? "pt-0" : "pt-2")}>
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">

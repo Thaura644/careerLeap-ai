@@ -39,6 +39,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(error("bad_request", ex.getMessage(), null));
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> forbidden(ForbiddenException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(error("forbidden", ex.getMessage(), null));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> generic(Exception ex) {
         log.error("Unhandled error", ex);

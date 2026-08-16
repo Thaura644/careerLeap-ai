@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AIUserProfile, AIMessage, RecommendedResource, CareerGoal, AIConversation } from "@/types/ai";
 import { uuid } from "@/lib/ai-utils";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
+import { getAuthToken } from "@/lib/authSession";
 
 interface AIContextType {
   isProcessing: boolean;
@@ -114,7 +115,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   // their persisted conversations. Nothing is invented when the account is new.
   const refreshProfile = useCallback(async () => {
     // Not logged in? Skip the protected calls entirely (they'd just 401).
-    if (!localStorage.getItem("leap_token")) {
+    if (!getAuthToken()) {
       setProfile(null);
       setMessages([]);
       setCurrentConversation(null);

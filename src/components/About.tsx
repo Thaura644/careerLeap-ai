@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 
 const About = () => {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -14,7 +14,7 @@ const About = () => {
 
             <div className="mb-8">
               <h3 className="text-xl font-semibold mb-3">Redefining Professional Development</h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 At Leap.ai, we combine advanced artificial intelligence with human expertise to deliver transformative career solutions for ambitious professionals.
               </p>
             </div>
@@ -26,7 +26,7 @@ const About = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">Strategic Career Planning</h4>
-                  <p className="text-gray-600">AI-powered roadmaps aligned with market trends and personal aspirations</p>
+                  <p className="text-muted-foreground">AI-powered roadmaps aligned with market trends and personal aspirations</p>
                 </div>
               </div>
 
@@ -36,7 +36,7 @@ const About = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">Intelligent Skill Analysis</h4>
-                  <p className="text-gray-600">Machine learning-driven competency assessments and gap identification</p>
+                  <p className="text-muted-foreground">Machine learning-driven competency assessments and gap identification</p>
                 </div>
               </div>
 
@@ -46,7 +46,7 @@ const About = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">Expert Mentorship</h4>
-                  <p className="text-gray-600">Direct access to industry leaders and career development specialists</p>
+                  <p className="text-muted-foreground">Direct access to industry leaders and career development specialists</p>
                 </div>
               </div>
 
@@ -56,43 +56,43 @@ const About = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">Curated Resources</h4>
-                  <p className="text-gray-600">Comprehensive library of professional development materials and courses</p>
+                  <p className="text-muted-foreground">Comprehensive library of professional development materials and courses</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 p-8 rounded-lg">
+          <div className="bg-muted p-8 rounded-lg">
             <h3 className="text-2xl font-semibold mb-6">Our Value Proposition</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               Leap.ai delivers measurable outcomes through our proprietary three-pillar methodology:
             </p>
 
             <div className="space-y-6">
-              <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                <h4 className="font-semibold text-leap-purple mb-2">Predictive Analytics for Career Trajectory</h4>
-                <p className="text-gray-600">Using AI to forecast optimal career paths based on your skills and market trends</p>
+              <div className="p-4 bg-card rounded-lg shadow-sm border border-border">
+                <h4 className="font-semibold text-leap-purple dark:text-leap-teal mb-2">Predictive Analytics for Career Trajectory</h4>
+                <p className="text-muted-foreground">Using AI to forecast optimal career paths based on your skills and market trends</p>
               </div>
 
-              <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                <h4 className="font-semibold text-leap-purple mb-2">Competency-Based Development Frameworks</h4>
-                <p className="text-gray-600">Structured approach to identifying and filling skill gaps efficiently</p>
+              <div className="p-4 bg-card rounded-lg shadow-sm border border-border">
+                <h4 className="font-semibold text-leap-purple dark:text-leap-teal mb-2">Competency-Based Development Frameworks</h4>
+                <p className="text-muted-foreground">Structured approach to identifying and filling skill gaps efficiently</p>
               </div>
 
-              <div className="p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                <h4 className="font-semibold text-leap-purple mb-2">Strategic Professional Connections</h4>
-                <p className="text-gray-600">AI-matched networking opportunities with relevant industry professionals</p>
+              <div className="p-4 bg-card rounded-lg shadow-sm border border-border">
+                <h4 className="font-semibold text-leap-purple dark:text-leap-teal mb-2">Strategic Professional Connections</h4>
+                <p className="text-muted-foreground">AI-matched networking opportunities with relevant industry professionals</p>
               </div>
             </div>
 
             <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                <p className="text-3xl font-bold text-leap-purple">92%</p>
-                <p className="text-gray-600">User Satisfaction Rate</p>
+              <div className="text-center p-4 bg-card rounded-lg shadow-sm border border-border">
+                <p className="text-3xl font-bold text-leap-purple dark:text-leap-teal">92%</p>
+                <p className="text-muted-foreground">User Satisfaction Rate</p>
               </div>
-              <div className="text-center p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-                <p className="text-3xl font-bold text-leap-purple">3.8x</p>
-                <p className="text-gray-600">Career Progression Acceleration</p>
+              <div className="text-center p-4 bg-card rounded-lg shadow-sm border border-border">
+                <p className="text-3xl font-bold text-leap-purple dark:text-leap-teal">3.8x</p>
+                <p className="text-muted-foreground">Career Progression Acceleration</p>
               </div>
             </div>
           </div>

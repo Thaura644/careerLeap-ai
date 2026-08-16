@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Radio, ExternalLink, UserRound } from "lucide-react";
 import { EventType } from "@/context/ResourcesContext";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const { title, description, type, isPro, date, time, color } = event;
+  const { title, description, type, isPro, date, time, color, hostName, joinUrl, isLive } = event;
 
   const getEventColorClasses = (color: string) => {
     switch (color) {
@@ -70,6 +70,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
+              {isLive && (
+                <Badge className="bg-red-600 text-white border-none gap-1 animate-pulse">
+                  <Radio className="h-3 w-3" /> LIVE
+                </Badge>
+              )}
               <Badge 
                 variant="outline" 
                 className={cn(
@@ -107,17 +112,35 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" /> {time}
               </div>
+              {hostName && (
+                <div className="flex items-center gap-1">
+                  <UserRound className="h-4 w-4" /> {hostName}
+                </div>
+              )}
             </div>
-            {/* Registration isn't wired to a backend yet — no fake success.
-                The button is honest about that instead of claiming a seat. */}
-            <Button
-              size="sm"
-              className={isPro ? "bg-leap-purple hover:bg-opacity-90" : ""}
-              disabled
-              title="Event registration is not open yet"
-            >
-              Registration opens soon
-            </Button>
+            {isLive && joinUrl ? (
+              <Button
+                size="sm"
+                asChild
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <a href={joinUrl} target="_blank" rel="noopener noreferrer">
+                  <Radio className="h-4 w-4 mr-1" /> Join live
+                  <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+              </Button>
+            ) : (
+              /* Registration isn't wired to a backend yet — no fake success.
+                 The button is honest about that instead of claiming a seat. */
+              <Button
+                size="sm"
+                className={isPro ? "bg-leap-purple hover:bg-opacity-90" : ""}
+                disabled
+                title="Event registration is not open yet"
+              >
+                Registration opens soon
+              </Button>
+            )}
           </div>
         </div>
       </CardContent>

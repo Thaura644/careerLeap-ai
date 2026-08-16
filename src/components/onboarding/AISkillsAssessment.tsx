@@ -159,7 +159,7 @@ export const AISkillsAssessment: React.FC<AISkillsAssessmentProps> = ({
     <div className={className}>
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold mb-2">Assess Your Skills</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Select from the skill library, add your own, or use what your resume showed — then
           rate them honestly to shape your roadmap.
         </p>

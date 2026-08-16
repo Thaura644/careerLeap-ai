@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import UpgradePro from "./pages/UpgradePro";
 import Practice from "./pages/Practice";
 import PracticeProblem from "./pages/PracticeProblem";
+import PracticeScenario from "./pages/PracticeScenario";
 import Flashcards from "./pages/Flashcards";
 import Resources from "./pages/Resources";
 import Settings from "./pages/Settings";
@@ -29,7 +30,6 @@ import Blog from "./pages/Blog";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Cookies from "./pages/Cookies";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,20 +62,6 @@ if ('serviceWorker' in navigator) {
 }
 
 const App = () => {
-  // Add dark mode correction
-  useEffect(() => {
-    // Ensure proper contrast in dark mode
-    const root = document.documentElement;
-    if (root.classList.contains('dark')) {
-      root.style.setProperty('--foreground', '210 40% 98%');
-      root.style.setProperty('--card-foreground', '210 40% 98%');
-      root.style.setProperty('--primary-foreground', '210 40% 98%');
-      root.style.setProperty('--secondary-foreground', '210 40% 98%');
-      root.style.setProperty('--accent-foreground', '210 40% 98%');
-      root.style.setProperty('--destructive-foreground', '210 40% 98%');
-    }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -93,6 +79,7 @@ const App = () => {
                 <Route path="/upgrade" element={<UpgradePro />} />
                 <Route path="/practice" element={<Practice />} />
                 <Route path="/practice/:slug" element={<PracticeProblem />} />
+                <Route path="/practice/scenario/:slug" element={<PracticeScenario />} />
                 <Route path="/flashcards" element={<Flashcards />} />
                 <Route path="/resources" element={<Resources />} />
                 <Route path="/settings" element={<Settings />} />

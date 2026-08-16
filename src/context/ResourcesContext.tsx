@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { apiGet, apiPost } from "@/lib/api";
+import { getAuthToken } from "@/lib/authSession";
 
 // Define types for resource data
 export interface ResourceType {
@@ -14,6 +15,11 @@ export interface ResourceType {
   isBookmarked: boolean;
   isCompleted?: boolean;
   description?: string;
+  /** External link the resource actually opens (engine/creator resources). */
+  url?: string | null;
+  /** Where it came from: "library" | "open" | "creator". */
+  source?: string;
+  createdByName?: string | null;
 }
 
 export interface EventType {
@@ -25,6 +31,9 @@ export interface EventType {
   date: string;
   time: string;
   color: string;
+  hostName?: string | null;
+  joinUrl?: string | null;
+  isLive?: boolean;
 }
 
 interface ResourcesContextType {
@@ -32,6 +41,8 @@ interface ResourcesContextType {
   recommendedResources: ResourceType[];
   bookmarkedResources: ResourceType[];
   completedResources: ResourceType[];
+  openResources: ResourceType[];
+  creatorResources: ResourceType[];
   upcomingEvents: EventType[];
   loading: boolean;
   error: string | null;
@@ -51,13 +62,15 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
   const [recommendedResources, setRecommendedResources] = useState<ResourceType[]>([]);
   const [bookmarkedResources, setBookmarkedResources] = useState<ResourceType[]>([]);
   const [completedResources, setCompletedResources] = useState<ResourceType[]>([]);
+  const [openResources, setOpenResources] = useState<ResourceType[]>([]);
+  const [creatorResources, setCreatorResources] = useState<ResourceType[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<EventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchResources = async () => {
     // Not logged in? Skip the protected call entirely (it would just 401).
-    if (!localStorage.getItem("leap_token")) {
+    if (!getAuthToken()) {
       setLoading(false);
       return;
     }
@@ -69,6 +82,8 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
         recommendedResources: ResourceType[];
         bookmarkedResources: ResourceType[];
         completedResources: ResourceType[];
+        openResources: ResourceType[];
+        creatorResources: ResourceType[];
         upcomingEvents: EventType[];
       }>("/resources");
 
@@ -76,6 +91,8 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
       setRecommendedResources(data.recommendedResources || []);
       setBookmarkedResources(data.bookmarkedResources || []);
       setCompletedResources(data.completedResources || []);
+      setOpenResources(data.openResources || []);
+      setCreatorResources(data.creatorResources || []);
       setUpcomingEvents(data.upcomingEvents || []);
     } catch (err) {
       // Honest empty state — no invented demo data. The UI says what failed.
@@ -83,6 +100,8 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
       setRecommendedResources([]);
       setBookmarkedResources([]);
       setCompletedResources([]);
+      setOpenResources([]);
+      setCreatorResources([]);
       setUpcomingEvents([]);
       setError("Could not load the learning library. Please try again.");
     } finally {
@@ -128,6 +147,8 @@ export const ResourcesProvider = ({ children }: ResourcesProviderProps) => {
       recommendedResources,
       bookmarkedResources,
       completedResources,
+      openResources,
+      creatorResources,
       upcomingEvents,
       loading,
       error,

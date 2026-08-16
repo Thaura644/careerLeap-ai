@@ -45,6 +45,27 @@ public class Resource {
     @Column(length = 1000)
     private String description;
 
+    /** External link (YouTube video, course page, GitHub repo, etc.) — the
+     *  resource engine only catalogs things that actually open somewhere. */
+    @Column(length = 500)
+    private String url;
+
+    /** Where the resource came from: "library" (seeded), "open" (imported
+     *  from the open-source engine), or "creator" (created by a Pro member). */
+    @Column(nullable = false, length = 20)
+    private String source = "library";
+
+    /** Creator account that made this resource (source=CREATOR only). */
+    @Column(name = "created_by_id")
+    private Long createdById;
+
+    @Column(name = "created_by_name", length = 200)
+    private String createdByName;
+
+    /** External platform id, e.g. the YouTube video id for embeds. */
+    @Column(name = "external_id", length = 200)
+    private String externalId;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -71,4 +92,19 @@ public class Resource {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getUrl() { return url; }
+    public void setUrl(String url) { this.url = url; }
+
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
+
+    public Long getCreatedById() { return createdById; }
+    public void setCreatedById(Long createdById) { this.createdById = createdById; }
+
+    public String getCreatedByName() { return createdByName; }
+    public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
+
+    public String getExternalId() { return externalId; }
+    public void setExternalId(String externalId) { this.externalId = externalId; }
 }

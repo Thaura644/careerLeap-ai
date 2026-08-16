@@ -158,7 +158,9 @@ public class InsightsService {
             dto.put("id", String.valueOf(r.getId()));
             dto.put("title", r.getTitle());
             dto.put("source", r.getType().toLowerCase(Locale.ROOT));
-            dto.put("url", "/resources");
+            // Real destination: the resource's actual link when the engine
+            // cataloged one, otherwise the library page.
+            dto.put("url", r.getUrl() == null || r.getUrl().isBlank() ? "/resources" : r.getUrl());
             dto.put("description", r.getDescription());
             dto.put("difficulty", r.isPro() ? "advanced" : "intermediate");
             dto.put("estimatedTime", r.getDuration());

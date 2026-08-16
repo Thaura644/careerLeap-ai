@@ -256,6 +256,156 @@ public class ProblemSeeder implements CommandLineRunner {
               n = 4  ->  5
             """;
 
+    private static final String VALID_ANAGRAM_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static boolean isAnagram(String s, String t) {
+                    // Return true if t is an anagram of s (same letters, same counts).
+                    return false;
+                }
+            }
+            """;
+
+    private static final String VALID_ANAGRAM_DESC = """
+            Given two strings s and t, return true if t is an anagram of s — the same
+            characters in any order — and false otherwise.
+
+            Examples:
+              s = "anagram", t = "nagaram"  ->  true
+              s = "rat",    t = "car"       ->  false
+            """;
+
+    private static final String LCP_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static String longestCommonPrefix(String[] strs) {
+                    // Return the longest common prefix shared by all strings, or "" if none.
+                    return "";
+                }
+            }
+            """;
+
+    private static final String LCP_DESC = """
+            Write a function to find the longest common prefix string among an array of
+            strings. If there is no common prefix, return an empty string "".
+
+            Examples:
+              ["flower","flow","flight"]  ->  "fl"
+              ["dog","racecar","car"]     ->  ""
+            """;
+
+    private static final String MAJORITY_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static int majorityElement(int[] nums) {
+                    // Return the element that appears more than n/2 times.
+                    return 0;
+                }
+            }
+            """;
+
+    private static final String MAJORITY_DESC = """
+            Given an array nums of size n, return the majority element — the element
+            that appears more than n/2 times. You may assume the majority element
+            always exists.
+
+            Examples:
+              [3,2,3]                ->  3
+              [2,2,1,1,1,2,2]        ->  2
+            """;
+
+    private static final String HOUSE_ROBBER_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static int rob(int[] nums) {
+                    // Return the max amount you can rob without robbing adjacent houses.
+                    return 0;
+                }
+            }
+            """;
+
+    private static final String HOUSE_ROBBER_DESC = """
+            You are a robber planning to rob houses along a street. Each house has a
+            certain amount of money stashed, and adjacent houses have a security system
+            that alerts the police if two adjacent houses are robbed on the same night.
+
+            Given an integer array nums of house amounts, return the maximum amount you
+            can rob tonight without alerting the police.
+
+            Examples:
+              [1,2,3,1]          ->  4   (rob house 1 + house 3)
+              [2,7,9,3,1]        ->  12  (rob house 1 + house 3 + house 5)
+            """;
+
+    private static final String WATER_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static int maxArea(int[] height) {
+                    // Return the max water a pair of lines can hold (area between them).
+                    return 0;
+                }
+            }
+            """;
+
+    private static final String WATER_DESC = """
+            You are given an integer array height of length n. Each element is a vertical
+            line drawn at that x-coordinate. Find two lines that together with the x-axis
+            form a container that holds the most water. Return the maximum amount of water
+            it can store.
+
+            Examples:
+              [1,8,6,2,5,4,8,3,7]  ->  49
+              [1,1]                 ->  1
+            """;
+
+    private static final String COIN_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static int coinChange(int[] coins, int amount) {
+                    // Return the fewest coins needed to make up amount, or -1 if impossible.
+                    return -1;
+                }
+            }
+            """;
+
+    private static final String COIN_DESC = """
+            You are given an integer array coins representing coins of different denominations
+            and an integer amount. Return the fewest number of coins you need to make up that
+            amount. If that amount cannot be made up by any combination of the coins, return -1.
+            You may assume you have an unlimited number of each kind of coin.
+
+            Examples:
+              coins = [1,2,5], amount = 11   ->  3   (5 + 5 + 1)
+              coins = [2], amount = 3        ->  -1
+              coins = [1], amount = 0        ->  0
+            """;
+
+    private static final String TRAP_STARTER = """
+            import java.util.*;
+
+            public class Solution {
+                public static int trap(int[] height) {
+                    // Return how much water the elevation map can trap.
+                    return 0;
+                }
+            }
+            """;
+
+    private static final String TRAP_DESC = """
+            Given n non-negative integers representing an elevation map where the width of
+            each bar is 1, compute how much water it can trap after raining.
+
+            Examples:
+              [0,1,0,2,1,0,1,3,2,1,2,1]  ->  6
+              [4,2,0,3,2,5]               ->  9
+            """;
+
     private static final List<Problem> ALL = List.of(
         problem("two-sum", "Two Sum", "EASY", "Arrays · Hash Map",
             "public static int[] twoSum(int[] nums, int target)",
@@ -276,18 +426,18 @@ public class ProblemSeeder implements CommandLineRunner {
             "public static boolean isValid(String s)",
             "isValid", VALID_PARENS_STARTER, VALID_PARENS_DESC,
             """
-            [{"call":"Solution.isValid(\"()\")","expected":"true"},
-             {"call":"Solution.isValid(\"()[]{}\")","expected":"true"},
-             {"call":"Solution.isValid(\"(]\")","expected":"false"}]
+            [{"call":"Solution.isValid(\\"()\\")","expected":"true"},
+             {"call":"Solution.isValid(\\"()[]{}\\")","expected":"true"},
+             {"call":"Solution.isValid(\\"(]\\")","expected":"false"}]
             """,
             """
-            [{"call":"Solution.isValid(\"()\")","expected":"true"},
-             {"call":"Solution.isValid(\"()[]{}\")","expected":"true"},
-             {"call":"Solution.isValid(\"(]\")","expected":"false"},
-             {"call":"Solution.isValid(\"([)]\")","expected":"false"},
-             {"call":"Solution.isValid(\"{[]}\")","expected":"true"},
-             {"call":"Solution.isValid(\"(\")","expected":"false"},
-             {"call":"Solution.isValid(\"((()))[]{}\")","expected":"true"}]
+            [{"call":"Solution.isValid(\\"()\\")","expected":"true"},
+             {"call":"Solution.isValid(\\"()[]{}\\")","expected":"true"},
+             {"call":"Solution.isValid(\\"(]\\")","expected":"false"},
+             {"call":"Solution.isValid(\\"([)]\\")","expected":"false"},
+             {"call":"Solution.isValid(\\"{[]}\\")","expected":"true"},
+             {"call":"Solution.isValid(\\"(\\")","expected":"false"},
+             {"call":"Solution.isValid(\\"((()))[]{}\\")","expected":"true"}]
             """),
         problem("contains-duplicate", "Contains Duplicate", "EASY", "Arrays · Hash Map",
             "public static boolean containsDuplicate(int[] nums)",
@@ -394,6 +544,119 @@ public class ProblemSeeder implements CommandLineRunner {
              {"call":"Solution.climbStairs(1)","expected":"1"},
              {"call":"Solution.climbStairs(10)","expected":"89"},
              {"call":"Solution.climbStairs(20)","expected":"10946"}]
+            """),
+        problem("valid-anagram", "Valid Anagram", "EASY", "Strings · Hash Map",
+            "public static boolean isAnagram(String s, String t)",
+            "isAnagram", VALID_ANAGRAM_STARTER, VALID_ANAGRAM_DESC,
+            """
+            [{"call":"Solution.isAnagram(\\"anagram\\", \\"nagaram\\")","expected":"true"},
+             {"call":"Solution.isAnagram(\\"rat\\", \\"car\\")","expected":"false"}]
+            """,
+            """
+            [{"call":"Solution.isAnagram(\\"anagram\\", \\"nagaram\\")","expected":"true"},
+             {"call":"Solution.isAnagram(\\"rat\\", \\"car\\")","expected":"false"},
+             {"call":"Solution.isAnagram(\\"a\\", \\"a\\")","expected":"true"},
+             {"call":"Solution.isAnagram(\\"\\", \\"\\")","expected":"true"},
+             {"call":"Solution.isAnagram(\\"ab\\", \\"ba\\")","expected":"true"},
+             {"call":"Solution.isAnagram(\\"aacc\\", \\"ccac\\")","expected":"false"},
+             {"call":"Solution.isAnagram(\\"listen\\", \\"silent\\")","expected":"true"}]
+            """),
+        problem("longest-common-prefix", "Longest Common Prefix", "EASY", "Strings · Trie",
+            "public static String longestCommonPrefix(String[] strs)",
+            "longestCommonPrefix", LCP_STARTER, LCP_DESC,
+            """
+            [{"call":"Solution.longestCommonPrefix(new String[]{\\"flower\\",\\"flow\\",\\"flight\\"})","expected":"fl"},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"dog\\",\\"racecar\\",\\"car\\"})","expected":""}]
+            """,
+            """
+            [{"call":"Solution.longestCommonPrefix(new String[]{\\"flower\\",\\"flow\\",\\"flight\\"})","expected":"fl"},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"dog\\",\\"racecar\\",\\"car\\"})","expected":""},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"a\\"})","expected":"a"},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"\\",\\"b\\"})","expected":""},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"ab\\",\\"a\\"})","expected":"a"},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"reflower\\",\\"flow\\",\\"flight\\"})","expected":""},
+             {"call":"Solution.longestCommonPrefix(new String[]{\\"same\\",\\"same\\",\\"same\\"})","expected":"same"}]
+            """),
+        problem("majority-element", "Majority Element", "EASY", "Arrays · Hash Map",
+            "public static int majorityElement(int[] nums)",
+            "majorityElement", MAJORITY_STARTER, MAJORITY_DESC,
+            """
+            [{"call":"Solution.majorityElement(new int[]{3,2,3})","expected":"3"},
+             {"call":"Solution.majorityElement(new int[]{2,2,1,1,1,2,2})","expected":"2"}]
+            """,
+            """
+            [{"call":"Solution.majorityElement(new int[]{3,2,3})","expected":"3"},
+             {"call":"Solution.majorityElement(new int[]{2,2,1,1,1,2,2})","expected":"2"},
+             {"call":"Solution.majorityElement(new int[]{1})","expected":"1"},
+             {"call":"Solution.majorityElement(new int[]{6,5,5})","expected":"5"},
+             {"call":"Solution.majorityElement(new int[]{1,1,2,2,1})","expected":"1"},
+             {"call":"Solution.majorityElement(new int[]{1,1,1,1,2,2,2,2,2})","expected":"2"},
+             {"call":"Solution.majorityElement(new int[]{3,3,3,3,3,3})","expected":"3"}]
+            """),
+        problem("house-robber", "House Robber", "MEDIUM", "Arrays · Dynamic Programming",
+            "public static int rob(int[] nums)",
+            "rob", HOUSE_ROBBER_STARTER, HOUSE_ROBBER_DESC,
+            """
+            [{"call":"Solution.rob(new int[]{1,2,3,1})","expected":"4"},
+             {"call":"Solution.rob(new int[]{2,7,9,3,1})","expected":"12"}]
+            """,
+            """
+            [{"call":"Solution.rob(new int[]{1,2,3,1})","expected":"4"},
+             {"call":"Solution.rob(new int[]{2,7,9,3,1})","expected":"12"},
+             {"call":"Solution.rob(new int[]{1})","expected":"1"},
+             {"call":"Solution.rob(new int[]{2,1,1,2})","expected":"4"},
+             {"call":"Solution.rob(new int[]{5,3,4,11,2})","expected":"16"},
+             {"call":"Solution.rob(new int[]{1,3,1,3,100})","expected":"103"},
+             {"call":"Solution.rob(new int[]{0,0,0})","expected":"0"}]
+            """),
+        problem("container-with-most-water", "Container With Most Water", "MEDIUM", "Arrays · Two Pointers",
+            "public static int maxArea(int[] height)",
+            "maxArea", WATER_STARTER, WATER_DESC,
+            """
+            [{"call":"Solution.maxArea(new int[]{1,8,6,2,5,4,8,3,7})","expected":"49"},
+             {"call":"Solution.maxArea(new int[]{1,1})","expected":"1"}]
+            """,
+            """
+            [{"call":"Solution.maxArea(new int[]{1,8,6,2,5,4,8,3,7})","expected":"49"},
+             {"call":"Solution.maxArea(new int[]{1,1})","expected":"1"},
+             {"call":"Solution.maxArea(new int[]{4,3,2,1,4})","expected":"16"},
+             {"call":"Solution.maxArea(new int[]{1,2,1})","expected":"2"},
+             {"call":"Solution.maxArea(new int[]{1,2,4,3})","expected":"4"},
+             {"call":"Solution.maxArea(new int[]{2,3,4,5,18,17,6})","expected":"17"}]
+            """),
+        problem("coin-change", "Coin Change", "MEDIUM", "Dynamic Programming",
+            "public static int coinChange(int[] coins, int amount)",
+            "coinChange", COIN_STARTER, COIN_DESC,
+            """
+            [{"call":"Solution.coinChange(new int[]{1,2,5}, 11)","expected":"3"},
+             {"call":"Solution.coinChange(new int[]{2}, 3)","expected":"-1"},
+             {"call":"Solution.coinChange(new int[]{1}, 0)","expected":"0"}]
+            """,
+            """
+            [{"call":"Solution.coinChange(new int[]{1,2,5}, 11)","expected":"3"},
+             {"call":"Solution.coinChange(new int[]{2}, 3)","expected":"-1"},
+             {"call":"Solution.coinChange(new int[]{1}, 0)","expected":"0"},
+             {"call":"Solution.coinChange(new int[]{1,5,10,25}, 30)","expected":"2"},
+             {"call":"Solution.coinChange(new int[]{1,2,5}, 100)","expected":"20"},
+             {"call":"Solution.coinChange(new int[]{2,5,10,1}, 27)","expected":"4"},
+             {"call":"Solution.coinChange(new int[]{1}, 3)","expected":"3"},
+             {"call":"Solution.coinChange(new int[]{2,4}, 5)","expected":"-1"}]
+            """),
+        problem("trapping-rain-water", "Trapping Rain Water", "HARD", "Arrays · Two Pointers",
+            "public static int trap(int[] height)",
+            "trap", TRAP_STARTER, TRAP_DESC,
+            """
+            [{"call":"Solution.trap(new int[]{0,1,0,2,1,0,1,3,2,1,2,1})","expected":"6"},
+             {"call":"Solution.trap(new int[]{4,2,0,3,2,5})","expected":"9"}]
+            """,
+            """
+            [{"call":"Solution.trap(new int[]{0,1,0,2,1,0,1,3,2,1,2,1})","expected":"6"},
+             {"call":"Solution.trap(new int[]{4,2,0,3,2,5})","expected":"9"},
+             {"call":"Solution.trap(new int[]{4,2,3})","expected":"1"},
+             {"call":"Solution.trap(new int[]{3,0,0,2,0,4})","expected":"10"},
+             {"call":"Solution.trap(new int[]{2,0,2})","expected":"2"},
+             {"call":"Solution.trap(new int[]{5,0,0,0,5})","expected":"15"},
+             {"call":"Solution.trap(new int[]{0})","expected":"0"}]
             """)
     );
 }

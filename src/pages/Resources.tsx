@@ -1,11 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
-import { ResourcesProvider } from "@/context/ResourcesContext";
+import { ResourcesProvider, useResources } from "@/context/ResourcesContext";
 import { ResourceSearch } from "@/components/resources/ResourceSearch";
 import { ResourceTabs } from "@/components/resources/ResourceTabs";
+import { ResourcesSection } from "@/components/resources/ResourcesSection";
 import { EventsSection } from "@/components/resources/EventsSection";
+import { ResourceEnginePanel } from "@/components/resources/ResourceEnginePanel";
+import { CreatorStudio } from "@/components/resources/CreatorStudio";
+import { TopicCatalogSection } from "@/components/resources/TopicCatalogSection";
 import { ProUpgradePrompt } from "@/components/common/ProUpgradePrompt";
 import { apiGet } from "@/lib/api";
+
+/** The engine and creator sections sit above the tabs; this inner component
+ *  reads the context so the page stays wrapped in a single provider. */
+const EngineAndCreatorSections: React.FC = () => {
+  const { openResources, creatorResources, loading } = useResources();
+  return (
+    <>
+      <ResourceEnginePanel />
+      <CreatorStudio />
+      {!loading && openResources.length > 0 && (
+        <ResourcesSection
+          title="Open-source picks"
+          description="Real learning materials the resource engine cataloged from the open web — every link opens somewhere."
+          resources={openResources}
+        />
+      )}
+      {!loading && creatorResources.length > 0 && (
+        <ResourcesSection
+          title="From creators"
+          description="Guides, courses, and workshops published by Pro members."
+          resources={creatorResources}
+        />
+      )}
+    </>
+  );
+};
 
 const Resources = () => {
   const [query, setQuery] = useState("");
@@ -36,6 +66,8 @@ const Resources = () => {
             </p>
           </div>
 
+          <TopicCatalogSection />
+          <EngineAndCreatorSections />
           <ResourceSearch value={query} onChange={setQuery} />
           <ResourceTabs query={query} preferredFormats={preferredFormats} />
           <EventsSection />

@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 // Social-login icons; unused while the social buttons are commented out.
 // import { Github, Twitter } from "lucide-react";
 import { apiPost, ApiTimeoutError } from "@/lib/api";
+import { saveAuthSession } from "@/lib/authSession";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -33,8 +34,11 @@ const Signup = () => {
         "/auth/signup",
         { fullName, email, password }
       );
-      localStorage.setItem("leap_token", response.token);
-      localStorage.setItem("leap_user", JSON.stringify(response.user));
+      // New accounts are remembered for 30 days by default — the "remember me"
+      // choice is offered at login, and fresh signups shouldn't log you out
+      // when the browser closes.
+      saveAuthSession(response.token, response.user, true);
+      window.dispatchEvent(new Event("leap:auth-change"));
       toast({
         title: "Account created successfully",
         description: "Welcome to Leap.ai! Redirecting to onboarding...",
@@ -114,7 +118,7 @@ const Signup = () => {
               required
               className="w-full"
             />
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Must be at least 8 characters and include a number and a symbol
             </p>
           </div>
@@ -123,7 +127,7 @@ const Signup = () => {
             <Checkbox id="terms" className="mt-1" />
             <Label
               htmlFor="terms"
-              className="text-sm font-normal text-gray-500"
+              className="text-sm font-normal text-muted-foreground"
             >
               By creating an account, you agree to our{" "}
               <a href="/terms" className="text-leap-purple hover:underline">

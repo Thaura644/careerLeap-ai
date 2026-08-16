@@ -44,7 +44,7 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
       case "ebook":
         return <BookOpen className="h-4 w-4 text-cyan-500" />;
       default:
-        return <BookOpen className="h-4 w-4 text-gray-500" />;
+        return <BookOpen className="h-4 w-4 text-muted-foreground" />;
     }
   };
   

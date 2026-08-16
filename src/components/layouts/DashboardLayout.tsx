@@ -18,10 +18,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AuthMenu } from "@/components/auth/AuthMenu";
 import { GlobalSearch, openGlobalSearch } from "@/components/search/GlobalSearch";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
 import { apiGet } from "@/lib/api";
+import { getAuthToken } from "@/lib/authSession";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -79,21 +80,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [fullName, setFullName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!localStorage.getItem("leap_token")) return;
+    if (!getAuthToken()) return;
     apiGet<{ user: { fullName: string } }>("/auth/me")
       .then(({ user }) => setFullName(user.fullName))
       .catch(() => {});
   }, []);
-
-  const initials = fullName
-    ? fullName
-        .split(" ")
-        .filter(Boolean)
-        .map((w) => w[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "…";
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = location.pathname === item.href;
@@ -165,11 +156,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-          </Button>
+          <AuthMenu />
         </div>
       </div>
 
@@ -183,11 +170,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 Leap.ai
               </span>
             </Link>
-            <Button variant="ghost" size="icon" className="ml-auto rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-            </Button>
+            <div className="ml-auto">
+              <AuthMenu />
+            </div>
           </div>
 
           <div className="shrink-0 border-b px-4 py-3">

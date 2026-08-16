@@ -3,8 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import CodeMirror from "@uiw/react-codemirror";
 import { java } from "@codemirror/lang-java";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { ArrowLeft, CheckCircle2, Loader2, Play, Send, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Crown, Loader2, Play, Send, Sparkles, XCircle } from "lucide-react";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { apiGet, apiPost } from "@/lib/api";
 
@@ -20,6 +21,8 @@ type PracticeDetail = {
   timeLimitMs: number;
   memoryLimitMb: number;
   solved: boolean;
+  recommended?: boolean;
+  reason?: string | null;
   samples: SampleCase[];
 };
 
@@ -46,18 +49,41 @@ const PracticeProblem = () => {
   const [problem, setProblem] = useState<PracticeDetail | null>(null);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
   const [running, setRunning] = useState<"run" | "submit" | null>(null);
   const [result, setResult] = useState<JudgeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     apiGet<PracticeDetail>(`/practice/problems/${slug}`)
       .then((d) => {
+        if (cancelled) return;
         setProblem(d);
         setCode(d.starterCode);
       })
-      .catch(() => setError("Could not load this problem. Try again in a moment."))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (cancelled) return;
+        // The backend 403s explore-pool problems for free accounts — treat
+        // that as the locked state rather than a generic failure.
+        if (String(err instanceof Error ? err.message : err).toLowerCase().includes("explore")) {
+          setLocked(true);
+        } else {
+          setError("Could not load this problem. Try again in a moment.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    apiGet<{ pro: boolean }>("/payments/me")
+      .then((d) => {
+        if (!cancelled) setIsPro(Boolean(d.pro));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   const judge = async (kind: "run" | "submit") => {
@@ -69,11 +95,46 @@ const PracticeProblem = () => {
       const res = await apiPost<JudgeResult>(`/practice/problems/${slug}/${kind}`, { code });
       setResult(res);
       if (res.solved && problem) setProblem({ ...problem, solved: true });
-    } catch {
-      setError("The judge did not respond. Try again in a moment.");
+    } catch (err) {
+      if (String(err instanceof Error ? err.message : err).toLowerCase().includes("explore")) {
+        setLocked(true);
+      } else {
+        setError("The judge did not respond. Try again in a moment.");
+      }
     }
     setRunning(null);
   };
+
+  // A problem in the explore pool is Pro-only — show the upgrade gate instead
+  // of the editor (mirrors the lock on the Practice list page).
+  const isLocked = locked || (!isPro && problem?.recommended === false);
+  if (isLocked) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto">
+          <Link to="/practice" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6">
+            <ArrowLeft className="h-4 w-4" /> All problems
+          </Link>
+          <Card className="mx-auto max-w-md p-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-leap-purple/10">
+              <Crown className="h-6 w-6 text-leap-purple" />
+            </div>
+            <h1 className="text-xl font-bold">This problem is for Pro members</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {problem ? problem.title : "This problem"} is part of the explore pool — beyond
+              your roadmap's recommendations. Upgrade to Pro to open it.
+            </p>
+            <Link to="/upgrade" className="mt-6 block">
+              <Button className="w-full bg-leap-purple hover:bg-leap-purple/90">
+                <Crown className="mr-2 h-4 w-4" />
+                Upgrade to Pro
+              </Button>
+            </Link>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -98,6 +159,12 @@ const PracticeProblem = () => {
                   {problem.difficulty}
                 </span>
                 <span className="text-xs text-muted-foreground">{problem.category}</span>
+                {problem.recommended && problem.reason && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-leap-purple/10 px-2 py-0.5 text-[11px] font-medium text-leap-purple">
+                    <Sparkles className="h-3 w-3" />
+                    {problem.reason}
+                  </span>
+                )}
                 {problem.solved && (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
                     <CheckCircle2 className="h-4 w-4" /> Solved

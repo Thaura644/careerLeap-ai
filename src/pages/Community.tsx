@@ -23,7 +23,7 @@ import {
   Loader2
 } from "lucide-react";
 import { apiGet } from "@/lib/api";
-import { useResources, EventType } from "@/context/ResourcesContext";
+import { ResourcesProvider, useResources, EventType } from "@/context/ResourcesContext";
 
 interface CommunityGroup {
   id: number;
@@ -32,7 +32,7 @@ interface CommunityGroup {
   lastActive: string;
 }
 
-const Community = () => {
+const CommunityContent = () => {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") === "events" ? "events" : "discussions";
   const [tab, setTab] = useState(initialTab);
@@ -52,8 +52,8 @@ const Community = () => {
   }, []);
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
+      <DashboardLayout>
+        <div className="flex flex-col gap-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">Community</h1>
@@ -223,8 +223,17 @@ const Community = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+      </DashboardLayout>
   );
 };
+
+// The provider must wrap the component that consumes the context (matching the
+// Resources page pattern) — calling useResources() in the same component that
+// renders the provider crashes, because the hook runs before the provider mounts.
+const Community = () => (
+  <ResourcesProvider>
+    <CommunityContent />
+  </ResourcesProvider>
+);
 
 export default Community;

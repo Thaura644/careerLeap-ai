@@ -74,7 +74,7 @@ const ResumeAnalysis: React.FC<ResumeAnalysisProps> = ({ onComplete, className }
     <div className={className}>
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold mb-2">Resume Analysis</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Upload your resume — the AI reads it and surfaces the skills you've already proven.
           You'll pick which ones to keep in the next step.
         </p>

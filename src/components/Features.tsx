@@ -15,7 +15,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) =
         {icon}
       </div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <p className="text-muted-foreground">{description}</p>
     </div>
   );
 };
@@ -55,13 +55,13 @@ const Features = () => {
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-muted">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Everything You Need to Succeed
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted-foreground">
             Personalized tools and community support to guide your career growth.
           </p>
         </div>

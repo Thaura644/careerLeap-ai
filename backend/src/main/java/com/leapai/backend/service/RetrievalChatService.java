@@ -9,6 +9,7 @@ import com.leapai.backend.model.User;
 import com.leapai.backend.repository.GoalRepository;
 import com.leapai.backend.repository.ResourceRepository;
 import com.leapai.backend.repository.RoadmapRepository;
+import com.leapai.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -31,18 +32,36 @@ public class RetrievalChatService {
     private final GoalRepository goals;
     private final ResourceRepository resources;
     private final ObjectMapper objectMapper;
+    private final AiContextService aiContext;
+    private final UserRepository users;
 
     public RetrievalChatService(RoadmapRepository roadmaps, GoalRepository goals,
-                                ResourceRepository resources, ObjectMapper objectMapper) {
+                                ResourceRepository resources, ObjectMapper objectMapper,
+                                AiContextService aiContext, UserRepository users) {
         this.roadmaps = roadmaps;
         this.goals = goals;
         this.resources = resources;
         this.objectMapper = objectMapper;
+        this.aiContext = aiContext;
+        this.users = users;
     }
 
     public String respond(String prompt, Long userId) {
         String input = prompt == null ? "" : prompt.toLowerCase(Locale.ROOT);
         String targetRole = targetRole(userId);
+
+        // The assistant can act on the user's data when asked: create a goal,
+        // update a profile field, or mark a resource complete.
+        String actionResult = tryAction(input, userId);
+        if (actionResult != null) {
+            return actionResult;
+        }
+
+        // "What do you know about me" — surface the real context payload.
+        if (input.contains("know about me") || input.contains("what do you know")
+                || input.contains("my profile") || input.contains("my data")) {
+            return contextAnswer(userId);
+        }
 
         if (input.contains("roadmap") || input.contains("plan") || input.contains("next step")
                 || input.contains("phase") || input.contains("path")) {
@@ -69,9 +88,123 @@ public class RetrievalChatService {
                     + ", then attack your two weakest scores first. Want me to list the catalog resources "
                     + "that match a specific skill? Ask \"recommend resources for <skill>\".";
         }
-        return "I can help with what I can see in your account: your roadmap, your goals, and the "
-                + "learning library. Try asking about your roadmap, setting a goal, or finding resources "
-                + "for a specific skill.";
+        return "I can help with what I can see in your account: your profile, roadmap, goals, and "
+                + "practice progress. Ask me to do things too — like \"add a goal: pass the AWS "
+                + "exam\", \"set my target role to Staff Engineer\", or \"mark the System Design "
+                + "Primer complete\" — and I'll actually do them and save the result.";
+    }
+
+    /**
+     * Recognize safe, explicit action requests and execute them against the
+     * user's real data. Returns the confirmation reply, or null when the
+     * message is not an action request (the normal answer path continues).
+     */
+    private String tryAction(String input, Long userId) {
+        // add a goal: <title> / create a goal to <title>
+        String goalTitle = null;
+        if (input.contains("add a goal") || input.contains("create a goal")
+                || input.contains("new goal")) {
+            goalTitle = after(input, "add a goal", ":");
+            if (goalTitle == null) goalTitle = after(input, "create a goal", ":");
+            if (goalTitle == null) goalTitle = after(input, "new goal", ":");
+            if (goalTitle == null) goalTitle = after(input, "add a goal", "to");
+            if (goalTitle == null) goalTitle = after(input, "create a goal", "to");
+        }
+        if (goalTitle != null && !goalTitle.isBlank()) {
+            Map<String, Object> action = Map.of("action", "create_goal", "title", goalTitle);
+            return aiContext.execute(userId, action);
+        }
+
+        // set my target role to X / change my target role to X
+        if (input.contains("target role")
+                && (input.contains("set") || input.contains("change") || input.contains("update")
+                || input.contains("make"))) {
+            String value = after(input, "target role", "to");
+            if (value != null && !value.isBlank()) {
+                Map<String, Object> action = Map.of("action", "update_profile", "targetRole", value);
+                return aiContext.execute(userId, action);
+            }
+        }
+        if (input.contains("current role")
+                && (input.contains("set") || input.contains("change") || input.contains("update"))) {
+            String value = after(input, "current role", "to");
+            if (value != null && !value.isBlank()) {
+                Map<String, Object> action = Map.of("action", "update_profile", "currentRole", value);
+                return aiContext.execute(userId, action);
+            }
+        }
+
+        // mark <title> complete / mark complete: <title>
+        if ((input.contains("mark") && input.contains("complete"))
+                || (input.contains("mark complete") && input.contains(":"))) {
+            String title = between(input, "mark", "complete");
+            if (title == null) title = after(input, "mark complete", ":");
+            if (title != null && !title.isBlank()) {
+                Map<String, Object> action = Map.of("action", "mark_complete", "title", title);
+                return aiContext.execute(userId, action);
+            }
+        }
+        return null;
+    }
+
+    private String contextAnswer(Long userId) {
+        Map<String, Object> ctx = aiContext.context(userId);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> profile = (Map<String, Object>) ctx.getOrDefault("profile", Map.of());
+        StringBuilder sb = new StringBuilder("Here's what I can see in your account:\n");
+        sb.append("• ").append(profile.getOrDefault("name", "")).append(" — ")
+                .append(profile.getOrDefault("currentRole", "")).append(" → ")
+                .append(profile.getOrDefault("targetRole", "")).append("\n");
+        if (!String.valueOf(profile.getOrDefault("timeframe", "")).isBlank()) {
+            sb.append("• Timeline: ").append(profile.get("timeframe")).append("\n");
+        }
+        Object roadmap = ctx.get("roadmap");
+        if (roadmap instanceof Map) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> phases = (List<Map<String, Object>>) ((Map<String, Object>) roadmap)
+                    .getOrDefault("phases", List.of());
+            sb.append("• Roadmap: ").append(phases.size()).append(" phases (");
+            for (int i = 0; i < Math.min(2, phases.size()); i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(phases.get(i).getOrDefault("title", ""));
+            }
+            sb.append(phases.size() > 2 ? "…)" : ")").append("\n");
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> goalList = (List<Map<String, Object>>) ctx.getOrDefault("goals", List.of());
+        sb.append("• Goals: ").append(goalList.size()).append(" saved\n");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> practice = (Map<String, Object>) ctx.getOrDefault("practice", Map.of());
+        sb.append("• Practice: ").append(practice.getOrDefault("solved", 0)).append("/")
+                .append(practice.getOrDefault("total", 0)).append(" problems solved\n");
+        sb.append("I can update any of this for you — just ask.");
+        return sb.toString();
+    }
+
+    /** Text between an anchor and a following delimiter, e.g. between
+     *  "mark" and "complete" in "mark the primer complete" → "the primer". */
+    private static String between(String input, String anchor, String delimiter) {
+        int start = input.indexOf(anchor);
+        if (start < 0) return null;
+        start += anchor.length();
+        int end = input.indexOf(delimiter, start);
+        if (end < 0) return null;
+        String value = input.substring(start, end).trim();
+        return value.isEmpty() ? null : value;
+    }
+
+    /** Text after the last occurrence of {@code anchor} and one of the given
+     *  delimiters (or end of string). Case-insensitive; returns trimmed. */
+    private static String after(String input, String anchor, String delimiter) {
+        int idx = input.indexOf(anchor);
+        if (idx < 0) return null;
+        int start = idx + anchor.length();
+        if (delimiter != null) {
+            int d = input.indexOf(delimiter, start);
+            if (d >= 0) start = d + delimiter.length();
+        }
+        String value = input.substring(start).trim();
+        return value.isEmpty() ? null : value;
     }
 
     private String roadmapAnswer(Long userId, String targetRole) {

@@ -80,6 +80,22 @@ public class User {
     @Column(name = "learning_style", length = 60)
     private String learningStyle;
 
+    /** Employment status, e.g. "Employed", "Unemployed", "Student", "Freelance". */
+    @Column(name = "employment_status", length = 40)
+    private String employmentStatus;
+
+    /** Preferred work setup, e.g. "Remote", "Hybrid", "On-site". */
+    @Column(name = "work_mode", length = 40)
+    private String workMode;
+
+    /** Biggest career challenges (comma-separated), e.g. "Imposter syndrome, No mentorship". */
+    @Column(name = "challenges", columnDefinition = "text")
+    private String challenges;
+
+    /** Why the user wants this career change / what's driving them. */
+    @Column(name = "motivation", columnDefinition = "text")
+    private String motivation;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -130,4 +146,16 @@ public class User {
 
     public String getLearningStyle() { return learningStyle; }
     public void setLearningStyle(String learningStyle) { this.learningStyle = learningStyle; }
+
+    public String getEmploymentStatus() { return employmentStatus; }
+    public void setEmploymentStatus(String employmentStatus) { this.employmentStatus = employmentStatus; }
+
+    public String getWorkMode() { return workMode; }
+    public void setWorkMode(String workMode) { this.workMode = workMode; }
+
+    public String getChallenges() { return challenges; }
+    public void setChallenges(String challenges) { this.challenges = challenges; }
+
+    public String getMotivation() { return motivation; }
+    public void setMotivation(String motivation) { this.motivation = motivation; }
 }

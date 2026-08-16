@@ -11,11 +11,13 @@ import { useToast } from "@/components/ui/use-toast";
 // Social-login icons; unused while the social buttons are commented out.
 // import { Github, Twitter } from "lucide-react";
 import { apiPost, ApiTimeoutError } from "@/lib/api";
+import { saveAuthSession } from "@/lib/authSession";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [remember, setRemember] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,8 +32,8 @@ const Login = () => {
         "/auth/login",
         { email, password }
       );
-      localStorage.setItem("leap_token", response.token);
-      localStorage.setItem("leap_user", JSON.stringify(response.user));
+      saveAuthSession(response.token, response.user, remember);
+      window.dispatchEvent(new Event("leap:auth-change"));
       toast({
         title: "Login successful",
         description: "Redirecting to your dashboard...",
@@ -99,10 +101,14 @@ const Login = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox id="remember" />
+            <Checkbox
+              id="remember"
+              checked={remember}
+              onCheckedChange={(checked) => setRemember(checked === true)}
+            />
             <Label
               htmlFor="remember"
-              className="text-sm font-normal text-gray-500"
+              className="text-sm font-normal text-muted-foreground"
             >
               Remember me for 30 days
             </Label>

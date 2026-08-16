@@ -71,6 +71,12 @@ public class AuthController {
         user.setLearningFormats(str(profile.get("learningFormats"), user.getLearningFormats()));
         user.setWeeklyCommitment(str(profile.get("weeklyCommitment"), user.getWeeklyCommitment()));
         user.setLearningStyle(str(profile.get("learningStyle"), user.getLearningStyle()));
+        // Deeper context captured during onboarding: situation, work setup,
+        // blockers, and motivation — used by the AI and the roadmap engine.
+        user.setEmploymentStatus(str(profile.get("employmentStatus"), user.getEmploymentStatus()));
+        user.setWorkMode(str(profile.get("workMode"), user.getWorkMode()));
+        user.setChallenges(str(profile.get("challenges"), user.getChallenges()));
+        user.setMotivation(str(profile.get("motivation"), user.getMotivation()));
         users.save(user);
         skillService.recordUsage(splitSkills(interests));
         Map<String, Object> result = new LinkedHashMap<>();

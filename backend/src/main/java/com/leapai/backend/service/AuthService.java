@@ -81,6 +81,10 @@ public class AuthService {
         u.put("learningFormats", nvl(user.getLearningFormats(), null));
         u.put("weeklyCommitment", nvl(user.getWeeklyCommitment(), null));
         u.put("learningStyle", nvl(user.getLearningStyle(), null));
+        u.put("employmentStatus", nvl(user.getEmploymentStatus(), null));
+        u.put("workMode", nvl(user.getWorkMode(), null));
+        u.put("challenges", nvl(user.getChallenges(), null));
+        u.put("motivation", nvl(user.getMotivation(), null));
         return u;
     }
 

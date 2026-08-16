@@ -1,23 +1,38 @@
 import React, { useEffect, useState } from "react";
-import { Brain, X } from "lucide-react";
+import { Brain, Maximize2, Minimize2, X } from "lucide-react";
 import { AIAgentChat } from "./AIAgentChat";
 import { cn } from "@/lib/utils";
 
 /** Floating AI assistant: a fixed action button that opens a right-side
  *  overlay drawer. The drawer is position:fixed — it never pushes or disturbs
- *  the rest of the page, it just slides over it. */
+ *  the rest of the page, it just slides over it. A toggle expands the drawer
+ *  to full screen (and back), and the message list scrolls independently. */
 export const FloatingAssistant: React.FC = () => {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
-  // Esc closes the drawer.
+  // Esc closes the drawer (also exits fullscreen mode first).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        if (expanded) setExpanded(false);
+        else setOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, expanded]);
+
+  // Entering fullscreen should not be prevented by the body scrollbar.
+  useEffect(() => {
+    if (!open || !expanded) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open, expanded]);
 
   return (
     <>
@@ -47,7 +62,10 @@ export const FloatingAssistant: React.FC = () => {
       />
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-40 flex w-full max-w-[400px] flex-col border-l bg-background shadow-2xl transition-transform duration-300",
+          "fixed inset-y-0 right-0 z-40 flex flex-col border-l bg-background shadow-2xl transition-all duration-300",
+          expanded
+            ? "inset-0 w-full max-w-none"
+            : "w-full max-w-[400px]",
           open ? "translate-x-0" : "translate-x-full"
         )}
         role="dialog"
@@ -58,20 +76,31 @@ export const FloatingAssistant: React.FC = () => {
             <Brain className="h-5 w-5 text-leap-purple" />
             <span className="text-sm font-semibold">AI Assistant</span>
           </div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            aria-label="Close AI assistant"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              aria-label={expanded ? "Collapse AI assistant" : "Expand AI assistant"}
+              title={expanded ? "Collapse" : "Expand to full screen"}
+            >
+              {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              aria-label="Close AI assistant"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
         <div className="min-h-0 flex-1 overflow-hidden">
           <AIAgentChat
             compact
             showHeader={false}
-            maxHeight="calc(100vh-220px)"
+            maxHeight={expanded ? "none" : "calc(100vh - 220px)"}
             className="h-full border-0 shadow-none"
           />
         </div>

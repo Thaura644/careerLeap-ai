@@ -1,6 +1,7 @@
 package com.leapai.backend.controller;
 
 import com.leapai.backend.config.UserContext;
+import com.leapai.backend.service.AiContextService;
 import com.leapai.backend.service.ConversationService;
 import com.leapai.backend.service.LlmService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,10 +21,23 @@ public class AiAssistantController {
 
     private final LlmService llmService;
     private final ConversationService conversationService;
+    private final AiContextService aiContextService;
 
-    public AiAssistantController(LlmService llmService, ConversationService conversationService) {
+    public AiAssistantController(LlmService llmService, ConversationService conversationService,
+                                 AiContextService aiContextService) {
         this.llmService = llmService;
         this.conversationService = conversationService;
+        this.aiContextService = aiContextService;
+    }
+
+    /**
+     * What the AI can see about the user: profile, roadmap, goals, and
+     * progress. Lets the frontend show the assistant's grounding honestly
+     * (and lets the assistant answer from real data).
+     */
+    @GetMapping("/context")
+    public Map<String, Object> context() {
+        return aiContextService.context(UserContext.require().getId());
     }
 
     /**

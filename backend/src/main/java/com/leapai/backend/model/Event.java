@@ -37,6 +37,21 @@ public class Event {
     @Column(nullable = false, length = 20)
     private String color;
 
+    /** Creator account hosting this event (null for seeded events). */
+    @Column(name = "host_by_id")
+    private Long hostById;
+
+    @Column(name = "host_name", length = 200)
+    private String hostName;
+
+    /** Where attendees join: the host's meeting link (e.g. a Jitsi room). */
+    @Column(name = "join_url", length = 500)
+    private String joinUrl;
+
+    /** True while the host is broadcasting the session live. */
+    @Column(name = "is_live", nullable = false)
+    private boolean isLive = false;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -60,4 +75,16 @@ public class Event {
 
     public String getColor() { return color; }
     public void setColor(String color) { this.color = color; }
+
+    public Long getHostById() { return hostById; }
+    public void setHostById(Long hostById) { this.hostById = hostById; }
+
+    public String getHostName() { return hostName; }
+    public void setHostName(String hostName) { this.hostName = hostName; }
+
+    public String getJoinUrl() { return joinUrl; }
+    public void setJoinUrl(String joinUrl) { this.joinUrl = joinUrl; }
+
+    public boolean isLive() { return isLive; }
+    public void setLive(boolean live) { isLive = live; }
 }

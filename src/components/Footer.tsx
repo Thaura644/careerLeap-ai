@@ -4,18 +4,18 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-leap-navy text-white pt-12 pb-8">
+    <footer className="bg-leap-navy text-white dark:bg-card dark:text-card-foreground dark:border-t dark:border-border pt-12 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <Link to="/" className="inline-block mb-4">
-              <span className="text-2xl font-bold text-white">Leap.ai</span>
+              <span className="text-2xl font-bold text-white dark:text-foreground">Leap.ai</span>
             </Link>
-            <p className="text-gray-300 mb-4">
+            <p className="text-gray-300 dark:text-muted-foreground mb-4">
               Pioneering AI-Driven Career Acceleration Platform
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-white">
+              <a href="#" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                 <span className="sr-only">Twitter</span>
                 <svg
                   className="h-6 w-6"
@@ -26,7 +26,7 @@ const Footer = () => {
                   <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
                 </svg>
               </a>
-              <a href="#" className="text-gray-300 hover:text-white">
+              <a href="#" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                 <span className="sr-only">LinkedIn</span>
                 <svg
                   className="h-6 w-6"
@@ -44,22 +44,22 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">About</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-gray-300 hover:text-white">
+                <Link to="/about" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/features" className="text-gray-300 hover:text-white">
+                <Link to="/features" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Features
                 </Link>
               </li>
               <li>
-                <Link to="/how-it-works" className="text-gray-300 hover:text-white">
+                <Link to="/how-it-works" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   How It Works
                 </Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-gray-300 hover:text-white">
+                <Link to="/pricing" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Pricing
                 </Link>
               </li>
@@ -70,22 +70,22 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/community" className="text-gray-300 hover:text-white">
+                <Link to="/community" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Community
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-gray-300 hover:text-white">
+                <Link to="/faq" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-gray-300 hover:text-white">
+                <Link to="/blog" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-300 hover:text-white">
+                <Link to="/contact" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Contact
                 </Link>
               </li>
@@ -96,22 +96,22 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/privacy" className="text-gray-300 hover:text-white">
+                <Link to="/privacy" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-gray-300 hover:text-white">
+                <Link to="/terms" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/cookies" className="text-gray-300 hover:text-white">
+                <Link to="/cookies" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Cookie Policy
                 </Link>
               </li>
               <li>
-                <Link to="/support" className="text-gray-300 hover:text-white">
+                <Link to="/support" className="text-gray-300 dark:text-muted-foreground hover:text-white dark:hover:text-foreground">
                   Support
                 </Link>
               </li>
@@ -119,8 +119,8 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-700">
-          <p className="text-center text-gray-300">
+        <div className="mt-12 pt-8 border-t border-gray-700 dark:border-border">
+          <p className="text-center text-gray-300 dark:text-muted-foreground">
             &copy; {new Date().getFullYear()} Leap.ai. All rights reserved.
           </p>
         </div>

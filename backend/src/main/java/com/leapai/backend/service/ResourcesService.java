@@ -2,10 +2,12 @@ package com.leapai.backend.service;
 
 import com.leapai.backend.model.Event;
 import com.leapai.backend.model.Resource;
+import com.leapai.backend.model.ResourceProgress;
 import com.leapai.backend.model.User;
 import com.leapai.backend.model.UserResource;
 import com.leapai.backend.model.UserResourceId;
 import com.leapai.backend.repository.EventRepository;
+import com.leapai.backend.repository.ResourceProgressRepository;
 import com.leapai.backend.repository.ResourceRepository;
 import com.leapai.backend.repository.UserResourceRepository;
 import org.springframework.stereotype.Service;
@@ -28,12 +30,14 @@ public class ResourcesService {
 
     private final ResourceRepository resources;
     private final UserResourceRepository userResources;
+    private final ResourceProgressRepository resourceProgress;
     private final EventRepository events;
 
     public ResourcesService(ResourceRepository resources, UserResourceRepository userResources,
-                            EventRepository events) {
+                            ResourceProgressRepository resourceProgress, EventRepository events) {
         this.resources = resources;
         this.userResources = userResources;
+        this.resourceProgress = resourceProgress;
         this.events = events;
     }
 
@@ -48,11 +52,20 @@ public class ResourcesService {
         List<Map<String, Object>> completed = toDtos(completedResources(user.getId()), state);
         List<Map<String, Object>> upcomingEvents = eventDtos(events.findAllByOrderByIdAsc());
 
+        // The resource engine's contributions: open-source imports and
+        // creator-made content, surfaced as their own sections.
+        List<Map<String, Object>> openResources = toDtos(
+                resources.findBySourceOrderByIdDesc("open"), state);
+        List<Map<String, Object>> creatorResources = toDtos(
+                resources.findBySourceOrderByIdDesc("creator"), state);
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("trendingResources", trending);
         result.put("recommendedResources", recommended);
         result.put("bookmarkedResources", bookmarked);
         result.put("completedResources", completed);
+        result.put("openResources", openResources);
+        result.put("creatorResources", creatorResources);
         result.put("upcomingEvents", upcomingEvents);
         return result;
     }
@@ -84,6 +97,40 @@ public class ResourcesService {
         return Map.of("id", String.valueOf(resourceId),
                 "isCompleted", ur.isCompleted(),
                 "message", "Progress updated");
+    }
+
+    // ------------------------------------------------------- URL-keyed progress
+
+    /**
+     * Completed resource URLs for the user (URL-keyed progress, used by the
+     * roadmap segment panel where links are catalog URLs, not library rows).
+     */
+    @Transactional(readOnly = true)
+    public List<String> completedUrls(User user) {
+        List<String> urls = new ArrayList<>();
+        for (ResourceProgress p : resourceProgress.findByUserId(user.getId())) {
+            if (p.isCompleted()) urls.add(p.getResourceUrl());
+        }
+        return urls;
+    }
+
+    /** Mark a resource URL complete (or undo it). Idempotent, per-user. */
+    @Transactional
+    public Map<String, Object> setCompleted(User user, String url, boolean completed) {
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException("Resource URL is required");
+        }
+        ResourceProgress p = resourceProgress.findByUserIdAndResourceUrl(user.getId(), url)
+                .orElseGet(() -> {
+                    ResourceProgress np = new ResourceProgress();
+                    np.setUserId(user.getId());
+                    np.setResourceUrl(url);
+                    return np;
+                });
+        p.setCompleted(completed);
+        p.setCompletedAt(completed ? Instant.now() : null);
+        resourceProgress.save(p);
+        return Map.of("url", url, "completed", p.isCompleted(), "message", "Progress updated");
     }
 
     private Map<Long, UserResource> stateByResourceId(Long userId) {
@@ -125,6 +172,9 @@ public class ResourcesService {
             dto.put("isBookmarked", ur != null && ur.isBookmarked());
             dto.put("isCompleted", ur != null && ur.isCompleted());
             dto.put("description", r.getDescription());
+            dto.put("url", r.getUrl());
+            dto.put("source", r.getSource() == null || r.getSource().isBlank() ? "library" : r.getSource());
+            dto.put("createdByName", r.getCreatedByName());
             // No stock photo assets: the UI renders a deterministic gradient block per title.
             dto.put("image", "");
             dtos.add(dto);
@@ -144,6 +194,9 @@ public class ResourcesService {
             dto.put("date", e.getDate());
             dto.put("time", e.getTime());
             dto.put("color", e.getColor());
+            dto.put("hostName", e.getHostName());
+            dto.put("joinUrl", e.getJoinUrl());
+            dto.put("isLive", e.isLive());
             dtos.add(dto);
         }
         return dtos;

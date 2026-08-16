@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthMenu } from "@/components/auth/AuthMenu";
 import { apiGet } from "@/lib/api";
 
 /** Prices served by GET /api/payments/status — the single source of truth. */
@@ -215,13 +216,10 @@ const LegacyLanding = () => {
 
           <div className="hidden items-center gap-7 md:flex">{navLinks}</div>
 
-          <div className="hidden items-center gap-4 md:flex">
-            <Link to="/login" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900">
-              Log in
-            </Link>
-            <Button asChild className="h-9 rounded-none bg-stone-900 px-4 text-[13px] hover:bg-stone-700">
-              <Link to="/signup">Sign up</Link>
-            </Button>
+          {/* Signed out: Log in / Sign up. Signed in: avatar + verified badge
+              with Dashboard / Profile / Sign out. */}
+          <div className="hidden md:block">
+            <AuthMenu />
           </div>
 
           <button className="md:hidden" onClick={() => setOpen((v) => !v)} aria-label="Menu">
@@ -232,14 +230,7 @@ const LegacyLanding = () => {
         {open && (
           <div className="flex flex-col gap-4 border-t border-stone-200 px-5 py-4 md:hidden">
             {navLinks}
-            <div className="flex gap-4">
-              <Link to="/login" className="text-sm text-stone-600">
-                Log in
-              </Link>
-              <Button asChild className="h-9 rounded-none bg-stone-900 px-4 text-[13px] hover:bg-stone-700">
-                <Link to="/signup">Sign up</Link>
-              </Button>
-            </div>
+            <AuthMenu />
           </div>
         )}
       </header>

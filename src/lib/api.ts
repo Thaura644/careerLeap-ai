@@ -1,10 +1,10 @@
+import { getAuthToken } from "./authSession";
+
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
 
 // Render's free tier cold-starts can take 30-60s; keep the default generous so
 // legit slow starts don't fail, but never let a request hang forever silently.
 const DEFAULT_TIMEOUT_MS = 45000;
-
-const getAuthToken = () => localStorage.getItem("leap_token");
 
 const withHeaders = (headers?: HeadersInit): HeadersInit => {
   const token = getAuthToken();
@@ -38,18 +38,42 @@ async function fetchWithTimeout(path: string, init: RequestInit): Promise<Respon
   }
 }
 
-/** Reads a server-provided error message from a failed response body. */
+/** Reads a server-provided error message from a failed response body.
+ *  Prefers the human-readable `message` field over the machine `error` code,
+ *  so callers (e.g. Pro-gate detection) see real text like "explore pool"
+ *  instead of a bare code like "forbidden". The Error also carries the HTTP
+ *  status so callers can branch on 401/403/404 directly. */
+export class ApiError extends Error {
+  status?: number;
+  code?: string;
+
+  constructor(message: string, status?: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
 async function errorMessage(path: string, res: Response): Promise<Error> {
   let msg = `Request to ${path} failed (${res.status})`;
+  let code: string | undefined;
   try {
     const body = await res.json();
-    if (body && typeof body.error === "string" && body.error.trim()) {
-      msg = body.error;
+    if (body && typeof body === "object") {
+      if (typeof body.message === "string" && body.message.trim()) {
+        msg = body.message;
+      } else if (typeof body.error === "string" && body.error.trim()) {
+        msg = body.error;
+      }
+      if (typeof body.error === "string" && body.error.trim()) {
+        code = body.error;
+      }
     }
   } catch {
     /* keep generic message */
   }
-  return new Error(msg);
+  return new ApiError(msg, res.status, code);
 }
 
 export async function apiGet<T>(path: string): Promise<T> {

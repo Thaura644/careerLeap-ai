@@ -66,6 +66,7 @@ public class LlmService {
     private final HttpClient httpClient;
     private final RoadmapEngine roadmapEngine;
     private final RetrievalChatService retrievalChat;
+    private final AiContextService aiContext;
 
     private final String apiKey;
     private final String baseUrl;
@@ -76,6 +77,7 @@ public class LlmService {
             ObjectMapper objectMapper,
             RoadmapEngine roadmapEngine,
             RetrievalChatService retrievalChat,
+            AiContextService aiContext,
             @Value("${LLM_API_KEY:}") String apiKey,
             @Value("${LLM_BASE_URL:https://openrouter.ai/api/v1}") String baseUrl,
             @Value("${LLM_MODEL:google/gemma-4-31b-it:free}") String model,
@@ -83,6 +85,7 @@ public class LlmService {
         this.objectMapper = objectMapper;
         this.roadmapEngine = roadmapEngine;
         this.retrievalChat = retrievalChat;
+        this.aiContext = aiContext;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.baseUrl = (baseUrl == null || baseUrl.isBlank())
                 ? "https://openrouter.ai/api/v1"
@@ -112,17 +115,31 @@ public class LlmService {
     }
 
     /**
-     * Chat completion. With a key, the real LLM answers. Without one, a
-     * retrieval-based responder grounded in the user's actual roadmap, goals,
-     * and the library catalog — real data, not canned phrases.
+     * Chat completion. With a key, the real LLM answers, grounded in the
+     * user's real data (profile, roadmap, goals, progress) and able to take
+     * actions on their behalf. Without a key, a retrieval-based responder
+     * grounded in the same data. Real data, not canned phrases.
      */
     public Map<String, Object> chat(String prompt, List<Map<String, String>> history, Long userId) {
         if (!isConfigured()) {
             return Map.of("source", "engine", "response", retrievalChat.respond(prompt, userId));
         }
         try {
+            Map<String, Object> context = aiContext.context(userId);
+            String contextJson = objectMapper.writeValueAsString(context);
             List<Map<String, Object>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", SYSTEM_CHAT_PROMPT));
+            messages.add(Map.of("role", "system", "content",
+                    SYSTEM_CHAT_PROMPT
+                    + "\n\nThe user's real account data (JSON) — use it to personalize every answer:"
+                    + "\n" + truncate(contextJson, 8000)
+                    + "\n\nYou can also take actions the user asks for. When the user wants you to"
+                    + " (e.g. add a goal like 'pass the AWS exam', set my target role to 'Staff Engineer',"
+                    + " or mark 'the System Design Primer' complete), end your reply with exactly one JSON"
+                    + " object on its own line, in this shape, and nothing after it:"
+                    + " {\"action\":\"create_goal\",\"title\":\"...\"} or"
+                    + " {\"action\":\"update_profile\",\"targetRole\":\"...\"} or"
+                    + " {\"action\":\"mark_complete\",\"title\":\"...\"}. Only take an action when"
+                    + " explicitly asked, never for sensitive operations."));
             if (history != null) {
                 for (Map<String, String> message : history) {
                     String role = message.getOrDefault("role", "user");
@@ -134,11 +151,39 @@ public class LlmService {
             }
             messages.add(Map.of("role", "user", "content", prompt));
             String text = complete(messages);
+
+            // Execute any action the model requested, and fold the confirmation
+            // into the reply the user sees.
+            Map<String, Object> action = extractAction(text);
+            if (action != null) {
+                String confirmation = aiContext.execute(userId, action);
+                if (confirmation != null) {
+                    text = text + "\n\n" + confirmation;
+                }
+            }
             return Map.of("source", "llm", "response", text);
         } catch (Exception e) {
             log.warn("[llm] chat failed, falling back to engine: {}", e.getMessage());
             return Map.of("source", "engine", "response", retrievalChat.respond(prompt, userId));
         }
+    }
+
+    /** Pulls the trailing {"action": ...} JSON block out of a reply, if any. */
+    private Map<String, Object> extractAction(String text) {
+        if (text == null) return null;
+        int start = text.lastIndexOf('{');
+        int end = text.lastIndexOf('}');
+        if (start < 0 || end <= start) return null;
+        try {
+            Map<String, Object> candidate = objectMapper.readValue(
+                    text.substring(start, end + 1),
+                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            if (candidate.containsKey("action")) {
+                return candidate;
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     /** Structured roadmap. LLM when configured; otherwise the deterministic engine. */

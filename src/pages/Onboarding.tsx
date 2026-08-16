@@ -11,7 +11,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { AISkillsAssessment } from "@/components/onboarding/AISkillsAssessment";
 import type { ResumeSkill } from "@/components/onboarding/AISkillsAssessment";
 import ResumeAnalysis from "@/components/onboarding/ResumeAnalysis";
+import { PrivacyConsentDialog } from "@/components/auth/PrivacyConsentDialog";
 import { apiPut } from "@/lib/api";
+import { clearAuthSession } from "@/lib/authSession";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 
@@ -40,8 +42,29 @@ const Onboarding = () => {
   ]);
   const [weeklyCommitment, setWeeklyCommitment] = useState("3–6 hours");
   const [learningStyle, setLearningStyle] = useState("Project-driven");
+  // Deeper context — employment situation, work setup, blockers, motivation.
+  const [employmentStatus, setEmploymentStatus] = useState("Employed");
+  const [workMode, setWorkMode] = useState("Hybrid");
+  const [challenges, setChallenges] = useState<string[]>(["Not enough time"]);
+  const [motivation, setMotivation] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  // Consent is asked once, right after onboarding, and remembered: only users
+  // who haven't accepted (or deliberately declined) are asked again.
+  const [showConsent, setShowConsent] = useState(() => !localStorage.getItem("leap_privacy_consent"));
+
+  const leaveApp = () => {
+    setShowConsent(false);
+    clearAuthSession();
+    window.dispatchEvent(new Event("leap:auth-change"));
+    navigate("/");
+  };
+
+  const acceptConsent = () => {
+    localStorage.setItem("leap_privacy_consent", new Date().toISOString());
+    setShowConsent(false);
+    navigate("/dashboard");
+  };
 
   const saveProfile = () => {
     return apiPut("/auth/profile", {
@@ -56,17 +79,26 @@ const Onboarding = () => {
       learningFormats: learningFormats.join(", "),
       weeklyCommitment,
       learningStyle,
+      employmentStatus,
+      workMode,
+      challenges: challenges.join(", "),
+      motivation: motivation.trim() || undefined,
     });
   };
 
   const nextStep = () => {
     const nextStepNum = step + 1;
-    if (nextStepNum > 6) {
+    if (nextStepNum > 7) {
       // Onboarding complete — persist the collected profile so the roadmap
       // engine (and everything else) works from real data, then continue.
       saveProfile().catch(() => {
         // Profile save is best-effort on completion; the app still proceeds.
       });
+      if (!localStorage.getItem("leap_privacy_consent")) {
+        // Gate on privacy consent before entering the app (non-dismissible).
+        setShowConsent(true);
+        return;
+      }
       toast({
         title: "Onboarding complete!",
         description: "Welcome to Leap.ai. Redirecting to your dashboard...",
@@ -77,14 +109,14 @@ const Onboarding = () => {
       return;
     }
     setStep(nextStepNum);
-    setProgress(nextStepNum * 16.6);
+    setProgress(nextStepNum * (100 / 7));
   };
 
   const prevStep = () => {
     const prevStepNum = step - 1;
     if (prevStepNum < 1) return;
     setStep(prevStepNum);
-    setProgress(prevStepNum * 16.6);
+    setProgress(prevStepNum * (100 / 7));
   };
 
   const handleSkillsComplete = (skills: AssessedSkill[]) => {
@@ -104,7 +136,11 @@ const Onboarding = () => {
             <Button
               variant="ghost"
               onClick={() => {
-                navigate("/dashboard");
+                if (!localStorage.getItem("leap_privacy_consent")) {
+                  setShowConsent(true);
+                } else {
+                  navigate("/dashboard");
+                }
               }}
             >
               Skip for now
@@ -125,7 +161,7 @@ const Onboarding = () => {
           <div className="mb-8">
             <Progress value={progress} className="h-2" />
             <div className="flex justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
-              <span>Step {step} of 6</span>
+              <span>Step {step} of 7</span>
               <span>{Math.round(progress)}% Complete</span>
             </div>
           </div>
@@ -244,6 +280,95 @@ const Onboarding = () => {
               )}
 
               {step === 3 && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4">Your Situation</h2>
+                  <p className="text-sm text-muted-foreground -mt-3">
+                    The more the assistant knows about where you are now, the sharper its
+                    advice — for your setup, your next move, and the best career path.
+                  </p>
+
+                  <div className="space-y-2">
+                    <Label>Current Employment Status</Label>
+                    <RadioGroup value={employmentStatus} onValueChange={setEmploymentStatus} className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {["Employed", "Unemployed", "Student", "Freelance", "Contract", "Other"].map((option) => (
+                        <div key={option} className="flex items-center space-x-2">
+                          <RadioGroupItem value={option} id={`emp-${option}`} />
+                          <Label htmlFor={`emp-${option}`}>{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Preferred Work Setup</Label>
+                    <RadioGroup value={workMode} onValueChange={setWorkMode} className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {["Remote", "Hybrid", "On-site", "Open to all"].map((option) => (
+                        <div key={option} className="flex items-center space-x-2">
+                          <RadioGroupItem value={option} id={`mode-${option}`} />
+                          <Label htmlFor={`mode-${option}`}>{option}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>What's holding you back? (pick the big ones)</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {[
+                        { name: "Not enough time", desc: "Work and life leave little room" },
+                        { name: "Imposter syndrome", desc: "Doubting your own abilities" },
+                        { name: "No mentorship", desc: "Nobody to guide your growth" },
+                        { name: "Unclear path", desc: "Don't know what to learn next" },
+                        { name: "No real experience", desc: "Projects but no professional proof" },
+                        { name: "Interview anxiety", desc: "Freeze up in interviews and tests" },
+                        { name: "Career switch", desc: "Moving into a new field entirely" },
+                        { name: "Outdated skills", desc: "Falling behind the market" },
+                      ].map((c) => {
+                        const checked = challenges.includes(c.name);
+                        return (
+                          <div
+                            key={c.name}
+                            className={`flex items-start gap-2 rounded-md border p-2.5 cursor-pointer transition-colors ${
+                              checked
+                                ? "border-leap-purple bg-leap-purple/5"
+                                : "border-gray-200 hover:border-gray-300 dark:border-border"
+                            }`}
+                            onClick={() =>
+                              setChallenges((prev) =>
+                                checked ? prev.filter((x) => x !== c.name) : [...prev, c.name]
+                              )
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              readOnly
+                              className="h-4 w-4 rounded border mt-0.5"
+                            />
+                            <div>
+                              <Label className="cursor-pointer font-medium">{c.name}</Label>
+                              <p className="text-xs text-muted-foreground">{c.desc}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="motivation">What's driving this career move?</Label>
+                    <Textarea
+                      id="motivation"
+                      placeholder="e.g. I want to lead teams, earn more, and build things that matter — and I'm tired of feeling stuck."
+                      className="min-h-[90px]"
+                      value={motivation}
+                      onChange={(e) => setMotivation(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {step === 4 && (
                 <ResumeAnalysis
                   onComplete={(skills) => {
                     setResumeSkills(skills);
@@ -252,14 +377,14 @@ const Onboarding = () => {
                 />
               )}
 
-              {step === 4 && (
+              {step === 5 && (
                 <AISkillsAssessment
                   resumeSkills={resumeSkills}
                   onComplete={handleSkillsComplete}
                 />
               )}
 
-              {step === 5 && (
+              {step === 6 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Learning Preferences</h2>
                   <p className="text-sm text-muted-foreground -mt-3">
@@ -343,7 +468,7 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step === 6 && (
+              {step === 7 && (
                 <div className="space-y-6">
                   <div className="text-center">
                     <div className="flex justify-center mb-4">
@@ -366,7 +491,7 @@ const Onboarding = () => {
                 </div>
               )}
 
-              {step < 6 && (
+              {step < 7 && (
                 <div className="flex justify-between mt-8">
                   {step > 1 ? (
                     <Button variant="outline" onClick={prevStep}>
@@ -376,7 +501,7 @@ const Onboarding = () => {
                     <div></div>
                   )}
 
-                  {step !== 3 && step !== 4 && (
+                  {step !== 4 && step !== 5 && (
                     <Button className="bg-leap-purple hover:bg-opacity-90" onClick={nextStep}>
                       Continue
                     </Button>
@@ -387,6 +512,14 @@ const Onboarding = () => {
           </Card>
         </div>
       </main>
+
+      {/* Privacy-policy consent — asked once after onboarding. Decline signs
+          the user out; accepting remembers the choice for next time. */}
+      <PrivacyConsentDialog
+        open={showConsent}
+        onAccept={acceptConsent}
+        onDecline={leaveApp}
+      />
     </div>
   );
 };
