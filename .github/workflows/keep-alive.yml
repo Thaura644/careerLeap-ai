@@ -1,0 +1,24 @@
+name: Keep backend awake
+
+# Render's free tier spins the web service down after ~15 minutes of
+# inactivity and the first request then pays a 30-60s cold start (or can even
+# fail while the instance boots). Pinging the health endpoint every 10 minutes
+# keeps the instance warm so signup/login and every API call stay fast.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    name: Ping health endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Leap.ai backend health
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -m 30 https://leap-ai-backend.onrender.com/api/health || echo "000")
+          echo "health check: HTTP ${code}"
+          if [ "$code" != "200" ]; then
+            echo "::warning::backend returned HTTP ${code} — check the Render service"
+            exit 1
+          fi

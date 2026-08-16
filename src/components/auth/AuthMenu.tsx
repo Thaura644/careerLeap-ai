@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BadgeCheck, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { AlignJustify, BadgeCheck, LayoutDashboard, LogOut, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -76,21 +76,28 @@ export const AuthMenu: React.FC<{ className?: string }> = ({ className }) => {
           type="button"
           aria-label="Account menu"
           className={cn(
-            "relative rounded-full outline-none ring-offset-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "group relative flex items-center gap-2.5 rounded-full outline-none ring-offset-background transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             className
           )}
         >
-          <Avatar className="h-9 w-9 border border-stone-300 dark:border-stone-700">
-            <AvatarFallback className="bg-leap-purple/10 text-sm font-semibold text-leap-purple">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          {/* Verified badge */}
-          <span
-            className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-leap-purple text-white ring-2 ring-background"
-            aria-hidden="true"
-          >
-            <BadgeCheck className="h-3 w-3" />
+          {/* Menu (four horizontal lines) + profile icon — the signed-in
+              header control replaces the Log in / Sign up pair. */}
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-stone-300 bg-white text-stone-700 transition-colors group-hover:bg-stone-100">
+            <AlignJustify className="h-4 w-4" />
+          </span>
+          <span className="relative">
+            <Avatar className="h-9 w-9 border border-stone-300">
+              <AvatarFallback className="bg-stone-900 text-sm font-semibold text-stone-50">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {/* Verified badge */}
+            <span
+              className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-stone-900 text-white ring-2 ring-[#FAF9F7]"
+              aria-hidden="true"
+            >
+              <BadgeCheck className="h-3 w-3" />
+            </span>
           </span>
         </button>
       </DropdownMenuTrigger>

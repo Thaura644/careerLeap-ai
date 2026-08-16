@@ -106,7 +106,7 @@ const Login = () => {
               <Label htmlFor="password">Password</Label>
               <a
                 href="/forgot-password"
-                className="text-sm text-leap-purple hover:underline"
+                className="text-sm font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600"
               >
                 Forgot password?
               </a>
@@ -139,7 +139,7 @@ const Login = () => {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-leap-purple hover:bg-opacity-90"
+          className="h-11 w-full rounded-none bg-stone-900 text-sm hover:bg-stone-700"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isSubmitting ? "Logging in..." : "Log in"}

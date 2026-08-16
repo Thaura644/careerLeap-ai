@@ -152,11 +152,11 @@ const Signup = () => {
               className="text-sm font-normal text-muted-foreground"
             >
               By creating an account, you agree to our{" "}
-              <a href="/terms" className="text-leap-purple hover:underline">
+              <a href="/terms" className="font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="/privacy" className="text-leap-purple hover:underline">
+              <a href="/privacy" className="font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600">
                 Privacy Policy
               </a>
             </Label>
@@ -166,7 +166,7 @@ const Signup = () => {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-leap-purple hover:bg-opacity-90"
+          className="h-11 w-full rounded-none bg-stone-900 text-sm hover:bg-stone-700"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isSubmitting ? "Creating your account..." : "Create account"}
