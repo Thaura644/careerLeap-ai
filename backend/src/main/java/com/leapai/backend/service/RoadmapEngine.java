@@ -149,6 +149,13 @@ public class RoadmapEngine {
         /** The target's broad field, so non-tech transitions get non-tech plans. */
         private static Domain detectDomain(String role) {
             String t = role.toLowerCase(Locale.ROOT);
+            // Data/analyst roles are data-first even when they sit inside
+            // another field (e.g. "Healthcare Data Analyst") — SQL, stats, and
+            // storytelling are the core of the job.
+            if (containsAny(t, "data", "analytics", "analyst", "scientist", "business intelligence",
+                    "machine learning")) {
+                return Domain.DATA;
+            }
             if (containsAny(t, "health", "medical", "clinical", "nurse", "physician", "doctor",
                     "pharmac", "therapy", "physio", "hospital", "dentist", "veterinary")) {
                 return Domain.HEALTHCARE;

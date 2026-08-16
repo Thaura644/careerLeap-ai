@@ -89,7 +89,7 @@ public class InsightsService {
         merged.putIfAbsent("weeklyCommitment", nvl(user.getWeeklyCommitment(), ""));
         merged.putIfAbsent("learningStyle", nvl(user.getLearningStyle(), ""));
 
-        Map<String, Object> generated = llmService.generateRoadmap(merged);
+        Map<String, Object> generated = llmService.generateRoadmap(merged, user.getId());
 
         Roadmap roadmap = new Roadmap();
         roadmap.setUserId(user.getId());

@@ -40,10 +40,14 @@ public class DataSeeder implements CommandLineRunner {
             seedResources();
             log.info("[seed] loaded {} library resources", resources.count());
         }
-        if (resources.findBySourceOrderByIdDesc("open").isEmpty()) {
-            seedOpenResources();
-            log.info("[seed] loaded {} open-source resources",
-                    resources.findBySourceOrderByIdDesc("open").size());
+        // Per-resource idempotency (by URL): new open resources seed on
+        // existing databases too, without duplicating what's already there.
+        int openBefore = resources.findBySourceOrderByIdDesc("open").size();
+        seedOpenResources();
+        int openAfter = resources.findBySourceOrderByIdDesc("open").size();
+        if (openAfter > openBefore) {
+            log.info("[seed] loaded {} new open-source resources ({} total)",
+                    openAfter - openBefore, openAfter);
         }
         if (events.count() == 0) {
             seedEvents();
@@ -86,27 +90,67 @@ public class DataSeeder implements CommandLineRunner {
     /** Real open-source learning materials (source=OPEN) so the resource engine
      *  has known-good links in the library from day one. */
     private void seedOpenResources() {
-        resources.save(openResource("System Design Primer", "Guide",
+        seedOpenResource(openResource("System Design Primer", "Guide",
                 "https://github.com/donnemartin/system-design-primer", "GitHub",
                 "The canonical open-source intro to large-scale system design."));
-        resources.save(openResource("freeCodeCamp — System Design Concepts Course", "Course",
+        seedOpenResource(openResource("freeCodeCamp — System Design Concepts Course", "Course",
                 "https://www.youtube.com/watch?v=F2FmTdLtb_4", "YouTube",
                 "A free, complete video walkthrough of system design fundamentals."));
-        resources.save(openResource("CS50x — Introduction to Computer Science", "Course",
+        seedOpenResource(openResource("CS50x — Introduction to Computer Science", "Course",
                 "https://cs50.harvard.edu/x/", "Course site",
                 "Harvard's free course that builds problem-solving fundamentals."));
-        resources.save(openResource("The Odin Project", "Course",
+        seedOpenResource(openResource("The Odin Project", "Course",
                 "https://www.theodinproject.com/", "Course site",
                 "Free, project-driven full-stack curriculum."));
-        resources.save(openResource("PostgreSQL Documentation", "Docs",
+        seedOpenResource(openResource("PostgreSQL Documentation", "Docs",
                 "https://www.postgresql.org/docs/", "Docs",
                 "The official docs — indexing, transactions, query planning."));
-        resources.save(openResource("Google SRE Book", "Book",
+        seedOpenResource(openResource("Google SRE Book", "Book",
                 "https://sre.google/sre-book/table-of-contents/", "Book",
                 "Free — the blueprint for running reliable production systems."));
-        resources.save(openResource("Kaggle Learn", "Course",
+        seedOpenResource(openResource("Kaggle Learn", "Course",
                 "https://www.kaggle.com/learn", "Kaggle",
                 "Free micro-courses on Python, SQL, ML, and visualization."));
+
+        // Cross-domain catalog — so a marketing→healthcare transition (or any
+        // other field pair) finds real, relevant free material, not just tech.
+        seedOpenResource(openResource("Khan Academy — Health & Medicine", "Course",
+                "https://www.khanacademy.org/science/health-and-medicine", "Khan Academy",
+                "Free courses on anatomy, physiology, and clinical foundations."));
+        seedOpenResource(openResource("OpenWHO — Free Public Health Courses", "Course",
+                "https://openwho.org/", "OpenWHO",
+                "WHO's free health-emergency and public-health training."));
+        seedOpenResource(openResource("HubSpot Academy — Free Marketing Certifications", "Course",
+                "https://academy.hubspot.com/", "HubSpot Academy",
+                "Free certifications in content, email, social, and inbound marketing."));
+        seedOpenResource(openResource("Semrush Academy — Free SEO Courses", "Course",
+                "https://www.semrush.com/academy/", "Semrush Academy",
+                "Free SEO and content-marketing training from practitioners."));
+        seedOpenResource(openResource("Khan Academy — Personal Finance", "Course",
+                "https://www.khanacademy.org/college-careers-more/personal-finance", "Khan Academy",
+                "Free foundations of budgeting, credit, investing, and taxes."));
+        seedOpenResource(openResource("Corporate Finance Institute — Free Courses", "Course",
+                "https://corporatefinanceinstitute.com/", "CFI",
+                "Free financial modeling and accounting fundamentals."));
+        seedOpenResource(openResource("Figma — Learn Design", "Course",
+                "https://www.figma.com/resources/learn-design/", "Figma",
+                "Free tutorials covering UI design, prototyping, and design systems."));
+        seedOpenResource(openResource("Nielsen Norman Group — Free UX Articles", "Guide",
+                "https://www.nngroup.com/articles/", "Nielsen Norman Group",
+                "Research-backed articles on UX, usability, and research methods."));
+        seedOpenResource(openResource("SalesHacker — Free Sales Resources", "Guide",
+                "https://www.saleshacker.com/", "SalesHacker",
+                "Free guides and webinars on modern B2B sales."));
+        seedOpenResource(openResource("Workable — Free Hiring Resources", "Guide",
+                "https://resources.workable.com/", "Workable",
+                "Free guides on recruiting, hiring, and HR fundamentals."));
+    }
+
+    /** Save an open resource only if one with the same URL doesn't exist yet
+     *  (idempotent across boots and fresh adds). */
+    private void seedOpenResource(Resource r) {
+        if (resources.findByUrl(r.getUrl()).isPresent()) return;
+        resources.save(r);
     }
 
     private void seedEvents() {

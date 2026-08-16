@@ -111,5 +111,46 @@ public class SkillSeeder implements CommandLineRunner {
         {"Cross-Functional Collaboration", "Soft Skills"}, {"Decision Making", "Soft Skills"},
         {"Problem Solving", "Soft Skills"}, {"Critical Thinking", "Soft Skills"},
         {"Time Management", "Soft Skills"}, {"Adaptability", "Soft Skills"},
+        // Marketing & Growth
+        {"SEO", "Marketing"}, {"Content Marketing", "Marketing"}, {"Copywriting", "Marketing"},
+        {"Social Media Marketing", "Marketing"}, {"Paid Advertising", "Marketing"},
+        {"Google Analytics", "Marketing"}, {"Email Marketing", "Marketing"},
+        {"Brand Strategy", "Marketing"}, {"Marketing Analytics", "Marketing"},
+        {"Growth Marketing", "Marketing"}, {"Conversion Rate Optimization", "Marketing"},
+        {"Product Marketing", "Marketing"}, {"Market Research", "Marketing"},
+        // Sales & Business
+        {"Sales Strategy", "Sales"}, {"B2B Sales", "Sales"}, {"Account Management", "Sales"},
+        {"Business Development", "Sales"}, {"CRM Management", "Sales"}, {"Salesforce", "Sales"},
+        {"Lead Generation", "Sales"}, {"Customer Success", "Sales"}, {"Negotiation", "Sales"},
+        {"Pitching", "Sales"},
+        // Healthcare & Clinical
+        {"Patient Care", "Healthcare"}, {"Clinical Documentation", "Healthcare"},
+        {"Medical Terminology", "Healthcare"}, {"HIPAA Compliance", "Healthcare"},
+        {"Nursing", "Healthcare"}, {"Pharmacology", "Healthcare"},
+        {"Electronic Health Records", "Healthcare"}, {"Public Health", "Healthcare"},
+        {"Health Education", "Healthcare"}, {"Telehealth", "Healthcare"},
+        // Finance & Accounting
+        {"Financial Analysis", "Finance"}, {"Financial Modeling", "Finance"},
+        {"Bookkeeping", "Finance"}, {"Accounting", "Finance"}, {"Auditing", "Finance"},
+        {"Budgeting", "Finance"}, {"Forecasting", "Finance"}, {"Excel", "Finance"},
+        {"QuickBooks", "Finance"}, {"Tax Preparation", "Finance"}, {"Risk Management", "Finance"},
+        // HR & People
+        {"Recruiting", "HR"}, {"Onboarding", "HR"}, {"Employee Relations", "HR"},
+        {"Performance Management", "HR"}, {"HR Policies", "HR"}, {"Talent Acquisition", "HR"},
+        {"Payroll", "HR"}, {"Compensation & Benefits", "HR"}, {"People Operations", "HR"},
+        // Legal & Compliance
+        {"Legal Research", "Legal"}, {"Contract Drafting", "Legal"}, {"Compliance", "Legal"},
+        {"Regulatory Affairs", "Legal"}, {"Paralegal Skills", "Legal"}, {"Intellectual Property", "Legal"},
+        {"Data Privacy (GDPR)", "Legal"},
+        // Education & Training
+        {"Curriculum Design", "Education"}, {"Lesson Planning", "Education"},
+        {"Instructional Design", "Education"}, {"Classroom Management", "Education"},
+        {"Assessment Design", "Education"}, {"Online Teaching", "Education"},
+        {"Mentoring", "Education"}, {"Training & Facilitation", "Education"},
+        // Operations & PM
+        {"Project Management", "Operations"}, {"Agile", "Operations"}, {"Process Improvement", "Operations"},
+        {"Supply Chain Management", "Operations"}, {"Logistics", "Operations"},
+        {"Vendor Management", "Operations"}, {"Operations Management", "Operations"},
+        {"Six Sigma", "Operations"},
     };
 }

@@ -42,7 +42,7 @@ public class ResumeService {
      * Analyze resume text and return the skills found, each upserted into the
      * catalog with an {@code inCatalog} flag (true = already existed).
      */
-    public Map<String, Object> analyze(String text) {
+    public Map<String, Object> analyze(String text, Long userId) {
         Map<String, Object> result = new LinkedHashMap<>();
         if (!available()) {
             result.put("ok", false);
@@ -55,7 +55,7 @@ public class ResumeService {
             return result;
         }
 
-        List<Map<String, String>> extracted = llmService.extractSkillsFromResume(text);
+        List<Map<String, String>> extracted = llmService.extractSkillsFromResume(text, userId);
         List<Map<String, Object>> skills = new ArrayList<>();
         for (Map<String, String> item : extracted) {
             skills.add(skillService.ensure(item.get("name"), item.get("category")));

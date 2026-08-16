@@ -2,6 +2,8 @@ package com.leapai.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leapai.backend.model.TokenUsage;
+import com.leapai.backend.repository.TokenUsageRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,6 +69,7 @@ public class LlmService {
     private final RoadmapEngine roadmapEngine;
     private final RetrievalChatService retrievalChat;
     private final AiContextService aiContext;
+    private final TokenUsageRepository tokenUsage;
 
     private final String apiKey;
     private final String baseUrl;
@@ -78,6 +81,7 @@ public class LlmService {
             RoadmapEngine roadmapEngine,
             RetrievalChatService retrievalChat,
             AiContextService aiContext,
+            TokenUsageRepository tokenUsage,
             @Value("${LLM_API_KEY:}") String apiKey,
             @Value("${LLM_BASE_URL:https://openrouter.ai/api/v1}") String baseUrl,
             @Value("${LLM_MODEL:google/gemma-4-31b-it:free}") String model,
@@ -86,6 +90,7 @@ public class LlmService {
         this.roadmapEngine = roadmapEngine;
         this.retrievalChat = retrievalChat;
         this.aiContext = aiContext;
+        this.tokenUsage = tokenUsage;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.baseUrl = (baseUrl == null || baseUrl.isBlank())
                 ? "https://openrouter.ai/api/v1"
@@ -150,7 +155,7 @@ public class LlmService {
                 }
             }
             messages.add(Map.of("role", "user", "content", prompt));
-            String text = complete(messages);
+            String text = complete(messages, 0.7, 2000, userId, "chat");
 
             // Execute any action the model requested, and fold the confirmation
             // into the reply the user sees.
@@ -187,7 +192,7 @@ public class LlmService {
     }
 
     /** Structured roadmap. LLM when configured; otherwise the deterministic engine. */
-    public Map<String, Object> generateRoadmap(Map<String, Object> profile) {
+    public Map<String, Object> generateRoadmap(Map<String, Object> profile, Long userId) {
         if (!isConfigured()) {
             return roadmapEngine.generate(profile);
         }
@@ -196,7 +201,7 @@ public class LlmService {
             List<Map<String, Object>> messages = List.of(
                     Map.of("role", "system", "content", SYSTEM_ROADMAP_PROMPT),
                     Map.of("role", "user", "content", "User profile (JSON):\n" + userJson));
-            String text = complete(messages);
+            String text = complete(messages, 0.7, 2000, userId, "roadmap");
             JsonNode node = objectMapper.readTree(text);
             JsonNode roadmap = node.has("roadmap") ? node.get("roadmap") : node;
             Map<String, Object> result = new LinkedHashMap<>();
@@ -223,7 +228,7 @@ public class LlmService {
      * or the response cannot be parsed, returns an empty list (caller decides
      * how to report that honestly).
      */
-    public List<Map<String, String>> extractSkillsFromResume(String resumeText) {
+    public List<Map<String, String>> extractSkillsFromResume(String resumeText, Long userId) {
         if (!isConfigured() || resumeText == null || resumeText.isBlank()) {
             return List.of();
         }
@@ -232,7 +237,7 @@ public class LlmService {
                     Map.of("role", "system", "content", SYSTEM_RESUME_PROMPT),
                     Map.of("role", "user", "content",
                             "Resume text:\n" + truncate(resumeText, 20000)));
-            String text = complete(messages, 0.2, 1200);
+            String text = complete(messages, 0.2, 1200, userId, "resume");
             JsonNode node = extractJson(text);
             if (node == null || !node.has("skills") || !node.get("skills").isArray()) {
                 return List.of();
@@ -270,7 +275,7 @@ public class LlmService {
      * list when the LLM is unavailable or the response cannot be parsed (the
      * caller falls back to its deterministic deck builder).
      */
-    public List<Map<String, Object>> generateFlashcards(Map<String, Object> roadmap, List<String> skills, String targetRole) {
+    public List<Map<String, Object>> generateFlashcards(Map<String, Object> roadmap, List<String> skills, String targetRole, Long userId) {
         if (!isConfigured()) {
             return List.of();
         }
@@ -283,7 +288,7 @@ public class LlmService {
                     Map.of("role", "system", "content", SYSTEM_FLASHCARD_PROMPT),
                     Map.of("role", "user", "content",
                             "User context (JSON):\n" + objectMapper.writeValueAsString(context)));
-            String text = complete(messages, 0.3, 2000);
+            String text = complete(messages, 0.3, 2000, userId, "flashcards");
             JsonNode node = extractJson(text);
             if (node == null || !node.has("cards") || !node.get("cards").isArray()) {
                 return List.of();
@@ -322,10 +327,15 @@ public class LlmService {
     }
 
     private String complete(List<Map<String, Object>> messages) throws Exception {
-        return complete(messages, 0.7, 2000);
+        return complete(messages, 0.7, 2000, null, null);
     }
 
     private String complete(List<Map<String, Object>> messages, double temperature, int maxTokens) throws Exception {
+        return complete(messages, temperature, maxTokens, null, null);
+    }
+
+    private String complete(List<Map<String, Object>> messages, double temperature, int maxTokens,
+                            Long userId, String purpose) throws Exception {
         Map<String, Object> payload = Map.of(
                 "model", model,
                 "messages", messages,
@@ -345,11 +355,37 @@ public class LlmService {
                     + ": " + truncate(response.body(), 300));
         }
         JsonNode node = objectMapper.readTree(response.body());
+        if (userId != null && purpose != null) {
+            recordUsage(userId, purpose, node);
+        }
         String content = node.path("choices").path(0).path("message").path("content").asText();
         if (content.isBlank()) {
             throw new IllegalStateException("LLM API returned empty content");
         }
         return content;
+    }
+
+    /** Persist per-user token usage from the API response (used for the usage
+     *  breakdown in Settings). Free-model calls are recorded too — the token
+     *  counts are real even when the cost is zero. */
+    private void recordUsage(Long userId, String purpose, JsonNode node) {
+        try {
+            JsonNode usage = node.path("usage");
+            long prompt = usage.path("prompt_tokens").asLong(0);
+            long completion = usage.path("completion_tokens").asLong(0);
+            long total = usage.path("total_tokens").asLong(0);
+            if (prompt <= 0 && completion <= 0 && total <= 0) return;
+            TokenUsage t = new TokenUsage();
+            t.setUserId(userId);
+            t.setPurpose(purpose);
+            t.setModel(model);
+            t.setPromptTokens(prompt);
+            t.setCompletionTokens(completion);
+            t.setTotalTokens(total > 0 ? total : prompt + completion);
+            tokenUsage.save(t);
+        } catch (Exception e) {
+            log.debug("[llm] could not record usage: {}", e.getMessage());
+        }
     }
 
     private static String truncate(String value, int max) {

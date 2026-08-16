@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,16 @@ const Signup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   // "Skip for now" on onboarding sends the user here to create an account
   // first; after signing up they should go straight to the dashboard instead
   // of being bounced back into onboarding.
   const skippedOnboarding = Boolean((location.state as { skipOnboarding?: boolean } | null)?.skipOnboarding);
+  // The plan the visitor clicked on the landing (pro-monthly, pro-annual,
+  // roadmap-report, or free). Carried through to onboarding, which routes to
+  // the pay prompt (or straight to the dashboard) based on it.
+  const plan = searchParams.get("plan");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,7 +64,7 @@ const Signup = () => {
         title: "Account created successfully",
         description: "Welcome to Leap.ai! Redirecting to onboarding...",
       });
-      navigate("/onboarding");
+      navigate(plan ? `/onboarding?plan=${encodeURIComponent(plan)}` : "/onboarding");
     } catch (error) {
       if (error instanceof ApiTimeoutError) {
         toast({

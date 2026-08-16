@@ -87,7 +87,7 @@ public class FlashcardService {
         flashcards.deleteByUserId(user.getId());
 
         List<Map<String, Object>> cards = llmService.generateFlashcards(
-                roadmapSnapshot(user), skillsOf(user), user.getTargetRole());
+                roadmapSnapshot(user), skillsOf(user), user.getTargetRole(), user.getId());
 
         if (cards == null || cards.isEmpty()) {
             cards = engineCards(user);

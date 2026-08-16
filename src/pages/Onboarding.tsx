@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +49,13 @@ const Onboarding = () => {
   const [motivation, setMotivation] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  // The plan this signup flow was started from (?plan= from the landing/signup).
+  // Paid plans route the user to the pay prompt after onboarding; if they skip
+  // payment the account simply stays on Free.
+  const plan = searchParams.get("plan");
+  const paidPlan = plan === "pro-monthly" || plan === "pro-annual" || plan === "roadmap-report";
+  const afterOnboarding = paidPlan ? `/upgrade?plan=${encodeURIComponent(plan || "")}` : "/dashboard";
   // Consent is asked once, right after onboarding completes (or when the user
   // skips the flow), and remembered — it must never block the very first step
   // of onboarding, so it starts closed.
@@ -76,7 +83,7 @@ const Onboarding = () => {
   const acceptConsent = () => {
     localStorage.setItem("leap_privacy_consent", new Date().toISOString());
     setShowConsent(false);
-    navigate("/dashboard");
+    navigate(afterOnboarding);
   };
 
   /**
@@ -141,10 +148,12 @@ const Onboarding = () => {
       }
       toast({
         title: "Onboarding complete!",
-        description: "Welcome to Leap.ai. Redirecting to your dashboard...",
+        description: paidPlan
+          ? "Your profile is ready. Now set up payment to unlock your plan."
+          : "Welcome to Leap.ai. Redirecting to your dashboard...",
       });
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate(afterOnboarding);
       }, 1500);
       return;
     }
@@ -182,6 +191,16 @@ const Onboarding = () => {
 
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
+          {paidPlan && (
+            <div className="mb-6 rounded-md border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700">
+              You're signing up for{" "}
+              <span className="font-semibold">
+                {plan === "roadmap-report" ? "Career Audit" : "Pro"}
+              </span>
+              . Complete your profile, then you'll set up payment to unlock it — skip it and
+              your account stays on the free plan.
+            </div>
+          )}
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold mb-2">Let's set up your career profile</h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -240,6 +259,12 @@ const Onboarding = () => {
                             <SelectItem value="Finance">Finance</SelectItem>
                             <SelectItem value="Healthcare">Healthcare</SelectItem>
                             <SelectItem value="Education">Education</SelectItem>
+                            <SelectItem value="Marketing">Marketing</SelectItem>
+                            <SelectItem value="Data & Analytics">Data & Analytics</SelectItem>
+                            <SelectItem value="Design">Design</SelectItem>
+                            <SelectItem value="Sales">Sales</SelectItem>
+                            <SelectItem value="Operations">Operations</SelectItem>
+                            <SelectItem value="Government & Nonprofit">Government & Nonprofit</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
                           </SelectContent>
                         </Select>

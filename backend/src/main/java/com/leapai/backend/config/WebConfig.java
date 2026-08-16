@@ -51,6 +51,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/goals/**",
                         "/api/payments/verify",
                         "/api/payments/me",
+                        "/api/billing/**",
                         "/api/practice/**",
                         "/api/skills/**",
                         "/api/resume/**",

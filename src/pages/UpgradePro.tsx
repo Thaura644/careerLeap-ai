@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { apiGet, apiPost } from "@/lib/api";
 import {
@@ -76,9 +77,15 @@ function detectCurrency(): Currency {
 }
 
 const UpgradePro = () => {
+  const [searchParams] = useSearchParams();
+  const planParam = searchParams.get("plan");
   const [status, setStatus] = useState<PaymentStatus | null>(null);
   const [currency, setCurrency] = useState<Currency>("USD");
-  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
+  // ?plan=pro-annual preselects annual billing; ?plan=roadmap-report scrolls to
+  // the Career Audit card. The context survives from signup → onboarding → here.
+  const [billing, setBilling] = useState<"monthly" | "annual">(
+    planParam === "pro-annual" ? "annual" : "monthly"
+  );
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [pro, setPro] = useState(false);
@@ -131,7 +138,14 @@ const UpgradePro = () => {
         setPro(false);
         setSignedIn(false);
       });
-  }, []);
+    // Landing user chose the Career Audit — bring the audit card into view so
+    // the pay prompt is what they see, not the Pro card.
+    if (planParam === "roadmap-report") {
+      setTimeout(() => {
+        document.getElementById("career-audit")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 400);
+    }
+  }, [planParam]);
 
   const proMonthly = status?.plans.find((p) => p.id === "pro-monthly");
   const proAnnual = status?.plans.find((p) => p.id === "pro-annual");
@@ -290,6 +304,16 @@ const UpgradePro = () => {
             </p>
           )}
           {pro && <p className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">✓ Pro is active</p>}
+          {planParam && !pro && (
+            <p className="mx-auto mt-4 max-w-2xl rounded-md bg-stone-100 px-4 py-2.5 text-sm text-stone-700">
+              You're here to get{" "}
+              <span className="font-semibold">
+                {planParam === "roadmap-report" ? "the Career Audit" : planParam === "pro-annual" ? "Pro — annual" : "Pro"}
+              </span>
+              . Complete the payment below to unlock it — otherwise your account stays on the free
+              plan.
+            </p>
+          )}
         </div>
 
         {status && status.currencies.length > 0 && (
@@ -344,7 +368,7 @@ const UpgradePro = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Career Audit */}
-          <Card>
+          <Card id="career-audit">
             <CardHeader>
               <CardTitle>Career Audit</CardTitle>
               <CardDescription>One-time deep review of your profile and the gap to your target</CardDescription>

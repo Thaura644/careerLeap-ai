@@ -1,5 +1,6 @@
 package com.leapai.backend.controller;
 
+import com.leapai.backend.config.UserContext;
 import com.leapai.backend.service.ResumeService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -53,7 +54,7 @@ public class ResumeController {
     }
 
     private ResponseEntity<Map<String, Object>> respond(String text) {
-        Map<String, Object> result = resumeService.analyze(text);
+        Map<String, Object> result = resumeService.analyze(text, UserContext.require().getId());
         if (Boolean.FALSE.equals(result.get("ok"))) {
             return bad(String.valueOf(result.get("error")));
         }

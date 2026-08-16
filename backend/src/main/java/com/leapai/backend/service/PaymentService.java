@@ -2,7 +2,9 @@ package com.leapai.backend.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.leapai.backend.model.PaymentRecord;
 import com.leapai.backend.model.User;
+import com.leapai.backend.repository.PaymentRecordRepository;
 import com.leapai.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +67,7 @@ public class PaymentService {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
     private final UserRepository users;
+    private final PaymentRecordRepository payments;
 
     private final String mode;
     private final String publicKey;
@@ -73,11 +76,13 @@ public class PaymentService {
     public PaymentService(
             ObjectMapper objectMapper,
             UserRepository users,
+            PaymentRecordRepository payments,
             @Value("${PAYMENTS_MODE:off}") String mode,
             @Value("${PAYSTACK_PUBLIC_KEY:}") String publicKey,
             @Value("${PAYSTACK_SECRET_KEY:${PAYSTACK_LIVE_SECRET:}}") String secretKey) {
         this.objectMapper = objectMapper;
         this.users = users;
+        this.payments = payments;
         this.mode = normalize(mode);
         this.publicKey = publicKey == null ? "" : publicKey.trim();
         this.secretKey = secretKey == null ? "" : secretKey.trim();
@@ -250,9 +255,9 @@ public class PaymentService {
             String planId = data.path("metadata").path("plan").asText("pro-monthly");
             boolean grantsPro = isProPlan(planId);
             if (grantsPro) {
-                user.setPlan(User.Plan.PRO);
-                users.save(user);
+                grantPro(user, planId);
             }
+            recordPayment(user, planId, reference, currencyOf(data), false);
             log.info("[payments] VERIFIED charge {} for {} (plan {}, grantedPro {})",
                     reference, user.getEmail(), planId, grantsPro);
             return Map.of("verified", true, "pro", grantsPro,
@@ -271,14 +276,60 @@ public class PaymentService {
         String planId = bodyPlan == null || bodyPlan.isBlank() ? "pro-monthly" : bodyPlan.trim();
         boolean grantsPro = isProPlan(planId);
         if (grantsPro) {
-            user.setPlan(User.Plan.PRO);
-            users.save(user);
+            grantPro(user, planId);
         }
+        recordPayment(user, planId, reference, "USD", true);
         log.info("[payments] SIMULATED verify {} for {} (plan {}, grantedPro {})",
                 reference, user.getEmail(), planId, grantsPro);
         return Map.of("verified", true, "simulated", true, "pro", grantsPro,
                 "email", user.getEmail(), "reference", reference, "plan", planId,
                 "grantedAt", Instant.now().toString());
+    }
+
+    /** Grant (or extend) the Pro entitlement with a real expiry: +30 days for
+     *  monthly, +365 for annual. The expiry is what makes an unpaid plan fall
+     *  back to Free instead of persisting forever. */
+    private void grantPro(User user, String planId) {
+        Instant now = Instant.now();
+        long days = "pro-annual".equals(planId) ? 365 : 30;
+        Instant base = user.getPlanExpiresAt() != null && user.getPlanExpiresAt().isAfter(now)
+                ? user.getPlanExpiresAt()
+                : now;
+        user.setPlan(User.Plan.PRO);
+        user.setPlanExpiresAt(base.plusSeconds(days * 24 * 60 * 60));
+        users.save(user);
+    }
+
+    /** Persist the confirmed charge as an invoice row for Settings. */
+    private void recordPayment(User user, String planId, String reference, String currency, boolean simulated) {
+        try {
+            PaymentRecord r = new PaymentRecord();
+            r.setUserId(user.getId());
+            r.setPlanId(planId);
+            r.setPlanLabel(planLabel(planId));
+            r.setReference(reference);
+            r.setCurrency(currency == null || currency.isBlank() ? "USD" : currency);
+            r.setAmountMinor(null); // filled from Paystack data when available; simulated has none
+            r.setStatus(simulated ? "simulated" : "success");
+            r.setExpiresAt(user.getPlanExpiresAt());
+            payments.save(r);
+        } catch (Exception e) {
+            log.warn("[payments] could not record invoice for {}: {}", user.getEmail(), e.getMessage());
+        }
+    }
+
+    private static String currencyOf(JsonNode data) {
+        String c = data.path("currency").asText("");
+        return c.isBlank() ? "USD" : c;
+    }
+
+    private static String planLabel(String planId) {
+        return switch (planId == null ? "" : planId) {
+            case "pro-monthly" -> "Pro — monthly";
+            case "pro-annual" -> "Pro — annual";
+            case "roadmap-report" -> "Career Audit";
+            default -> planId == null ? "" : planId;
+        };
     }
 
     /** Only the Pro plans grant the Pro entitlement. The Career Audit is a
@@ -287,8 +338,56 @@ public class PaymentService {
         return "pro-monthly".equals(planId) || "pro-annual".equals(planId);
     }
 
+    /**
+     * Real entitlement with expiry: a Pro grant whose period has lapsed is
+     * downgraded to Free right here, so an unpaid subscription never keeps
+     * Pro features.
+     */
     public boolean isPro(User user) {
-        return user != null && user.getPlan() == User.Plan.PRO;
+        if (user == null || user.getPlan() != User.Plan.PRO) return false;
+        Instant expires = user.getPlanExpiresAt();
+        if (expires == null) return true; // legacy grant without a period — keep it
+        if (expires.isBefore(Instant.now())) {
+            user.setPlan(User.Plan.FREE);
+            user.setPlanExpiresAt(null);
+            users.save(user);
+            log.info("[payments] downgraded {} to Free — Pro period ended {}", user.getEmail(), expires);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Billing summary for Settings: current plan + status + next renewal,
+     * invoice history (most recent first), and a per-user LLM usage breakdown
+     * (only meaningful when the real LLM is configured; engine fallbacks cost
+     * nothing and aren't recorded).
+     */
+    public Map<String, Object> billingSummary(User user, TokenUsageService tokenUsage) {
+        boolean active = isPro(user);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("plan", active ? "pro" : "free");
+        result.put("planLabel", active ? "Pro" : "Free");
+        result.put("status", active ? "active" : "expired");
+        result.put("nextRenewal", user.getPlanExpiresAt());
+
+        List<Map<String, Object>> invoices = new ArrayList<>();
+        for (PaymentRecord r : payments.findByUserIdOrderByCreatedAtDesc(user.getId())) {
+            Map<String, Object> inv = new LinkedHashMap<>();
+            inv.put("id", r.getId());
+            inv.put("planId", r.getPlanId());
+            inv.put("planLabel", r.getPlanLabel());
+            inv.put("reference", r.getReference());
+            inv.put("currency", r.getCurrency());
+            inv.put("amountMinor", r.getAmountMinor());
+            inv.put("status", r.getStatus());
+            inv.put("createdAt", r.getCreatedAt());
+            inv.put("expiresAt", r.getExpiresAt());
+            invoices.add(inv);
+        }
+        result.put("invoices", invoices);
+        result.put("usage", tokenUsage.summary(user.getId()));
+        return result;
     }
 
     private static Map<String, Object> plan(String id, String label, Map<String, Map<String, Object>> prices) {

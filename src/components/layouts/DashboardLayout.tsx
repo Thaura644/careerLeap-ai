@@ -35,42 +35,31 @@ type NavItem = {
   pro?: boolean;
 };
 
-const navItems: NavItem[] = [
+const navGroups: { label: string; items: NavItem[] }[] = [
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
+    label: "Overview",
+    items: [
+      { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { title: "Resources", href: "/resources", icon: BookOpen },
+    ],
   },
   {
-    title: "Resources",
-    href: "/resources",
-    icon: BookOpen,
+    label: "Learn",
+    items: [
+      { title: "Practice", href: "/practice", icon: Code2 },
+      { title: "Flashcards", href: "/flashcards", icon: Brain },
+    ],
   },
   {
-    title: "Practice",
-    href: "/practice",
-    icon: Code2,
+    label: "Connect",
+    items: [{ title: "Community", href: "/community", icon: Users }],
   },
   {
-    title: "Flashcards",
-    href: "/flashcards",
-    icon: Brain,
-  },
-  {
-    title: "Community",
-    href: "/community",
-    icon: Users,
-  },
-  {
-    title: "AI Insights",
-    href: "/insights",
-    icon: Lightbulb,
-    pro: true,
-  },
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
+    label: "Account",
+    items: [
+      { title: "AI Insights", href: "/insights", icon: Lightbulb, pro: true },
+      { title: "Settings", href: "/settings", icon: Settings },
+    ],
   },
 ];
 
@@ -106,16 +95,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Link
         to={item.href}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
+          "group relative flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium transition-colors",
           isActive
             ? "bg-accent text-accent-foreground"
-            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
         )}
       >
-        <item.icon className="h-4 w-4" />
+        {isActive && (
+          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
+        )}
+        <item.icon className={cn("h-[18px] w-[18px]", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
         <span>{item.title}</span>
         {item.pro && (
-          <span className="ml-auto flex h-5 items-center justify-center rounded-full bg-leap-purple px-2 text-[10px] font-medium text-white">
+          <span
+            className={cn(
+              "ml-auto flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-semibold tracking-wide",
+              isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+            )}
+          >
             PRO
           </span>
         )}
@@ -151,11 +148,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
             </div>
             <nav className="grid gap-1 p-4">
-              {navItems.map((item) => (
+              {navGroups.flatMap((g) => g.items).map((item) => (
                 <NavLink key={item.href} item={item} />
               ))}
               <Link to="/upgrade" className="mt-4">
-                <Button className="w-full bg-leap-purple hover:bg-opacity-90">
+                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                   <Crown className="mr-2 h-4 w-4" />
                   Upgrade to Pro
                 </Button>
@@ -201,19 +198,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </button>
           </div>
 
-          <nav className="grid flex-1 gap-1 overflow-y-auto p-4">
-            {navItems.map((item) => (
-              <NavLink key={item.href} item={item} />
+          <nav className="grid flex-1 content-start gap-5 overflow-y-auto px-3 py-4">
+            {navGroups.map((group) => (
+              <div key={group.label} className="grid gap-1">
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+                  {group.label}
+                </p>
+                {group.items.map((item) => (
+                  <NavLink key={item.href} item={item} />
+                ))}
+              </div>
             ))}
           </nav>
 
-          <div className="shrink-0 border-t p-4">
-            <Link to="/upgrade">
-              <Button className="w-full bg-leap-purple hover:bg-opacity-90">
-                <Crown className="mr-2 h-4 w-4" />
-                Upgrade to Pro
-              </Button>
-            </Link>
+          <div className="shrink-0 border-t p-3">
+            <div className="rounded-md border bg-accent/40 p-3">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-primary" />
+                <p className="text-[13px] font-semibold">Unlock everything</p>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Full practice library, scenarios, interview prep &amp; creator content.
+              </p>
+              <Link to="/upgrade" className="mt-3 block">
+                <Button className="h-8 w-full bg-primary text-primary-foreground text-xs hover:bg-primary/90">
+                  Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
           </div>
         </aside>
         <main className="flex-1">

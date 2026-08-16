@@ -38,6 +38,11 @@ public class User {
     @Column(nullable = false, length = 16)
     private Plan plan = Plan.FREE;
 
+    /** When the current Pro entitlement lapses (null = not set / one-time only).
+     *  On expiry the account is downgraded to Free — an unpaid plan never stays
+     *  granted. */
+    private Instant planExpiresAt;
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -110,6 +115,9 @@ public class User {
 
     public Plan getPlan() { return plan; }
     public void setPlan(Plan plan) { this.plan = plan; }
+
+    public Instant getPlanExpiresAt() { return planExpiresAt; }
+    public void setPlanExpiresAt(Instant planExpiresAt) { this.planExpiresAt = planExpiresAt; }
 
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }

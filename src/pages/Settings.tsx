@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, User, Bell, Globe, Shield, Mail, Save, AlertTriangle } from "lucide-react";
+import { Loader2, User, Bell, Globe, Shield, Mail, Save, AlertTriangle, Receipt } from "lucide-react";
+import BillingTab from "@/components/settings/BillingTab";
 import { apiGet, apiPut } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -127,10 +128,14 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="mb-8">
-          <TabsList className="grid grid-cols-4 mb-8">
+          <TabsList className="grid grid-cols-5 mb-8">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Billing</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
@@ -289,6 +294,10 @@ const Settings = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="billing">
+            <BillingTab />
           </TabsContent>
 
           <TabsContent value="notifications">

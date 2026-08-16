@@ -4,6 +4,7 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthMenu } from "@/components/auth/AuthMenu";
 import { apiGet } from "@/lib/api";
+import { getAuthToken } from "@/lib/authSession";
 
 /** Prices served by GET /api/payments/status — the single source of truth. */
 type CurrencyPrice = { displayPrice: string; amountMinor: number };
@@ -11,11 +12,11 @@ type PlanStatus = { id: string; label: string; prices: Record<string, CurrencyPr
 type PaymentStatus = { mode: string; enabled: boolean; currencies: string[]; plans: PlanStatus[] };
 
 const FREE_PLAN = {
+  id: "free",
   name: "Free",
   price: "$0",
   period: "Early Access",
   cta: "Start free",
-  to: "/onboarding",
   features: [
     "Personalized career roadmap",
     "Practice problems tied to your roadmap — real code judge",
@@ -28,11 +29,11 @@ const FREE_PLAN = {
 /** Fallback if the status fetch fails (offline/cold start) — mirrors backend pricing. */
 const FALLBACK_PLANS = [
   {
+    id: "roadmap-report",
     name: "Career Audit",
     price: "$12",
     period: "one-time · also ₦15,000",
     cta: "Get your audit",
-    to: "/upgrade",
     features: [
       "Full profile + resume review",
       "Skill-gap analysis, in priority order",
@@ -41,11 +42,11 @@ const FALLBACK_PLANS = [
     ],
   },
   {
+    id: "pro-monthly",
     name: "Pro",
     price: "$12",
     period: "per month · also ₦15,000 · or $100/yr",
     cta: "Go Pro",
-    to: "/upgrade",
     features: [
       "Everything in Free",
       "Full practice library — every topic, real code judge",
@@ -61,18 +62,18 @@ const FALLBACK_PLANS = [
 const phases = [
   {
     n: "01",
-    title: "Own a cross-team system",
-    desc: "End-to-end ownership of one system two or more teams depend on. Your name in the runbooks, your pager in the rotation.",
+    title: "Learn the new core",
+    desc: "The specific skills and credentials the target role actually requires, in priority order — not a 40-hour course list.",
   },
   {
     n: "02",
-    title: "Publish your technical strategy",
-    desc: "Write the RFC other engineers follow — reviewed, revised, and shipped, not filed.",
+    title: "Get real experience",
+    desc: "Projects, rotations, and practice that exercise the new skills end-to-end, so it's evidence — not just coursework.",
   },
   {
     n: "03",
-    title: "Prove the leverage",
-    desc: "One metric that moved because of you, and the writeup that shows how.",
+    title: "Prove it with results",
+    desc: "One measurable outcome you can show a hiring team, and the writeup that makes it legible.",
   },
 ];
 
@@ -118,7 +119,7 @@ const featureList = [
   {
     n: "04",
     title: "A cohort, not a feed",
-    desc: "A small community of engineers at the same crossroads — wins, advice, accountability.",
+    desc: "A small community of professionals at the same crossroads — wins, advice, accountability.",
   },
   {
     n: "05",
@@ -175,11 +176,11 @@ const LegacyLanding = () => {
         const next: typeof FALLBACK_PLANS = [];
         if (report) {
           next.push({
+            id: "roadmap-report",
             name: "Career Audit",
             price: usd(report),
             period: `one-time${ngn(report) ? ` · also ${ngn(report)}` : ""}`,
             cta: "Get your audit",
-            to: "/upgrade",
             features: [
               "Full profile + resume review",
               "Skill-gap analysis, in priority order",
@@ -190,11 +191,11 @@ const LegacyLanding = () => {
         }
         if (monthly) {
           next.push({
+            id: "pro-monthly",
             name: "Pro",
             price: usd(monthly),
             period: `per month${ngn(monthly) ? ` · also ${ngn(monthly)}` : ""}${usd(annual) ? ` · or ${usd(annual)}/yr` : ""}`,
             cta: "Go Pro",
-            to: "/upgrade",
             features: [
               "Everything in Free",
               "Full practice library — every topic, real code judge",
@@ -217,6 +218,16 @@ const LegacyLanding = () => {
   }, []);
 
   const plans = [FREE_PLAN, ...paidPlans];
+
+  // Signed-in users jump straight to onboarding/upgrade; everyone else goes
+  // through signup first, with the chosen plan carried along (?plan=) so the
+  // signup → onboarding → pay prompt flow keeps their context.
+  const signedIn = typeof window !== "undefined" ? !!getAuthToken() : false;
+  const planHref = (plan: { id: string }) => {
+    if (plan.id === "free") return signedIn ? "/dashboard" : "/signup";
+    return signedIn ? `/upgrade?plan=${plan.id}` : `/signup?plan=${plan.id}`;
+  };
+  const startHref = signedIn ? "/onboarding" : "/signup";
 
   const navLinks = (
     <>
@@ -276,20 +287,20 @@ const LegacyLanding = () => {
                 Live now · free to start
               </p>
               <h1 className="mt-5 font-display text-[40px] font-medium leading-[1.05] tracking-tight sm:text-[56px]">
-                The gap between Senior and Staff was never more{" "}
-                <em className="font-display italic">code</em>.
+                From any field to the career you{" "}
+                <em className="font-display italic">actually</em> want.
               </h1>
               <p className="mt-6 max-w-lg text-[17px] leading-relaxed text-stone-600">
-                It's leverage. It's scope. It's visible proof that you moved a metric that
-                mattered. Leap.ai turns that gap into a working plan — the skills to build,
-                the projects to ship, and the milestones to hit, in that order.
+                Marketing to healthcare. Support to data. Senior to Staff. Leap.ai turns the gap
+                between where you are and the role you want into a working plan — the skills to
+                build, the proof to show, and the milestones to hit, in that order.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-4">
                 <Button
                   asChild
                   className="h-11 rounded-none bg-stone-900 px-6 text-sm hover:bg-stone-700"
                 >
-                  <Link to="/onboarding">
+                  <Link to={startHref}>
                     Get my career plan <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -318,9 +329,9 @@ const LegacyLanding = () => {
                   </p>
                 </div>
                 <div className="px-5 py-4">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-stone-500">
-                    Senior → Staff · 12 months
-                  </p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-stone-500">
+              Marketing → Data Analyst · 12 months
+            </p>
                   <div className="mt-4 space-y-4">
                     {phases.map((p, i) => (
                       <div key={p.n} className="relative flex gap-4">
@@ -379,7 +390,7 @@ const LegacyLanding = () => {
               What's inside
             </p>
             <h2 className="mt-3 max-w-xl font-display text-3xl font-medium tracking-tight sm:text-4xl">
-              Built for the Senior → Staff gap. Nothing else.
+              Built for real career moves — including the big ones.
             </h2>
             <div className="mt-12 grid gap-x-14 gap-y-10 md:grid-cols-2">
               {featureList.map((f) => (
@@ -439,7 +450,7 @@ const LegacyLanding = () => {
                         : "mt-8 h-10 w-full rounded-none border border-stone-300 bg-transparent text-[13px] text-stone-800 hover:bg-stone-100"
                     }
                   >
-                    <Link to={plan.to}>{plan.cta}</Link>
+                    <Link to={planHref(plan)}>{plan.cta}</Link>
                   </Button>
                 </div>
               ))}
@@ -467,7 +478,7 @@ const LegacyLanding = () => {
                 asChild
                 className="h-11 rounded-none bg-stone-50 px-7 text-sm text-stone-900 hover:bg-white"
               >
-                <Link to="/onboarding">
+                <Link to={startHref}>
                   Get my career plan <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
