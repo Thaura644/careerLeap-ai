@@ -322,7 +322,146 @@ public class TopicCatalogService {
                             link("O*NET OnLine", "https://www.onetonline.org/", "Tool",
                                     "Government data on what every occupation actually requires."),
                             link("Gap Analysis Template (Notion)", "https://www.notion.com/templates/career-development", "Tool",
-                                    "Score yourself against job requirements and track the plan.")))
+                                    "Score yourself against job requirements and track the plan."))),
+
+            new TopicEntry("Clinical skills & assessment",
+                    List.of("clinical", "assessment", "vital signs", "patient assessment", "triage",
+                            "physical exam", "physical examination", "auscultation", "symptoms",
+                            "anamnesis", "patient care", "differential diagnosis", "consultation"),
+                    List.of(
+                            link("Geeky Medics", "https://geekymedics.com/", "Course",
+                                    "Free clinical skills guides and videos — examinations and procedures step by step."),
+                            link("Zero to Finals", "https://zerotofinals.com/", "Course",
+                                    "Free medical education: condition guides, flashcards, and question banks."),
+                            link("MedlinePlus", "https://medlineplus.gov/", "Guide",
+                                    "NIH's plain-language reference for symptoms, conditions, and tests."),
+                            link("Merck Manual — Professional Edition", "https://www.merckmanuals.com/professional", "Guide",
+                                    "The clinical reference for diagnosis, assessment, and management.")),
+                    List.of(
+                            link("SBAR Toolkit (IHI)", "https://www.ihi.org/resources/Pages/Tools/SBARToolkit.aspx", "Tool",
+                                    "The structure hospitals use for safe, complete clinical communication."),
+                            link("MedlinePlus — Lab Tests", "https://medlineplus.gov/lab-tests/", "Tool",
+                                    "What each lab test measures and why it's ordered."))),
+
+            new TopicEntry("Anatomy & physiology",
+                    List.of("anatomy", "physiology", "body systems", "organ", "musculoskeletal",
+                            "cardiovascular", "respiratory system", "nervous system", "cell biology",
+                            "homeostasis", "human body"),
+                    List.of(
+                            link("CrashCourse — Anatomy & Physiology", "https://www.youtube.com/playlist?list=PL8dPuuaLjXtOAKed_MxxWBNaPno5h3Zs8", "Video",
+                                    "The full A&P body-system series, free on YouTube."),
+                            link("Khan Academy — Health & Medicine", "https://www.khanacademy.org/science/health-and-medicine", "Course",
+                                    "Free courses on anatomy, physiology, and clinical foundations."),
+                            link("TeachMeAnatomy", "https://teachmeanatomy.info/", "Guide",
+                                    "Structured anatomy reference with clear diagrams by region."),
+                            link("OpenStax — Anatomy & Physiology", "https://openstax.org/details/books/anatomy-and-physiology-2e", "Book",
+                                    "The full free college textbook, downloadable and searchable.")),
+                    List.of(
+                            link("Innerbody Anatomy Explorer", "https://www.innerbody.com/", "Tool",
+                                    "Interactive 3D body-system explorer for visual learners."),
+                            link("Merck Manual — Home", "https://www.merckmanuals.com/home", "Tool",
+                                    "Consumer reference with fundamentals of each body system."))),
+
+            new TopicEntry("Pediatrics & child health",
+                    List.of("pediatric", "pediatrics", "child health", "neonatal", "infant", "newborn",
+                            "growth and development", "immunization", "vaccination", "milestones", "child"),
+                    List.of(
+                            link("Merck Manual — Children's Health", "https://www.merckmanuals.com/home/children-s-health-issues", "Guide",
+                                    "Children's health reference from newborns to adolescents."),
+                            link("KidsHealth", "https://kidshealth.org/", "Guide",
+                                    "Trusted child health and development information for families and clinicians."),
+                            link("WHO — Child Growth Standards", "https://www.who.int/tools/child-growth-standards", "Guide",
+                                    "The international growth charts used to assess child development."),
+                            link("Khan Academy — NCLEX-RN", "https://www.khanacademy.org/test-prep/nclex-rn", "Course",
+                                    "Free nursing review including pediatric priorities.")),
+                    List.of(
+                            link("WHO — Child Growth Standards Tool", "https://www.who.int/tools/child-growth-standards", "Tool",
+                                    "Calculate and plot growth percentiles for any age."))),
+
+            new TopicEntry("Pharmacology & medications",
+                    List.of("pharmacology", "medication", "drug", "dosage", "prescription",
+                            "drug interaction", "antibiotic", "side effects", "pharmacokinetics",
+                            "drug administration", "medication safety"),
+                    List.of(
+                            link("DailyMed", "https://dailymed.nlm.nih.gov/dailymed/", "Guide",
+                                    "NIH's official drug label database — indications, dosing, and warnings."),
+                            link("Merck Manual — Drugs", "https://www.merckmanuals.com/home/drugs", "Guide",
+                                    "Consumer drug reference covering the major medication classes."),
+                            link("PubMed", "https://pubmed.ncbi.nlm.nih.gov/", "Guide",
+                                    "Search the medical literature for evidence on any drug.")),
+                    List.of(
+                            link("Drugs.com Interaction Checker", "https://www.drugs.com/drug_interactions.html", "Tool",
+                                    "Check interactions between multiple drugs at once."))),
+
+            new TopicEntry("Public health & epidemiology",
+                    List.of("public health", "epidemiology", "outbreak", "disease prevention",
+                            "community health", "health promotion", "infection control", "health policy",
+                            "surveillance", "disease transmission"),
+                    List.of(
+                            link("OpenWHO", "https://openwho.org/", "Course",
+                                    "WHO's free training on health emergencies and public health."),
+                            link("WHO", "https://www.who.int/", "Guide",
+                                    "Global health data, guidance, and disease information."),
+                            link("Our World in Data — Health", "https://ourworldindata.org/health-meta", "Guide",
+                                    "Data-driven view of global health outcomes and causes."),
+                            link("PubMed", "https://pubmed.ncbi.nlm.nih.gov/", "Guide",
+                                    "Search the epidemiological literature.")),
+                    List.of(
+                            link("WHO Data", "https://www.who.int/data", "Tool",
+                                    "Explore global health statistics and indicators."))),
+
+            new TopicEntry("Medical documentation & handover",
+                    List.of("documentation", "medical records", "clinical notes", "soap notes", "charting",
+                            "handover", "sbar", "discharge summary", "progress note", "ehr", "medical records"),
+                    List.of(
+                            link("SBAR Toolkit (IHI)", "https://www.ihi.org/resources/Pages/Tools/SBARToolkit.aspx", "Guide",
+                                    "The structure hospitals use for safe, complete handover communication."),
+                            link("RegisteredNurseRN — Nursing Education", "https://www.registerednursern.com/", "Course",
+                                    "Free nursing education including documentation and charting fundamentals.")),
+                    List.of(
+                            link("OpenEMR", "https://www.open-emr.org/", "Tool",
+                                    "Free, open-source EHR — practice real charting in a safe environment."))),
+
+            new TopicEntry("Nursing fundamentals",
+                    List.of("nursing", "nclex", "patient care", "infection control", "wound care",
+                            "fluid balance", "hygiene", "medication administration", "nursing process",
+                            "vital signs"),
+                    List.of(
+                            link("Khan Academy — NCLEX-RN", "https://www.khanacademy.org/test-prep/nclex-rn", "Course",
+                                    "Free NCLEX review covering the nursing content and question types."),
+                            link("American Nurses Association", "https://www.nursingworld.org/", "Guide",
+                                    "Standards of practice, scope, and career resources for nurses."),
+                            link("NCSBN", "https://www.ncsbn.org/", "Guide",
+                                    "The nursing regulators — exam blueprint and practice information."),
+                            link("RegisteredNurseRN", "https://www.registerednursern.com/", "Course",
+                                    "Free nursing school review videos and practice questions.")),
+                    List.of(
+                            link("MedlinePlus — Lab Tests", "https://medlineplus.gov/lab-tests/", "Tool",
+                                    "What each lab test measures and why it's ordered."))),
+
+            new TopicEntry("Marketing fundamentals",
+                    List.of("marketing", "seo", "content marketing", "social media", "brand", "branding",
+                            "campaign", "inbound", "lead generation", "email marketing", "marketing analytics"),
+                    List.of(
+                            link("HubSpot Academy", "https://academy.hubspot.com/", "Course",
+                                    "Free certifications in content, email, social, and inbound marketing."),
+                            link("Semrush Academy", "https://www.semrush.com/academy/", "Course",
+                                    "Free SEO and content-marketing training from practitioners.")),
+                    List.of(
+                            link("Google Trends", "https://trends.google.com/trends/", "Tool",
+                                    "See what people are searching — free, no account needed."))),
+
+            new TopicEntry("Finance fundamentals",
+                    List.of("finance", "financial", "accounting", "budgeting", "investing", "credit",
+                            "tax", "financial modeling", "bookkeeping", "capital markets"),
+                    List.of(
+                            link("Khan Academy — Personal Finance", "https://www.khanacademy.org/college-careers-more/personal-finance", "Course",
+                                    "Free foundations of budgeting, credit, investing, and taxes."),
+                            link("Khan Academy — Finance & Capital Markets", "https://www.khanacademy.org/economics-finance-domain/core-finance", "Course",
+                                    "How interest, stocks, and bonds actually work.")),
+                    List.of(
+                            link("SEC EDGAR", "https://www.sec.gov/edgar.shtml", "Tool",
+                                    "Read real company filings — the raw material of financial analysis.")))
     );
 
     /** The full catalog, ready for JSON serialization. */
@@ -344,9 +483,17 @@ public class TopicCatalogService {
      * catalog. Returns the matched topics sorted by relevance plus the
      * deduped resources and tools collected across those matches — the same
      * logic the frontend used to run locally, now shared by every client.
+     *
+     * <p>Field-aware: when the phrase itself signals a career field (e.g.
+     * "clinical documentation" is healthcare), cross-field topics are dropped
+     * so a clinical phase never collects staff-engineering links, and
+     * same-field topics lead over general career ones. A phrase with no clear
+     * field matches the whole catalog as before.
      */
     public Map<String, Object> match(String text, int maxResults) {
         String haystack = normalize(text);
+        ResourceDomain.Domain phaseDomain = ResourceDomain.detect(
+                text == null ? "" : text);
         List<Map<String, Object>> matches = new ArrayList<>();
         for (TopicEntry entry : CATALOG) {
             int count = 0;
@@ -354,14 +501,30 @@ public class TopicCatalogService {
                 if (keywordMatches(haystack, keyword)) count++;
             }
             if (count > 0) {
+                // Field gate: a cross-field topic is only kept when the phrase
+                // has no clear field of its own.
+                ResourceDomain.Domain topicDomain = topicDomain(entry);
+                if (phaseDomain != ResourceDomain.Domain.GENERAL
+                        && topicDomain != ResourceDomain.Domain.GENERAL
+                        && topicDomain != phaseDomain) {
+                    continue;
+                }
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("topic", entry.topic);
                 m.put("matchCount", count);
+                m.put("sameField", topicDomain == phaseDomain);
                 matches.add(m);
             }
         }
-        matches.sort((a, b) -> ((Number) b.get("matchCount")).intValue()
-                - ((Number) a.get("matchCount")).intValue());
+        // Same-field topics lead, then general ones; within each group the
+        // strongest keyword match wins.
+        matches.sort((a, b) -> {
+            int field = Boolean.compare(b.get("sameField") == Boolean.TRUE,
+                    a.get("sameField") == Boolean.TRUE);
+            if (field != 0) return field;
+            return ((Number) b.get("matchCount")).intValue()
+                    - ((Number) a.get("matchCount")).intValue();
+        });
         if (matches.size() > maxResults) matches = matches.subList(0, maxResults);
 
         // Collect links from the matched topics, deduped by URL.
@@ -387,6 +550,13 @@ public class TopicCatalogService {
             if (entry.topic.equals(topic)) return entry;
         }
         return null;
+    }
+
+    /** The career field of a catalog topic, derived from its name + keywords. */
+    private static ResourceDomain.Domain topicDomain(TopicEntry entry) {
+        StringBuilder sb = new StringBuilder(entry.topic);
+        for (String kw : entry.keywords) sb.append(' ').append(kw);
+        return ResourceDomain.detect(sb.toString());
     }
 
     private static void addUnique(java.util.Set<String> seen, List<CatalogLink> out, CatalogLink l) {
