@@ -134,6 +134,11 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({ resource }) => {
             {getTypeIcon(type)}
             {type}
           </Badge>
+          {resource.domain && resource.domain !== "General" && (
+            <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">
+              {resource.domain}
+            </Badge>
+          )}
           <div className="flex items-center gap-2">
             {resource.source === "open" && (
               <Badge variant="outline" className="text-[10px] text-green-600 dark:text-green-400 border-green-300 dark:border-green-800">

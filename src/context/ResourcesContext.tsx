@@ -20,6 +20,8 @@ export interface ResourceType {
   /** Where it came from: "library" | "open" | "creator". */
   source?: string;
   createdByName?: string | null;
+  /** Career field the resource belongs to ("Healthcare", "Technology", ...). */
+  domain?: string;
 }
 
 export interface EventType {
