@@ -28,9 +28,13 @@ public class ResourceEngine {
     private static final Logger log = LoggerFactory.getLogger(ResourceEngine.class);
 
     private final ResourceRepository resources;
+    private final PageScraper scraper;
+    private final LlmService llm;
 
-    public ResourceEngine(ResourceRepository resources) {
+    public ResourceEngine(ResourceRepository resources, PageScraper scraper, LlmService llm) {
         this.resources = resources;
+        this.scraper = scraper;
+        this.llm = llm;
     }
 
     /** One open-source catalog entry. */
@@ -162,25 +166,75 @@ public class ResourceEngine {
                     "data", "analytics", "communication", "visualization"),
             new OpenItem("Rust Book", "Book", "https://doc.rust-lang.org/book/", "Book",
                     "beginner", "The official free Rust programming language book.",
-                    "rust", "programming", "backend")
+                    "rust", "programming", "backend"),
+
+            // Cross-field catalog — healthcare, marketing, and finance so the
+            // engine search is field-aware for every user, not just tech.
+            new OpenItem("CrashCourse — Anatomy & Physiology", "Video",
+                    "https://www.youtube.com/playlist?list=PL8dPuuaLjXtOAKed_MxxWBNaPno5h3Zs8",
+                    "YouTube", "beginner", "The full anatomy & physiology body-system series, free on YouTube.",
+                    "anatomy", "physiology", "healthcare", "medicine"),
+            new OpenItem("Khan Academy — Health & Medicine", "Course",
+                    "https://www.khanacademy.org/science/health-and-medicine",
+                    "Khan Academy", "beginner", "Free courses on anatomy, physiology, and clinical foundations.",
+                    "healthcare", "medicine", "anatomy", "physiology"),
+            new OpenItem("Merck Manual — Professional Edition", "Docs",
+                    "https://www.merckmanuals.com/professional",
+                    "Merck Manual", "advanced", "The clinical reference clinicians trust for diagnosis and management.",
+                    "healthcare", "medicine", "clinical", "diagnosis"),
+            new OpenItem("MedlinePlus — Health Information", "Guide",
+                    "https://medlineplus.gov/", "MedlinePlus", "beginner",
+                    "NIH's consumer health library — conditions, drugs, and lab tests in plain language.",
+                    "healthcare", "medicine", "health", "patient education"),
+            new OpenItem("OpenWHO — Public Health Courses", "Course",
+                    "https://openwho.org/", "OpenWHO", "beginner",
+                    "WHO's free training on health emergencies and public health.",
+                    "public health", "epidemiology", "healthcare"),
+            new OpenItem("Geeky Medics — Clinical Skills", "Video",
+                    "https://geekymedics.com/", "Geeky Medics", "intermediate",
+                    "Free clinical skills guides and videos — examinations and procedures step by step.",
+                    "clinical skills", "healthcare", "physical exam", "medicine"),
+            new OpenItem("Khan Academy — NCLEX-RN", "Course",
+                    "https://www.khanacademy.org/test-prep/nclex-rn",
+                    "Khan Academy", "intermediate", "Free NCLEX review covering nursing content and priority questions.",
+                    "nursing", "nclex", "healthcare", "patient care"),
+            new OpenItem("HubSpot Academy — Marketing Certifications", "Course",
+                    "https://academy.hubspot.com/", "HubSpot Academy", "beginner",
+                    "Free certifications in content, email, social, and inbound marketing.",
+                    "marketing", "seo", "content", "inbound"),
+            new OpenItem("Khan Academy — Personal Finance", "Course",
+                    "https://www.khanacademy.org/college-careers-more/personal-finance",
+                    "Khan Academy", "beginner", "Free foundations of budgeting, credit, investing, and taxes.",
+                    "finance", "budgeting", "investing", "personal finance")
     );
 
     /** Search the open-source catalog by title/topics. Never calls out to the
      *  network — the catalog is curated in code, so results are instant and
-     *  every link is known-good. */
+     *  every link is known-good. When the query signals a career field
+     *  (e.g. "clinical skills"), same-field items lead so a healthcare user
+     *  doesn't have to page past engineering content. */
     public List<Map<String, Object>> search(String query, int limit) {
         String q = normalize(query);
-        List<Map<String, Object>> out = new ArrayList<>();
+        ResourceDomain.Domain qDomain = ResourceDomain.detect(query);
+        List<Map<String, Object>> sameField = new ArrayList<>();
+        List<Map<String, Object>> rest = new ArrayList<>();
         for (OpenItem item : OPEN_CATALOG) {
-            if (q.isEmpty()) {
-                out.add(dto(item));
-                continue;
+            if (!q.isEmpty()) {
+                String hay = normalize(item.title + " " + String.join(" ", item.topics));
+                if (!hay.contains(q)) continue;
             }
-            String hay = normalize(item.title + " " + String.join(" ", item.topics));
-            if (hay.contains(q)) out.add(dto(item));
-            if (out.size() >= limit) break;
+            Map<String, Object> dto = dto(item);
+            if (qDomain != ResourceDomain.Domain.GENERAL
+                    && ResourceDomain.detect(item.title + " " + String.join(" ", item.topics)) == qDomain) {
+                sameField.add(dto);
+            } else {
+                rest.add(dto);
+            }
+            if (sameField.size() + rest.size() >= limit * 2) break;
         }
-        return out;
+        List<Map<String, Object>> out = new ArrayList<>(sameField);
+        out.addAll(rest);
+        return out.size() > limit ? out.subList(0, limit) : out;
     }
 
     /** Import an open-source item into the library (idempotent by URL). */
@@ -204,11 +258,68 @@ public class ResourceEngine {
         });
     }
 
-    /** Import an arbitrary URL by detecting its platform from the host. */
-    public Resource importByUrl(String url, String title) {
+    /**
+     * Analyze a URL without importing: scrape the live page, then have the AI
+     * classify and describe it from the real content. Returns the would-be
+     * metadata (title, description, type, difficulty, topics, field) plus
+     * whether the scrape and the AI enrichment succeeded. Never writes to the
+     * library — callers preview first, then import.
+     */
+    public Map<String, Object> analyzeUrl(String url, String title, Long userId) {
         String platform = platform(url);
-        String fallbackTitle = title == null || title.isBlank() ? "Open resource — " + platform : title;
-        return importItem(fallbackTitle, "Guide", url, platform, "Imported from " + platform);
+        PageScraper.Scraped page = scraper.scrape(url);
+        boolean scraped = page.ok();
+        String scrapedTitle = scraped && !page.title().isBlank()
+                ? page.title()
+                : (title == null || title.isBlank() ? "Open resource — " + platform : title);
+        String scrapedDescription = scraped ? page.description() : "Imported from " + platform;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("url", url);
+        result.put("source", platform);
+        result.put("title", scrapedTitle);
+        result.put("description", scrapedDescription);
+        result.put("type", "Guide");
+        result.put("difficulty", "intermediate");
+        result.put("topics", List.of());
+        result.put("field", ResourceDomain.label(ResourceDomain.detect(scrapedTitle + " " + scrapedDescription)));
+        result.put("scraped", scraped);
+        result.put("ai", false);
+
+        if (!scraped) {
+            return result;
+        }
+        // AI enrichment is strictly additive: it summarizes the real scraped
+        // text, and on any failure the scraped metadata above stands.
+        Map<String, Object> enriched = llm.enrichResource(page.text(), userId);
+        if (enriched == null) {
+            return result;
+        }
+        // Prefer the AI's clean title over the raw page title (which carries
+        // site boilerplate like "· GitHub"); both are grounded in the page.
+        if (enriched.containsKey("title") && !String.valueOf(enriched.get("title")).isBlank()) {
+            result.put("title", enriched.get("title"));
+        }
+        if (enriched.containsKey("description") && !String.valueOf(enriched.get("description")).isBlank()) {
+            result.put("description", enriched.get("description"));
+        }
+        if (enriched.containsKey("type")) result.put("type", enriched.get("type"));
+        if (enriched.containsKey("difficulty")) result.put("difficulty", enriched.get("difficulty"));
+        if (enriched.containsKey("topics")) result.put("topics", enriched.get("topics"));
+        if (enriched.containsKey("field")) {
+            result.put("field", enriched.get("field"));
+        }
+        result.put("ai", true);
+        return result;
+    }
+
+    /** Import an arbitrary URL: scrape + AI-classify it, then add it to the
+     *  library with the real metadata. Idempotent by URL. */
+    public Resource importByUrl(String url, String title, Long userId) {
+        Map<String, Object> analysis = analyzeUrl(url, title, userId);
+        String type = String.valueOf(analysis.getOrDefault("type", "Guide"));
+        String description = String.valueOf(analysis.getOrDefault("description", "Imported from " + platform(url)));
+        return importItem(String.valueOf(analysis.get("title")), type, url, platform(url), description);
     }
 
     /** Human-readable platform label for a URL, derived from the host. */

@@ -320,6 +320,68 @@ public class LlmService {
         }
     }
 
+    private static final String SYSTEM_RESOURCE_PROMPT =
+            "You are Leap.ai's resource cataloger. Given the scraped text of a webpage that is "
+            + "candidate learning material, produce structured metadata so it can be added to a "
+            + "learning library. Respond with ONLY valid JSON, no markdown, in exactly this shape: "
+            + "{\"title\": string, \"description\": string, \"type\": string, \"difficulty\": string, "
+            + "\"topics\": [string], \"field\": string}. Rules:\n"
+            + "- Base EVERYTHING strictly on the scraped text. Never invent facts, statistics, "
+            + "credentials, or claims that are not present in the text. If the text is too thin to "
+            + "describe, say what is actually there and nothing more.\n"
+            + "- title: a clean, short resource title (under 60 chars) taken from the page — drop "
+            + "site suffixes like '· GitHub' or '- Owner/Repo' boilerplate.\n"
+            + "- description: 1-2 sentences, concrete, from the text (what it is and who it is for).\n"
+            + "- type: exactly one of Course, Guide, Book, Practice, Tool, Docs, Video, Article.\n"
+            + "- difficulty: exactly one of beginner, intermediate, advanced — judge from the text.\n"
+            + "- topics: 3-5 short topic tags derived from the text.\n"
+            + "- field: exactly one of healthcare, tech, marketing, finance, design, sales, general.";
+
+    /**
+     * Structured metadata for a scraped resource page: description, type,
+     * difficulty, topics, and career field — all derived strictly from the
+     * scraped text. Returns {@code null} when the LLM is unavailable or the
+     * response cannot be parsed, so the caller falls back to the scraped title
+     * and meta description (real data either way — nothing fabricated).
+     */
+    public Map<String, Object> enrichResource(String scrapedText, Long userId) {
+        if (!isConfigured() || scrapedText == null || scrapedText.isBlank()) {
+            return null;
+        }
+        try {
+            List<Map<String, Object>> messages = List.of(
+                    Map.of("role", "system", "content", SYSTEM_RESOURCE_PROMPT),
+                    Map.of("role", "user", "content",
+                            "Scraped page text:\n" + truncate(scrapedText, 8000)));
+            String text = complete(messages, 0.2, 600, userId, "resource");
+            JsonNode node = extractJson(text);
+            if (node == null) return null;
+            Map<String, Object> out = new LinkedHashMap<>();
+            String title = node.path("title").asText("").trim();
+            if (!title.isEmpty()) out.put("title", title.length() > 200 ? title.substring(0, 200) : title);
+            String description = node.path("description").asText("").trim();
+            if (!description.isEmpty()) out.put("description", description.length() > 500
+                    ? description.substring(0, 500) : description);
+            String type = node.path("type").asText("").trim();
+            if (!type.isEmpty()) out.put("type", type);
+            String difficulty = node.path("difficulty").asText("").trim();
+            if (!difficulty.isEmpty()) out.put("difficulty", difficulty);
+            String field = node.path("field").asText("").trim();
+            if (!field.isEmpty()) out.put("field", field);
+            List<String> topics = new ArrayList<>();
+            for (JsonNode t : node.path("topics")) {
+                String topic = t.asText("").trim();
+                if (!topic.isEmpty()) topics.add(topic.length() > 40 ? topic.substring(0, 40) : topic);
+                if (topics.size() >= 5) break;
+            }
+            if (!topics.isEmpty()) out.put("topics", topics);
+            return out.isEmpty() ? null : out;
+        } catch (Exception e) {
+            log.warn("[llm] resource enrichment failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     /** Pulls a JSON object out of a model response, tolerating markdown fences. */
     private JsonNode extractJson(String text) {
         if (text == null) return null;

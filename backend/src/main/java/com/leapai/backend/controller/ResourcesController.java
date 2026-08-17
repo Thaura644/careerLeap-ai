@@ -75,15 +75,36 @@ public class ResourcesController {
                 "title", imported.getTitle());
     }
 
-    /** Resource engine: import any URL by detecting its platform. */
+    /**
+     * Resource engine: analyze a URL without importing. Scrapes the live page
+     * and has the AI classify and describe it (title, description, type,
+     * difficulty, topics, field) so the user can preview before adding. No
+     * library write. Falls back to platform metadata when the page can't be
+     * scraped or the AI is unavailable — never fabricated content.
+     */
+    @PostMapping("/engine/analyze-url")
+    public Map<String, Object> engineAnalyzeUrl(@RequestBody Map<String, Object> body) {
+        String url = String.valueOf(body.getOrDefault("url", "")).trim();
+        if (url.isEmpty() || !url.matches("^https?://.+$")) {
+            throw new IllegalArgumentException("Enter a valid http(s) URL");
+        }
+        return resourceEngine.analyzeUrl(url,
+                String.valueOf(body.getOrDefault("title", "")),
+                UserContext.require().getId());
+    }
+
+    /** Resource engine: import any URL by scraping + AI-classifying it. */
     @PostMapping("/engine/import-url")
     public Map<String, Object> engineImportUrl(@RequestBody Map<String, Object> body) {
-        var imported = resourceEngine.importByUrl(
-                String.valueOf(body.getOrDefault("url", "")),
-                String.valueOf(body.getOrDefault("title", "")));
+        String url = String.valueOf(body.getOrDefault("url", "")).trim();
+        if (url.isEmpty() || !url.matches("^https?://.+$")) {
+            throw new IllegalArgumentException("Enter a valid http(s) URL");
+        }
+        var imported = resourceEngine.importByUrl(url,
+                String.valueOf(body.getOrDefault("title", "")),
+                UserContext.require().getId());
         return Map.of("imported", true, "id", String.valueOf(imported.getId()),
-                "title", imported.getTitle(), "source", ResourceEngine.platform(
-                        String.valueOf(body.getOrDefault("url", ""))));
+                "title", imported.getTitle(), "source", ResourceEngine.platform(url));
     }
 
     @PostMapping("/{id}/bookmark")
