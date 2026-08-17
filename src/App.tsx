@@ -43,26 +43,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// No PWA/service worker exists for this app (there is no /service-worker.js
-// file, so the old template's registration was silently registering the SPA
-// shell and serving stale bundles). Unregister any stale worker and clear its
-// caches so every visitor gets the current build.
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations()
-      .then((registrations) => {
-        for (const registration of registrations) {
-          registration.unregister();
-        }
-      })
-      .catch(() => {});
-    if (window.caches) {
-      caches.keys()
-        .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
-        .catch(() => {});
-    }
-  });
-}
+// The PWA service worker is registered from main.tsx (production only). It is
+// network-first for navigations and caches only content-hashed assets, so it
+// can never serve a stale bundle.
 
 const App = () => {
   return (

@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AuthMenu } from "@/components/auth/AuthMenu";
 import { GlobalSearch, openGlobalSearch } from "@/components/search/GlobalSearch";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { apiGet } from "@/lib/api";
 import { getAuthToken } from "@/lib/authSession";
 
@@ -166,6 +167,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
+          <InstallAppButton />
           <ThemeToggle />
           <AuthMenu />
         </div>
