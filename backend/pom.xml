@@ -35,6 +35,12 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Email (Gmail SMTP primary / Resend API fallback) for password reset. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Password hashing only (no full Spring Security filter chain). -->
         <dependency>
             <groupId>org.springframework.security</groupId>

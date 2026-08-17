@@ -46,6 +46,25 @@ public class AuthController {
         return authService.signup(request.getFullName(), request.getEmail(), request.getPassword());
     }
 
+    /** Start a password reset — public, no auth. Returns the same response for
+     *  unknown emails too (no account enumeration). */
+    @PostMapping("/forgot-password")
+    public Map<String, Object> forgotPassword(@RequestBody Map<String, Object> body) {
+        String email = body.get("email") == null ? "" : String.valueOf(body.get("email")).trim();
+        if (email.isEmpty() || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$")) {
+            throw new IllegalArgumentException("Enter a valid email address");
+        }
+        return authService.forgotPassword(email);
+    }
+
+    /** Complete a password reset with the one-time token from the email. */
+    @PostMapping("/reset-password")
+    public Map<String, Object> resetPassword(@RequestBody Map<String, Object> body) {
+        String token = body.get("token") == null ? "" : String.valueOf(body.get("token"));
+        String password = body.get("password") == null ? "" : String.valueOf(body.get("password"));
+        return authService.resetPassword(token, password);
+    }
+
     /** Current user (auth required via interceptor). */
     @GetMapping("/me")
     public Map<String, Object> me() {

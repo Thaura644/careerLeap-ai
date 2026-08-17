@@ -101,6 +101,15 @@ public class User {
     @Column(name = "motivation", columnDefinition = "text")
     private String motivation;
 
+    // --- Password reset (one-time token) ---
+    /** SHA-256 hash of the one-time reset token (never stored raw). */
+    @Column(name = "reset_token_hash", length = 64)
+    private String resetTokenHash;
+
+    /** When the reset token stops being valid. */
+    @Column(name = "reset_token_expires_at")
+    private Instant resetTokenExpiresAt;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -166,4 +175,10 @@ public class User {
 
     public String getMotivation() { return motivation; }
     public void setMotivation(String motivation) { this.motivation = motivation; }
+
+    public String getResetTokenHash() { return resetTokenHash; }
+    public void setResetTokenHash(String resetTokenHash) { this.resetTokenHash = resetTokenHash; }
+
+    public Instant getResetTokenExpiresAt() { return resetTokenExpiresAt; }
+    public void setResetTokenExpiresAt(Instant resetTokenExpiresAt) { this.resetTokenExpiresAt = resetTokenExpiresAt; }
 }

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -104,12 +104,12 @@ const Login = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <a
-                href="/forgot-password"
+              <Link
+                to="/forgot-password"
                 className="text-sm font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <Input
               id="password"
