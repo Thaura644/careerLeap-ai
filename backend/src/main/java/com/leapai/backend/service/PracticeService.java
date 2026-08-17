@@ -94,9 +94,10 @@ public class PracticeService {
 
     public List<Map<String, Object>> list(User user) {
         String haystack = roadmapHaystack(user);
+        ResourceDomain.Domain userDomain = userDomain(user);
         List<Map<String, Object>> out = new ArrayList<>();
         for (Problem p : problems.findAllByOrderByDifficultyAscIdAsc()) {
-            out.add(dto(p, user, haystack, false));
+            out.add(dto(p, user, haystack, userDomain, false));
         }
         return out;
     }
@@ -107,7 +108,7 @@ public class PracticeService {
                 .orElseThrow(() -> new IllegalArgumentException("Problem not found: " + slug));
         requireAccess(p, user);
         String haystack = roadmapHaystack(user);
-        Map<String, Object> m = dto(p, user, haystack, true);
+        Map<String, Object> m = dto(p, user, haystack, userDomain(user), true);
         // Sample cases as a real array (the display shows them as the "expected"
         // values); hidden tests are never returned.
         m.put("samples", parseJsonArray(p.getSampleCasesJson()));
@@ -181,15 +182,16 @@ public class PracticeService {
      * Pro to open or run.
      */
     private void requireAccess(Problem p, User user) {
-        if (recommendation(p, roadmapHaystack(user)).recommended) return;
+        if (recommendation(p, roadmapHaystack(user), userDomain(user)).recommended) return;
         if (payments.isPro(user)) return;
         throw new ForbiddenException(
                 "This problem is in the explore pool — upgrade to Pro to unlock it.");
     }
 
     /** Builds the problem DTO with solved state, recommendation flag, and reason. */
-    private Map<String, Object> dto(Problem p, User user, String haystack, boolean includeCode) {
-        Recommendation rec = recommendation(p, haystack);
+    private Map<String, Object> dto(Problem p, User user, String haystack,
+                                    ResourceDomain.Domain userDomain, boolean includeCode) {
+        Recommendation rec = recommendation(p, haystack, userDomain);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("slug", p.getSlug());
         m.put("title", p.getTitle());
@@ -209,7 +211,8 @@ public class PracticeService {
         return m;
     }
 
-    private Recommendation recommendation(Problem p, String haystack) {
+    private Recommendation recommendation(Problem p, String haystack,
+                                          ResourceDomain.Domain userDomain) {
         // Direct match: a problem topic appears in the roadmap's skills/phases.
         List<String> keywords = PROBLEM_KEYWORDS.getOrDefault(p.getSlug(), List.of());
         for (String kw : keywords) {
@@ -217,11 +220,16 @@ public class PracticeService {
                 return new Recommendation(true, "Matches a skill in your roadmap (" + kw + ")");
             }
         }
-        // Coding-practice intent: the roadmap mentions interview/algorithm prep
-        // (or there is no roadmap yet) — the classic EASY problems are the
-        // foundation to build before the harder explore pool.
-        boolean codingIntent = haystack.isBlank();
-        if (!codingIntent) {
+        // Coding-practice intent only applies to tech-field (or undefined-field)
+        // users: their roadmap mentions interview/algorithm prep, or there is no
+        // roadmap yet and the classic EASY problems are the foundation. A
+        // healthcare or marketing user is never pushed LeetCode-style problems
+        // just because they have no roadmap — their practice lives in the
+        // scenarios instead.
+        boolean codingIntent = userDomain == ResourceDomain.Domain.TECH
+                || userDomain == ResourceDomain.Domain.GENERAL;
+        if (codingIntent && !haystack.isBlank()) {
+            codingIntent = false;
             for (String signal : CODING_SIGNALS) {
                 if (haystack.contains(signal)) {
                     codingIntent = true;
@@ -235,6 +243,22 @@ public class PracticeService {
                     : "Part of your roadmap's interview-prep foundation");
         }
         return new Recommendation(false, null);
+    }
+
+    /** The user's career field, used to gate the coding-practice fallback. */
+    private ResourceDomain.Domain userDomain(User user) {
+        return ResourceDomain.userDomain(
+                user.getTargetRole(), user.getCurrentRole(), user.getIndustry(), splitSkills(user.getInterests()));
+    }
+
+    private List<String> splitSkills(String value) {
+        List<String> out = new ArrayList<>();
+        if (value == null || value.isBlank()) return out;
+        for (String part : value.split(",")) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) out.add(trimmed);
+        }
+        return out;
     }
 
     /**

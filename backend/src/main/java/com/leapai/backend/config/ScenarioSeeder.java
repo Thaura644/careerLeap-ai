@@ -366,6 +366,86 @@ public class ScenarioSeeder implements CommandLineRunner {
                      {"title":"Rewrite two","detail":"Rewrite the two weakest answers using the STAR-style structure. Make the action specific and yours."},
                      {"title":"Fast review","detail":"Five more questions, timed (2 min each). Speed without sacrificing the structure."}]
                     """,
+                    false),
+
+            // ---- Healthcare: clinical practice for non-engineering users ---------
+            // Real clinical material so a healthcare student gets healthcare practice
+            // (triage, handover, NCLEX-style priority questions) instead of only
+            // system-design cases and Java projects. One case is a free trial so a
+            // healthcare user's first taste is in their own field.
+            scenario("case-clinical-triage", "Clinical triage: prioritize the waiting room", PracticeScenario.Type.CASE_STUDY,
+                    "Beginner", "Healthcare · Clinical", "30–45 min",
+                    "Six patients, one duty officer — assign acuity, spot red flags, and justify every call.",
+                    """
+                    You're the clinical officer on duty in a busy outpatient clinic. Six patients arrive within
+                    ten minutes and you have to triage them. You can't treat everyone at once — you have to
+                    decide who needs attention now, who can wait safely, and who needs escalation.
+
+                    There's no single right answer, but strong candidates follow the same logic: airway,
+                    breathing, circulation first; vital-sign red flags never wait; and every decision gets
+                    documented. Work the case the way you'd actually have to in a real shift.
+                    """,
+                    """
+                    [{"title":"Know the red flags","detail":"List the vital-sign and symptom red flags that mean 'do not wait': severe respiratory distress, chest pain with sweating, altered consciousness, uncontrolled bleeding, and high fever in an infant."},
+                     {"title":"Assign acuity to each patient","detail":"For each of the six patients, assign an acuity level (resuscitation / emergent / urgent / standard) and the single strongest reason for it."},
+                     {"title":"Justify your top three","detail":"Put the three sickest patients in order and defend it: why does patient A beat patient B? Use airway-breathing-circulation reasoning, not who arrived first."},
+                     {"title":"Decide what can wait","detail":"Identify the patients who can safely wait, what monitoring you'd leave in place for them, and what would change your decision."},
+                     {"title":"Escalate and document","detail":"Write the escalation note for the most urgent patient: findings, decision, and what you told the next provider. Practice it in under two minutes."}]
+                    """,
+                    true),
+            scenario("case-patient-handover-sbar", "Safe patient handover: SBAR in practice", PracticeScenario.Type.CASE_STUDY,
+                    "Intermediate", "Healthcare · Communication", "30–45 min",
+                    "Hand over a post-op patient the way hospitals want it: structured, safe, complete.",
+                    """
+                    Shift change. You're handing over a post-operative patient to the next clinical officer.
+                    Handovers are where care breaks — a fact forgotten, an allergy missed, a trend not flagged.
+                    SBAR (Situation, Background, Assessment, Recommendation) is the structure hospitals use to
+                    stop that. Your job: work the real case, spot what's missing from the chart, and write the
+                    handover a colleague could act on.
+                    """,
+                    """
+                    [{"title":"Gather the facts","detail":"From the patient chart: the surgery and when, the vitals trend, pain score, medications given, and any abnormal lab result. Write them down before anything else."},
+                     {"title":"Write the SBAR","detail":"Situation (why this patient needs handover), Background (relevant history + what was done), Assessment (current status + what concerns you), Recommendation (the specific action you want the next provider to take)."},
+                     {"title":"Spot the gaps","detail":"Identify three facts you'd want before accepting this handover that aren't in the chart. This is the step that prevents real harm."},
+                     {"title":"Do the verbal handover","detail":"Practice saying it out loud in under two minutes, ending with a clear request. Record yourself if you can."},
+                     {"title":"Score yourself","detail":"Check the checklist: allergies mentioned? bleeding risk? next review time? What did you miss, and how will you catch it next time?"}]
+                    """,
+                    false),
+            scenario("exam-nclex-prep", "NCLEX-style priority questions", PracticeScenario.Type.EXAM_PREP,
+                    "Intermediate", "Exam · Nursing", "45–60 min",
+                    "Drill the question type that decides nursing exams: which patient do you see first?",
+                    """
+                    Nursing and clinical licensing exams (NCLEX and equivalents) are built on priority
+                    questions — "which patient should the nurse see first?" The pattern is teachable: ABCs,
+                    Maslow's hierarchy, safety, and recognizing the patient most likely to decompensate.
+                    This track drills the pattern until it's automatic, because in the exam and on the ward
+                    it's the same skill.
+                    """,
+                    """
+                    [{"title":"Learn the priority rules","detail":"ABCs before everything; safety first; acute over chronic; the patient who might decompensate beats the stable one. Write the rules in your own words."},
+                     {"title":"Practice: ABCs","detail":"Three priority questions where the answer is airway or breathing. Explain each choice in one sentence before looking at the rationale."},
+                     {"title":"Practice: Maslow","detail":"Three questions mixing physical and psychosocial needs. Justify in writing why the physical need wins every time."},
+                     {"title":"Practice: safety","detail":"Three questions on medication errors, fall risk, and infection control. What makes a patient unsafe right now, not later?"},
+                     {"title":"Timed quiz (10 questions)","detail":"Ten mixed priority questions, 20 minutes, no notes. Grade honestly and categorize every miss: knowledge gap, misread, or hesitation."},
+                     {"title":"Close the gaps","detail":"For each miss, write the rule you forgot on a single page. Re-test tomorrow until the set is clean."}]
+                    """,
+                    false),
+            scenario("project-clinical-revision", "Build your clinical revision system", PracticeScenario.Type.PROJECT,
+                    "Beginner", "Healthcare · Study", "1–2 hours",
+                    "A real study system: syllabus map, flashcard bank, and a past-questions log that survives exam season.",
+                    """
+                    Build the revision system you'll use for the rest of your training: map your syllabus to
+                    the exam blueprint, turn every weak topic into flashcards, keep a past-questions log with
+                    the pattern of your misses, and schedule weekly reviews. The deliverable is a system, not
+                    a notes dump — you should be able to see your weakest topic in one glance.
+                    """,
+                    """
+                    [{"title":"Map the syllabus","detail":"List your program's topics and mark each strong / shaky / unknown against the exam blueprint. This is your source of truth for the whole system."},
+                     {"title":"Build the flashcard bank","detail":"Turn every shaky and unknown topic into 20 flashcards, one concept each, in your own words. No copying from notes."},
+                     {"title":"Start the past-questions log","detail":"A table: date, topic, question, your answer, correct? Add the pattern of each miss (knowledge, misread, time). This log is where you find your gaps."},
+                     {"title":"Set the weekly review","detail":"Schedule one 45-minute review: 15 min flashcards, 15 min past questions, 15 min on the single weakest topic. Put it in your calendar now."},
+                     {"title":"Make it visible","detail":"One page (or doc) showing your three weakest topics and this week's plan. Put it where you study so the system runs even on low-motivation days."}]
+                    """,
                     false)
     );
 }

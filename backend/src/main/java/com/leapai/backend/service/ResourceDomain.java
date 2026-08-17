@@ -54,16 +54,27 @@ public final class ResourceDomain {
             Domain.SALES, List.of(
                     "sales", "b2b", "saleshacker", "closing", "workable", "hiring", "recruiting"));
 
-    /** Precompiled word-boundary patterns, one per keyword. */
-    private static final Map<Domain, List<Pattern>> PATTERNS = compile(KEYWORDS);
+    /** A keyword paired with its precompiled word-boundary pattern. */
+    private static final class Keyword {
+        final String text;
+        final Pattern pattern;
+
+        Keyword(String text) {
+            this.text = text;
+            this.pattern = pattern(text);
+        }
+    }
+
+    /** Precompiled keywords, one entry per domain. */
+    private static final Map<Domain, List<Keyword>> KEYWORD_SET = compile(KEYWORDS);
 
     private ResourceDomain() {
     }
 
-    private static Map<Domain, List<Pattern>> compile(Map<Domain, List<String>> keywords) {
-        Map<Domain, List<Pattern>> out = new HashMap<>();
+    private static Map<Domain, List<Keyword>> compile(Map<Domain, List<String>> keywords) {
+        Map<Domain, List<Keyword>> out = new HashMap<>();
         for (Map.Entry<Domain, List<String>> e : keywords.entrySet()) {
-            out.put(e.getKey(), e.getValue().stream().map(ResourceDomain::pattern).toList());
+            out.put(e.getKey(), e.getValue().stream().map(Keyword::new).toList());
         }
         return out;
     }
@@ -84,16 +95,23 @@ public final class ResourceDomain {
         String lower = text.toLowerCase(Locale.ROOT);
         Domain best = Domain.GENERAL;
         int bestHits = 0;
-        for (Map.Entry<Domain, List<Pattern>> e : PATTERNS.entrySet()) {
+        int bestLen = 0;
+        for (Map.Entry<Domain, List<Keyword>> e : KEYWORD_SET.entrySet()) {
             int hits = 0;
-            for (Pattern p : e.getValue()) {
-                if (p.matcher(lower).find()) hits++;
+            int len = 0;
+            for (Keyword kw : e.getValue()) {
+                if (kw.pattern.matcher(lower).find()) {
+                    hits++;
+                    len += kw.text.length();
+                }
             }
-            // A single hit on a distinctive keyword is enough; ties resolve to
-            // whichever domain had more distinct keywords matched.
-            if (hits > bestHits || (hits > 0 && hits == bestHits && best == Domain.GENERAL)) {
+            // A single hit on a distinctive keyword is enough. Ties go to the
+            // domain with the more specific (longer) matched keywords, so
+            // "system design" beats "design" and "microservices" beats it too.
+            if (hits > bestHits || (hits == bestHits && hits > 0 && len > bestLen)) {
                 best = e.getKey();
                 bestHits = hits;
+                bestLen = len;
             }
         }
         return best;

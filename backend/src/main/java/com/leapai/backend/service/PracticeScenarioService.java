@@ -46,12 +46,14 @@ public class PracticeScenarioService {
     }
 
     /** All scenarios with per-user access state: open (free/trial), pro (full),
-     *  or locked (visible but not accessible for this user). */
+     *  or locked (visible but not accessible for this user). Same-field
+     *  scenarios lead so a healthcare user sees clinical cases first — the
+     *  engineering ones never crowd them out. */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> list(User user) {
         boolean pro = payments.isPro(user);
         List<Map<String, Object>> out = new ArrayList<>();
-        for (PracticeScenario s : scenarios.findAllByOrderByIdAsc()) {
+        for (PracticeScenario s : domainRanked(user, scenarios.findAllByOrderByIdAsc())) {
             out.add(card(s, user, pro));
         }
         return out;
@@ -101,6 +103,47 @@ public class PracticeScenarioService {
         p.setUpdatedAt(Instant.now());
         progress.save(p);
         return Map.of("completedSteps", completed.stream().toList(), "message", "Progress updated");
+    }
+
+    /**
+     * Orders scenarios so items in the user's field come first, then general
+     * career content, then cross-field items. Stable within each group.
+     */
+    private List<PracticeScenario> domainRanked(User user, List<PracticeScenario> list) {
+        ResourceDomain.Domain userDomain = ResourceDomain.userDomain(
+                user.getTargetRole(), user.getCurrentRole(), user.getIndustry(), csvList(user.getInterests()));
+        if (userDomain == ResourceDomain.Domain.GENERAL) {
+            return list;
+        }
+        List<PracticeScenario> same = new ArrayList<>();
+        List<PracticeScenario> general = new ArrayList<>();
+        List<PracticeScenario> other = new ArrayList<>();
+        for (PracticeScenario s : list) {
+            String text = (s.getTitle() + " " + s.getCategory() + " " + nvl(s.getSummary(), "")
+                    + " " + nvl(s.getDescription(), "")).toLowerCase(java.util.Locale.ROOT);
+            ResourceDomain.Domain d = ResourceDomain.detect(text);
+            if (d == userDomain) same.add(s);
+            else if (d == ResourceDomain.Domain.GENERAL) general.add(s);
+            else other.add(s);
+        }
+        List<PracticeScenario> ranked = new ArrayList<>(same);
+        ranked.addAll(general);
+        ranked.addAll(other);
+        return ranked;
+    }
+
+    private static String nvl(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static List<String> csvList(String value) {
+        List<String> out = new ArrayList<>();
+        if (value == null || value.isBlank()) return out;
+        for (String part : value.split(",")) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) out.add(trimmed);
+        }
+        return out;
     }
 
     // ---------------------------------------------------------------- dto
