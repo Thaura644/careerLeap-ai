@@ -75,7 +75,7 @@ export const LearningTools: React.FC = () => {
         <h2 className="text-lg font-semibold">Continue learning</h2>
         <p className="text-sm text-muted-foreground">Your real tools — pick up where you left off.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tools.map((tool) => (
           <Link key={tool.title} to={tool.to} className="group">
             <Card className="h-full transition-all hover:border-leap-purple/60 hover:shadow-md">

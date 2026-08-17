@@ -22,7 +22,7 @@ export const ResourcesSection: React.FC<ResourcesSectionProps> = ({
       {title && <h2 className="text-xl font-bold mb-1">{title}</h2>}
       {description && <p className="text-muted-foreground mb-4">{description}</p>}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 [&>*]:min-w-0">
         {loading ? (
           // Loading skeletons
           Array.from({ length: 3 }).map((_, index) => (

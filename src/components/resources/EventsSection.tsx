@@ -33,7 +33,7 @@ export const EventsSection: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 [&>*]:min-w-0">
           {upcomingEvents.map(event => (
             <EventCard key={event.id} event={event} />
           ))}

@@ -124,7 +124,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Mobile navigation */}
-      <div className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto md:hidden">
+      <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background px-3 sm:static sm:h-auto sm:gap-4 sm:px-4 md:hidden">
         <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
@@ -161,13 +161,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </nav>
           </SheetContent>
         </Sheet>
-        <Link to="/" className="flex items-center gap-2">
-          <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
+        <Link to="/" className="flex min-w-0 items-center gap-2">
+          <span className="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-[22px]">
             Leap<span className="text-stone-400">.ai</span>
           </span>
         </Link>
-        <div className="ml-auto flex items-center gap-2">
-          <InstallAppButton />
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="hidden min-[370px]:flex">
+            <InstallAppButton />
+          </div>
           <ThemeToggle />
           <AuthMenu />
         </div>
@@ -230,7 +232,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
         </aside>
-        <main className="flex-1">
+        <main className="min-w-0 flex-1">
           <div className="hidden items-center justify-between border-b bg-background p-4 md:flex">
             <div></div>
             <div className="flex items-center gap-4">

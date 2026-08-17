@@ -92,7 +92,7 @@ const ScenarioCard: React.FC<{ scenario: PracticeScenario; isPro: boolean }> = (
   const body = (
     <Card
       className={cn(
-        "flex h-full flex-col transition-colors",
+        "flex h-full min-w-0 flex-col transition-colors",
         locked ? "opacity-70" : "hover:border-leap-purple",
         scenario.trial && !locked && "border-leap-teal/40"
       )}
@@ -151,7 +151,7 @@ const ProblemRow: React.FC<{ problem: PracticeProblem; locked?: boolean }> = ({ 
   const row = (
     <Card
       className={cn(
-        "transition-colors",
+        "min-w-0 transition-colors",
         locked ? "opacity-60" : "hover:border-leap-purple",
         problem.recommended && "border-leap-purple/40 bg-leap-purple/[0.03]"
       )}
@@ -323,7 +323,7 @@ const Practice = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-3 [&>*]:min-w-0">
                   {filter(recommended).map((p) => (
                     <ProblemRow key={p.slug} problem={p} />
                   ))}
@@ -373,7 +373,7 @@ const Practice = () => {
                   </div>
                 </Card>
               ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-3 [&>*]:min-w-0">
                   {filter(explore).map((p) => (
                     <ProblemRow key={p.slug} problem={p} />
                   ))}
@@ -432,7 +432,7 @@ const ScenarioSections: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 [&>*]:min-w-0">
             {list.map((s) => (
               <ScenarioCard key={s.slug} scenario={s} isPro={isPro} />
             ))}
@@ -460,7 +460,7 @@ const ScenarioSections: React.FC = () => {
           consultant, or build a project you can actually ship. Try one free; the full set is
           a Pro perk.
         </p>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 [&>*]:min-w-0">
           {typeSection(
             "CASE_STUDY",
             "Case studies",
@@ -490,7 +490,7 @@ const ScenarioSections: React.FC = () => {
           assessments. Each one is a guided plan you work through, with progress that
           actually saves.
         </p>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 [&>*]:min-w-0">
           {typeSection(
             "INTERVIEW_PREP",
             "Interview prep",

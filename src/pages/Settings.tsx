@@ -168,7 +168,7 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="mb-8">
-          <TabsList className="grid grid-cols-5 mb-8">
+          <TabsList className="w-full grid grid-cols-5 mb-8">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>

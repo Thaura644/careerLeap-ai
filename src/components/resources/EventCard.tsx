@@ -65,11 +65,11 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
     <Card>
       <CardContent className="p-6">
         <div className="flex gap-4">
-          <div className={cn("p-3 rounded-lg h-fit", colorClasses.bg)}>
+          <div className={cn("p-3 rounded-lg h-fit shrink-0", colorClasses.bg)}>
             <Calendar className={cn("h-5 w-5", colorClasses.text)} />
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               {isLive && (
                 <Badge className="bg-red-600 text-white border-none gap-1 animate-pulse">
                   <Radio className="h-3 w-3" /> LIVE
@@ -105,7 +105,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
             <p className="text-sm text-muted-foreground mb-3">
               {description}
             </p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground mb-4">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" /> {date}
               </div>
@@ -134,7 +134,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
                  The button is honest about that instead of claiming a seat. */
               <Button
                 size="sm"
-                className={isPro ? "bg-leap-purple hover:bg-opacity-90" : ""}
+                className={cn("h-auto whitespace-normal text-left", isPro ? "bg-leap-purple hover:bg-opacity-90" : "")}
                 disabled
                 title="Event registration is not open yet"
               >

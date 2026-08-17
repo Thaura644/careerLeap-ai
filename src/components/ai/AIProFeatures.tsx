@@ -14,7 +14,7 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
   return (
     <Card className="border border-dashed">
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
               Advanced AI Insights
@@ -22,7 +22,7 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
             </CardTitle>
             <CardDescription>Unlock powerful career analysis and guidance</CardDescription>
           </div>
-          <Link to="/upgrade">
+          <Link to="/upgrade" className="shrink-0">
             <Button className="bg-leap-purple hover:bg-opacity-90">
               <Crown className="mr-2 h-4 w-4" />
               Upgrade to Pro

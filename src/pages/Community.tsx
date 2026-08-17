@@ -54,21 +54,21 @@ const CommunityContent = () => {
   return (
       <DashboardLayout>
         <div className="flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
+        <div className="flex flex-col flex-wrap justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="min-w-0">
             <h1 className="text-2xl font-bold">Community</h1>
             <p className="text-muted-foreground">Connect with peers and professionals</p>
           </div>
-          <div className="flex gap-2">
-            <div className="relative w-full sm:w-auto">
+          <div className="flex min-w-0 gap-2">
+            <div className="relative min-w-0 flex-1 sm:flex-none">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search discussions..."
-                className="w-full sm:w-[300px] pl-8"
+                className="w-full pl-8 sm:w-[280px]"
               />
             </div>
-            <Button variant="default" disabled title="Discussions open soon">
+            <Button variant="default" disabled title="Discussions open soon" className="shrink-0">
               <MessageSquare className="mr-2 h-4 w-4" />
               New Post
             </Button>
