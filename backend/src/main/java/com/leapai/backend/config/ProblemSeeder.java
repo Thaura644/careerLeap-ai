@@ -27,14 +27,20 @@ public class ProblemSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        int created = 0;
-        for (Problem p : ALL) {
-            if (problems.findBySlug(p.getSlug()).isPresent()) continue;
-            problems.save(p);
-            created++;
-        }
-        if (created > 0) {
-            log.info("[seeder] created {} practice problem(s)", created);
+        // Best-effort (idempotent catalog): a transient DB blip at boot must
+        // not take the API down — the next boot retries.
+        try {
+            int created = 0;
+            for (Problem p : ALL) {
+                if (problems.findBySlug(p.getSlug()).isPresent()) continue;
+                problems.save(p);
+                created++;
+            }
+            if (created > 0) {
+                log.info("[seeder] created {} practice problem(s)", created);
+            }
+        } catch (Exception ex) {
+            log.warn("[seeder] practice problem seed skipped (will retry next boot): {}", ex.getMessage());
         }
     }
 

@@ -24,19 +24,27 @@ public class SkillSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        int created = 0;
-        for (String[] row : CATALOG) {
-            if (skills.countByNormalizedName(normalize(row[0])) > 0) continue;
-            Skill s = new Skill();
-            s.setName(row[0]);
-            s.setNormalizedName(normalize(row[0]));
-            s.setCategory(row[1]);
-            s.setUsageCount(1);
-            skills.save(s);
-            created++;
-        }
-        if (created > 0) {
-            log.info("[seeder] created {} skill(s)", created);
+        // Best-effort: the skill catalog is non-critical and idempotent. If the
+        // DB connection is briefly unavailable at boot (e.g. a pooled connection
+        // dropped during schema sync), log and move on — the next boot seeds it.
+        // A seeding blip must never take the whole API down.
+        try {
+            int created = 0;
+            for (String[] row : CATALOG) {
+                if (skills.countByNormalizedName(normalize(row[0])) > 0) continue;
+                Skill s = new Skill();
+                s.setName(row[0]);
+                s.setNormalizedName(normalize(row[0]));
+                s.setCategory(row[1]);
+                s.setUsageCount(1);
+                skills.save(s);
+                created++;
+            }
+            if (created > 0) {
+                log.info("[seeder] created {} skill(s)", created);
+            }
+        } catch (Exception ex) {
+            log.warn("[seeder] skill catalog seed skipped (will retry next boot): {}", ex.getMessage());
         }
     }
 

@@ -36,26 +36,34 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (resources.count() == 0) {
-            seedResources();
-            log.info("[seed] loaded {} library resources", resources.count());
-        }
-        // Per-resource idempotency (by URL): new open resources seed on
-        // existing databases too, without duplicating what's already there.
-        int openBefore = resources.findBySourceOrderByIdDesc("open").size();
-        seedOpenResources();
-        int openAfter = resources.findBySourceOrderByIdDesc("open").size();
-        if (openAfter > openBefore) {
-            log.info("[seed] loaded {} new open-source resources ({} total)",
-                    openAfter - openBefore, openAfter);
-        }
-        if (events.count() == 0) {
-            seedEvents();
-            log.info("[seed] loaded {} events", events.count());
-        }
-        if (groups.count() == 0) {
-            seedGroups();
-            log.info("[seed] loaded {} community groups", groups.count());
+        // Best-effort: the content catalog is non-critical and idempotent. If the
+        // DB connection is briefly unavailable at boot (e.g. a pooled connection
+        // dropped during schema sync), log and move on — the next boot seeds it.
+        // A seeding blip must never take the whole API down.
+        try {
+            if (resources.count() == 0) {
+                seedResources();
+                log.info("[seed] loaded {} library resources", resources.count());
+            }
+            // Per-resource idempotency (by URL): new open resources seed on
+            // existing databases too, without duplicating what's already there.
+            int openBefore = resources.findBySourceOrderByIdDesc("open").size();
+            seedOpenResources();
+            int openAfter = resources.findBySourceOrderByIdDesc("open").size();
+            if (openAfter > openBefore) {
+                log.info("[seed] loaded {} new open-source resources ({} total)",
+                        openAfter - openBefore, openAfter);
+            }
+            if (events.count() == 0) {
+                seedEvents();
+                log.info("[seed] loaded {} events", events.count());
+            }
+            if (groups.count() == 0) {
+                seedGroups();
+                log.info("[seed] loaded {} community groups", groups.count());
+            }
+        } catch (Exception ex) {
+            log.warn("[seed] content catalog seed skipped (will retry next boot): {}", ex.getMessage());
         }
     }
 

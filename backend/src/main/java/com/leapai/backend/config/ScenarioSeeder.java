@@ -28,14 +28,20 @@ public class ScenarioSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        int created = 0;
-        for (PracticeScenario s : ALL) {
-            if (scenarios.findBySlug(s.getSlug()).isPresent()) continue;
-            scenarios.save(s);
-            created++;
-        }
-        if (created > 0) {
-            log.info("[seeder] created {} practice scenario(s)", created);
+        // Best-effort (idempotent catalog): a transient DB blip at boot must
+        // not take the API down — the next boot retries.
+        try {
+            int created = 0;
+            for (PracticeScenario s : ALL) {
+                if (scenarios.findBySlug(s.getSlug()).isPresent()) continue;
+                scenarios.save(s);
+                created++;
+            }
+            if (created > 0) {
+                log.info("[seeder] created {} practice scenario(s)", created);
+            }
+        } catch (Exception ex) {
+            log.warn("[seeder] practice scenario seed skipped (will retry next boot): {}", ex.getMessage());
         }
     }
 
