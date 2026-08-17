@@ -45,9 +45,12 @@ public class ResourcesService {
         Map<Long, UserResource> state = stateByResourceId(user.getId());
 
         List<Map<String, Object>> trending = toDtos(
-                resources.findByCategoryOrderByIdAsc("TRENDING"), state);
+                domainRanked(user, resources.findByCategoryOrderByIdAsc("TRENDING")), state);
+        // Same-field content leads the recommended section so a healthcare
+        // user sees healthcare picks first — engineering items never drown
+        // them out just because they have more reviews.
         List<Map<String, Object>> recommended = toDtos(
-                resources.findByCategoryOrderByIdAsc("RECOMMENDED"), state);
+                domainRanked(user, resources.findByCategoryOrderByIdAsc("RECOMMENDED")), state);
         List<Map<String, Object>> bookmarked = toDtos(bookmarkedResources(user.getId()), state);
         List<Map<String, Object>> completed = toDtos(completedResources(user.getId()), state);
         List<Map<String, Object>> upcomingEvents = eventDtos(events.findAllByOrderByIdAsc());
@@ -157,6 +160,49 @@ public class ResourcesService {
         return result;
     }
 
+    /**
+     * Orders catalog resources so items in the user's field come first, then
+     * general career content, then cross-field items. Stable within each group
+     * (catalog order preserved).
+     */
+    private List<Resource> domainRanked(User user, List<Resource> list) {
+        ResourceDomain.Domain userDomain = ResourceDomain.userDomain(
+                user.getTargetRole(), user.getCurrentRole(), user.getIndustry(),
+                csvList(user.getInterests()));
+        if (userDomain == ResourceDomain.Domain.GENERAL) {
+            return list;
+        }
+        List<Resource> same = new ArrayList<>();
+        List<Resource> general = new ArrayList<>();
+        List<Resource> other = new ArrayList<>();
+        for (Resource r : list) {
+            String text = (r.getTitle() + " " + nvl(r.getDescription(), "") + " "
+                    + r.getType() + " " + r.getCategory()).toLowerCase(java.util.Locale.ROOT);
+            ResourceDomain.Domain d = ResourceDomain.detect(text);
+            if (d == userDomain) same.add(r);
+            else if (d == ResourceDomain.Domain.GENERAL) general.add(r);
+            else other.add(r);
+        }
+        List<Resource> ranked = new ArrayList<>(same);
+        ranked.addAll(general);
+        ranked.addAll(other);
+        return ranked;
+    }
+
+    private static String nvl(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private static List<String> csvList(String value) {
+        List<String> out = new ArrayList<>();
+        if (value == null || value.isBlank()) return out;
+        for (String part : value.split(",")) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) out.add(trimmed);
+        }
+        return out;
+    }
+
     private List<Map<String, Object>> toDtos(List<Resource> list, Map<Long, UserResource> state) {
         List<Map<String, Object>> dtos = new ArrayList<>();
         for (Resource r : list) {
@@ -175,6 +221,9 @@ public class ResourcesService {
             dto.put("url", r.getUrl());
             dto.put("source", r.getSource() == null || r.getSource().isBlank() ? "library" : r.getSource());
             dto.put("createdByName", r.getCreatedByName());
+            dto.put("domain", ResourceDomain.label(ResourceDomain.detect(
+                    (r.getTitle() + " " + nvl(r.getDescription(), "") + " "
+                            + r.getType() + " " + r.getCategory()))));
             // No stock photo assets: the UI renders a deterministic gradient block per title.
             dto.put("image", "");
             dtos.add(dto);

@@ -164,11 +164,19 @@ public class InsightsService {
         int maxReviews = 0;
         for (Resource r : resources.findAll()) maxReviews = Math.max(maxReviews, r.getReviews());
 
+        // The user's field (healthcare, tech, marketing, ...) gates the whole
+        // ranking: same-field content is boosted, different-field content is
+        // suppressed so a healthcare user never gets staff-engineering picks.
+        ResourceDomain.Domain userDomain = ResourceDomain.userDomain(
+                target, current, user.getIndustry(), interests);
+
         List<Resource> catalog = resources.findAll();
         List<ScoredResource> scored = new ArrayList<>();
         for (Resource r : catalog) {
             String text = (r.getTitle() + " " + nvl(r.getDescription(), "") + " " + r.getType()
                     + " " + r.getCategory()).toLowerCase(Locale.ROOT);
+            ResourceDomain.Domain resourceDomain = ResourceDomain.detect(text);
+            double domain = domainAlignment(userDomain, resourceDomain);
 
             double roleRelevance = roleRelevance(text, target, current);
             double skillGap = skillGap(text, interests);
@@ -177,15 +185,17 @@ public class InsightsService {
             double popularity = popularity(r.getRating(), r.getReviews(), maxReviews);
             double trending = "TRENDING".equalsIgnoreCase(r.getCategory()) ? 1.0 : 0.0;
 
-            // Weights sum to 1.0: profile-first, then engagement signals.
-            double score = 100.0 * (0.30 * roleRelevance
+            // Weights sum to 1.0: profile-first, then engagement signals. The
+            // domain factor multiplies the whole score so field relevance can't
+            // be drowned out by review counts or trending flags.
+            double score = 100.0 * domain * (0.30 * roleRelevance
                     + 0.25 * skillGap
                     + 0.15 * format
                     + 0.10 * difficulty
                     + 0.10 * popularity
                     + 0.10 * trending);
 
-            List<String> reasons = reasons(r, roleRelevance, skillGap, format, trending);
+            List<String> reasons = reasons(r, roleRelevance, skillGap, format, trending, domain);
 
             Map<String, Object> dto = new LinkedHashMap<>();
             dto.put("id", String.valueOf(r.getId()));
@@ -207,9 +217,21 @@ public class InsightsService {
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("recommendations", diverse);
-        result.put("explanation", "Scored by role relevance (30%), skill-gap match (25%), "
+        result.put("explanation", "Scored by field match, role relevance (30%), skill-gap match (25%), "
                 + "learning format (15%), difficulty fit (10%), popularity (10%), and trending (10%).");
         return result;
+    }
+
+    /**
+     * Field alignment factor: same-field content is boosted slightly, different
+     * field is suppressed hard (so popularity/trending can't override it), and
+     * generic content (or an unclear user field) passes through unchanged.
+     */
+    private double domainAlignment(ResourceDomain.Domain user, ResourceDomain.Domain resource) {
+        if (user == ResourceDomain.Domain.GENERAL || resource == ResourceDomain.Domain.GENERAL) {
+            return 1.0;
+        }
+        return user == resource ? 1.25 : 0.05;
     }
 
     /** Role relevance: how much of the target+current role's vocabulary is in
@@ -258,8 +280,10 @@ public class InsightsService {
     }
 
     /** Human-readable "why this item" reasons for the UI. */
-    private List<String> reasons(Resource r, double role, double skill, double format, double trending) {
+    private List<String> reasons(Resource r, double role, double skill, double format, double trending,
+                                 double domain) {
         List<String> reasons = new ArrayList<>();
+        if (domain > 1.0) reasons.add("Focused on your field");
         if (role >= 0.66) reasons.add("Strong match for your target role");
         else if (role >= 0.33) reasons.add("Relevant to your career path");
         if (skill >= 0.33) reasons.add("Covers skills you're building");

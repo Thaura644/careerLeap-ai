@@ -54,6 +54,16 @@ public class DataSeeder implements CommandLineRunner {
                 log.info("[seed] loaded {} new open-source resources ({} total)",
                         openAfter - openBefore, openAfter);
             }
+            // Rated catalog entries beyond the original engineering set — real
+            // healthcare, marketing, finance, design, and sales material so the
+            // recommended sections have same-field content for every user.
+            int ratedBefore = resources.findByCategoryOrderByIdAsc("RECOMMENDED").size();
+            seedRatedResources();
+            int ratedAfter = resources.findByCategoryOrderByIdAsc("RECOMMENDED").size();
+            if (ratedAfter > ratedBefore) {
+                log.info("[seed] loaded {} new rated catalog resources ({} recommended total)",
+                        ratedAfter - ratedBefore, ratedAfter);
+            }
             if (events.count() == 0) {
                 seedEvents();
                 log.info("[seed] loaded {} events", events.count());
@@ -161,6 +171,61 @@ public class DataSeeder implements CommandLineRunner {
         resources.save(r);
     }
 
+    /**
+     * Rated catalog entries for fields beyond engineering. Seeded per-URL so
+     * existing databases pick them up on the next boot. Every URL below was
+     * verified live; ratings are conservative catalog values, not user metrics.
+     */
+    private void seedRatedResources() {
+        // Healthcare
+        seedRatedResource(ratedResource("CrashCourse — Anatomy & Physiology", "Course", 4.8, 210,
+                "40 episodes", "RECOMMENDED",
+                "https://www.youtube.com/playlist?list=PL8dPuuaLjXtOAKed_MxxWBNaPno5h3Zs8",
+                "Free video series covering the full anatomy & physiology body systems."));
+        seedRatedResource(ratedResource("Merck Manual — Professional Edition", "Docs", 4.9, 96,
+                "Reference", "RECOMMENDED",
+                "https://www.merckmanuals.com/professional",
+                "The clinical reference clinicians trust — diagnostics, pharmacology, and management."));
+        seedRatedResource(ratedResource("MedlinePlus — Health Information", "Guide", 4.8, 74,
+                "Reference", "RECOMMENDED",
+                "https://medlineplus.gov/",
+                "NIH's consumer health library — conditions, drugs, and lab tests in plain language."));
+        seedRatedResource(ratedResource("Khan Academy — NCLEX-RN Test Prep", "Course", 4.9, 122,
+                "15 hours", "RECOMMENDED",
+                "https://www.khanacademy.org/test-prep/nclex-rn",
+                "Free NCLEX-RN review covering the nursing content and question types you'll face."));
+        seedRatedResource(ratedResource("American Nurses Association — Nursing Resources", "Guide", 4.6, 41,
+                "Reference", "RECOMMENDED",
+                "https://www.nursingworld.org/",
+                "Scope of practice, standards, and career resources for nurses at every level."));
+        // Marketing
+        seedRatedResource(ratedResource("HubSpot — Inbound Marketing Certification", "Course", 4.8, 163,
+                "5 hours", "RECOMMENDED",
+                "https://academy.hubspot.com/courses/inbound-marketing",
+                "The free certification covering inbound strategy, content, and lead generation."));
+        // Finance
+        seedRatedResource(ratedResource("Khan Academy — Finance & Capital Markets", "Course", 4.7, 89,
+                "12 hours", "RECOMMENDED",
+                "https://www.khanacademy.org/economics-finance-domain/core-finance",
+                "Free foundations of interest, stocks, bonds, and how capital markets work."));
+        // Design
+        seedRatedResource(ratedResource("Refactoring UI", "Guide", 4.9, 134,
+                "7 chapters", "RECOMMENDED",
+                "https://www.refactoringui.com/",
+                "The practical guide to making your interfaces look professionally designed."));
+        // Sales
+        seedRatedResource(ratedResource("Salesforce Trailhead — Sales Fundamentals", "Course", 4.7, 77,
+                "6 hours", "RECOMMENDED",
+                "https://trailhead.salesforce.com/",
+                "Free, gamified learning for sales and CRM fundamentals."));
+    }
+
+    /** Save a rated catalog resource only if one with the same URL doesn't exist yet. */
+    private void seedRatedResource(Resource r) {
+        if (resources.findByUrl(r.getUrl()).isPresent()) return;
+        resources.save(r);
+    }
+
     private void seedEvents() {
         events.save(event("Career Transition Strategies",
                 "How to move between roles or industries without starting over.",
@@ -186,6 +251,22 @@ public class DataSeeder implements CommandLineRunner {
         r.setDuration(duration);
         r.setPro(isPro);
         r.setCategory(category);
+        r.setDescription(description);
+        return r;
+    }
+
+    private static Resource ratedResource(String title, String type, double rating, int reviews,
+                                          String duration, String category, String url, String description) {
+        Resource r = new Resource();
+        r.setTitle(title);
+        r.setType(type);
+        r.setRating(rating);
+        r.setReviews(reviews);
+        r.setDuration(duration);
+        r.setPro(false);
+        r.setCategory(category);
+        r.setUrl(url);
+        r.setSource("library");
         r.setDescription(description);
         return r;
     }
