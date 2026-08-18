@@ -59,7 +59,7 @@ public class AuthService {
     public Map<String, Object> login(String email, String rawPassword) {
         User user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
-        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
         return authPayload(user);
@@ -140,7 +140,7 @@ public class AuthService {
         u.put("id", user.getId());
         u.put("fullName", user.getFullName());
         u.put("email", user.getEmail());
-        u.put("plan", user.getPlan().name().toLowerCase());
+        u.put("plan", user.getPlan() != null ? user.getPlan().name().toLowerCase() : "free");
         // Career profile (drives the roadmap engine). Null-safe for new accounts.
         u.put("currentRole", nvl(user.getCurrentRole(), null));
         u.put("targetRole", nvl(user.getTargetRole(), null));
