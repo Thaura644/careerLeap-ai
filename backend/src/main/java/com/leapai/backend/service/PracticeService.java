@@ -95,8 +95,32 @@ public class PracticeService {
     public List<Map<String, Object>> list(User user) {
         String haystack = roadmapHaystack(user);
         ResourceDomain.Domain userDomain = userDomain(user);
+        // Rank problems so same-field items come first. A healthcare user
+        // sees clinical/medical scenarios before LeetCode-style problems;
+        // a tech user sees coding problems first.
+        List<Problem> all = problems.findAllByOrderByDifficultyAscIdAsc();
+        List<Problem> same = new ArrayList<>();
+        List<Problem> general = new ArrayList<>();
+        List<Problem> other = new ArrayList<>();
+        for (Problem p : all) {
+            String text = (p.getTitle() + " " + p.getCategory()).toLowerCase(Locale.ROOT);
+            ResourceDomain.Domain d = ResourceDomain.detect(text);
+            if (d == userDomain) same.add(p);
+            else if (d == ResourceDomain.Domain.GENERAL) general.add(p);
+            else other.add(p);
+        }
+        // For non-tech users: same-field first, then general, then other.
+        // For tech users: keep original order (coding problems are the core).
+        List<Problem> ranked;
+        if (userDomain == ResourceDomain.Domain.TECH || userDomain == ResourceDomain.Domain.GENERAL) {
+            ranked = all;
+        } else {
+            ranked = new ArrayList<>(same);
+            ranked.addAll(general);
+            ranked.addAll(other);
+        }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Problem p : problems.findAllByOrderByDifficultyAscIdAsc()) {
+        for (Problem p : ranked) {
             out.add(dto(p, user, haystack, userDomain, false));
         }
         return out;
