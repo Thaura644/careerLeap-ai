@@ -45,16 +45,16 @@ public class User {
 
     // --- Credit-based rate limiting -------------------------------------------
     /** Monthly credit allowance (Free=300, Pro=99999). Reset on the 1st. */
-    @Column(nullable = false)
+    @Column
     private int creditsTotal = 300;
 
     /** Credits left in the current window. Deducted per AI action. */
-    @Column(nullable = false)
+    @Column
     private int creditsRemaining = 300;
 
     /** When credits last refreshed (monthly reset or 7hr partial refill). */
-    @Column(nullable = false)
-    private Instant creditResetAt = Instant.now();
+    @Column
+    private Instant creditResetAt;
 
     public int getCreditsTotal() { return creditsTotal; }
     public void setCreditsTotal(int creditsTotal) { this.creditsTotal = creditsTotal; }

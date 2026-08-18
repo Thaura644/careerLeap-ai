@@ -123,6 +123,8 @@ public class CreditService {
             } else {
                 out.put("refreshesIn", 0L);
             }
+        } else {
+            out.put("refreshesIn", null);
         }
 
         return out;
@@ -136,6 +138,14 @@ public class CreditService {
     private void refreshIfNeeded(User user) {
         Instant now = Instant.now();
         Instant lastReset = user.getCreditResetAt();
+
+        // First time seeing this user (no reset timestamp yet) — initialize credits.
+        if (lastReset == null) {
+            user.setCreditsRemaining(FREE_MONTHLY);
+            user.setCreditResetAt(now);
+            users.save(user);
+            return;
+        }
 
         // Monthly reset: check if we crossed the 1st of a new month
         LocalDate lastResetDate = lastReset.atZone(ZoneOffset.UTC).toLocalDate();
@@ -152,7 +162,7 @@ public class CreditService {
         }
 
         // Partial refill: if credits are low and 7 hours have passed since last refill
-        if (user.getCreditsRemaining() < FREE_MONTHLY && lastReset != null) {
+        if (user.getCreditsRemaining() < FREE_MONTHLY) {
             Instant refillAt = lastReset.plus(COOLDOWN);
             if (now.isAfter(refillAt)) {
                 int newTotal = Math.min(user.getCreditsRemaining() + PARTIAL_REFILL, FREE_MONTHLY);
