@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -56,14 +59,26 @@ public class AuthService {
         return authPayload(user);
     }
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     public Map<String, Object> login(String email, String rawPassword) {
         User user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
         String hash = user.getPasswordHash();
         if (hash == null || hash.isBlank()) {
+            log.warn("User {} has null/empty password hash — cannot login", user.getId());
             throw new IllegalArgumentException("Invalid email or password");
         }
-        if (!hash.startsWith("$2") || !passwordEncoder.matches(rawPassword, hash)) {
+        boolean matches;
+        try {
+            matches = hash.startsWith("$2") && passwordEncoder.matches(rawPassword, hash);
+        } catch (Exception e) {
+            // Corrupted BCrypt hash or other encoding issue — log and reject.
+            log.error("Password check crashed for user {} (hash length={}): {}",
+                    user.getId(), hash.length(), e.getClass().getSimpleName() + ": " + e.getMessage());
+            matches = false;
+        }
+        if (!matches) {
             throw new IllegalArgumentException("Invalid email or password");
         }
         return authPayload(user);
