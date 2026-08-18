@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthMenu } from "@/components/auth/AuthMenu";
-import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { apiGet } from "@/lib/api";
 import { getAuthToken } from "@/lib/authSession";
 
@@ -261,9 +260,7 @@ const LegacyLanding = () => {
           <div className="hidden items-center gap-7 md:flex">{navLinks}</div>
 
           {/* Signed out: Log in / Sign up. Signed in: avatar + verified badge
-              with Dashboard / Profile / Sign out. Plus the PWA install button. */}
-          <div className="hidden items-center gap-1 md:flex">
-            <InstallAppButton variant="outline" className="h-9 w-9 border-stone-300 bg-transparent text-stone-600 hover:bg-stone-100 hover:text-stone-900" />
+              with Dashboard / Profile / Sign out. Plus the PWA install button. */}              <div className="hidden items-center gap-1 md:flex">
             <AuthMenu />
           </div>
 
@@ -276,7 +273,6 @@ const LegacyLanding = () => {
           <div className="flex flex-col gap-4 border-t border-stone-200 px-5 py-4 md:hidden">
             {navLinks}
             <div className="flex items-center justify-between">
-              <InstallAppButton variant="outline" className="h-9 w-9 border-stone-300 bg-transparent text-stone-600 hover:bg-stone-100 hover:text-stone-900" />
               <AuthMenu />
             </div>
           </div>

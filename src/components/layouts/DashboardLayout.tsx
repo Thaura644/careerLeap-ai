@@ -21,7 +21,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AuthMenu } from "@/components/auth/AuthMenu";
 import { GlobalSearch, openGlobalSearch } from "@/components/search/GlobalSearch";
 import { FloatingAssistant } from "@/components/ai/FloatingAssistant";
-import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { apiGet } from "@/lib/api";
 import { getAuthToken } from "@/lib/authSession";
 
@@ -165,11 +164,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <span className="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-[22px]">
             Leap<span className="text-stone-400">.ai</span>
           </span>
-        </Link>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <div className="hidden min-[370px]:flex">
-            <InstallAppButton />
-          </div>
+        </Link>          <div className="ml-auto flex shrink-0 items-center gap-2">
           <ThemeToggle />
           <AuthMenu />
         </div>

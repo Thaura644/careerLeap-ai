@@ -1,75 +1,53 @@
 import React, { useState } from "react";
-import { Download, Loader2, X, MonitorSmartphone } from "lucide-react";
+import { X, MonitorSmartphone } from "lucide-react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { Button } from "@/components/ui/button";
 
 /**
- * "Install app" control for the PWA. On Android/Chrome it triggers the native
- * install prompt; on iOS Safari (which has no install event) it shows the
- * Share → Add to Home Screen instructions. Hidden entirely once the app is
- * installed or the browser can't install it.
+ * Auto-prompting PWA install banner for iOS Safari only.
+ *
+ * On Android/Chrome, the browser fires `beforeinstallprompt` and the hook
+ * auto-triggers the native install dialog — no UI needed here.
+ *
+ * On iOS Safari there's no install event, so we show a brief, dismissable
+ * banner with instructions. Once dismissed, it stays hidden for the session.
  */
-export const InstallAppButton: React.FC<{ variant?: "ghost" | "outline"; className?: string }> = ({
-  variant = "ghost",
-  className,
-}) => {
-  const { canPrompt, isIos, installed, promptInstall } = useInstallPrompt();
-  const [showIosHint, setShowIosHint] = useState(false);
-  const [prompting, setPrompting] = useState(false);
+export const InstallAppBanner: React.FC = () => {
+  const { isIos, installed } = useInstallPrompt();
+  const [dismissed, setDismissed] = useState(() =>
+    sessionStorage.getItem("leap:ios-pwa-dismissed") === "1"
+  );
 
-  if (installed || (!canPrompt && !isIos)) return null;
+  // Only show on iOS, not installed, not dismissed
+  if (!isIos || installed || dismissed) return null;
 
-  const handleClick = async () => {
-    if (isIos) {
-      setShowIosHint((v) => !v);
-      return;
-    }
-    setPrompting(true);
-    try {
-      await promptInstall();
-    } finally {
-      setPrompting(false);
-    }
+  const handleDismiss = () => {
+    setDismissed(true);
+    sessionStorage.setItem("leap:ios-pwa-dismissed", "1");
   };
 
   return (
-    <div className="relative">
-      <Button
-        type="button"
-        variant={variant}
-        size="icon"
-        className={className}
-        onClick={handleClick}
-        title={isIos ? "Install this app (Add to Home Screen)" : "Install Leap.ai as an app"}
-        aria-label="Install app"
-      >
-        {prompting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-      </Button>
-
-      {isIos && showIosHint && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowIosHint(false)} />
-          <div className="relative m-4 w-full max-w-sm rounded-lg border bg-background p-5 shadow-lg">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <MonitorSmartphone className="h-5 w-5 text-leap-purple" />
-                <h3 className="font-semibold">Install Leap.ai</h3>
-              </div>
-              <Button variant="ghost" size="icon" className="-mr-2 -mt-1 h-7 w-7" onClick={() => setShowIosHint(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              iOS doesn't show an install prompt — add the app to your Home Screen manually:
+    <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm sm:left-auto sm:right-4">
+      <div className="rounded-lg border bg-background p-4 shadow-lg">
+        <div className="flex items-start gap-3">
+          <MonitorSmartphone className="mt-0.5 h-5 w-5 shrink-0 text-leap-purple" />
+          <div className="flex-1">
+            <p className="text-sm font-medium">Add Leap.ai to your Home Screen</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Tap <strong>Share</strong> → <strong>Add to Home Screen</strong> to use Leap.ai like a native app.
             </p>
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
-              <li>Tap the <strong>Share</strong> button in your browser</li>
-              <li>Choose <strong>Add to Home Screen</strong></li>
-              <li>Tap <strong>Add</strong> — Leap.ai will open like a native app</li>
-            </ol>
           </div>
+          <button
+            onClick={handleDismiss}
+            className="shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };
+
+/** Backward-compatible alias — the old name is still referenced in some places. */
+export const InstallAppButton = InstallAppBanner;

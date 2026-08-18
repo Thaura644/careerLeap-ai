@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** The browser's install prompt event (Chrome/Edge/Android). */
 interface BeforeInstallPromptEvent extends Event {
@@ -8,14 +8,18 @@ interface BeforeInstallPromptEvent extends Event {
 
 /**
  * PWA install prompt state. Chrome/Android fire `beforeinstallprompt` when the
- * app is installable; iOS Safari never does, so on iOS we surface a manual
- * "Add to Home Screen" hint instead. Everything here is real browser state —
- * the button only appears when the browser would actually allow an install.
+ * app is installable; iOS Safari never does. This hook auto-triggers the
+ * browser's native install dialog — no hardcoded button needed.
+ *
+ * The prompt fires once per session at most (tracked via sessionStorage) so
+ * it doesn't nag the user on every page load. If they dismiss it, it won't
+ * fire again until the next session.
  */
 export function useInstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const prompted = useRef(false);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -25,10 +29,28 @@ export function useInstallPrompt() {
       ((navigator as unknown as { maxTouchPoints?: number }).maxTouchPoints ?? 0) > 1;
     setIsIos(ios);
 
+    // Only prompt once per session
+    const alreadyPrompted = sessionStorage.getItem("leap:pwa-prompted");
+
     const onPrompt = (event: Event) => {
       event.preventDefault();
-      setDeferred(event as BeforeInstallPromptEvent);
+      const e = event as BeforeInstallPromptEvent;
+
+      if (alreadyPrompted || prompted.current) return;
+      prompted.current = true;
+      sessionStorage.setItem("leap:pwa-prompted", "1");
+
+      // Auto-trigger the browser's native install dialog
+      e.prompt().then(({ userChoice }) => {
+        if (userChoice.outcome === "accepted") {
+          setInstalled(true);
+        }
+        setDeferred(null);
+      }).catch(() => {
+        // Prompt blocked or failed — silently ignore
+      });
     };
+
     const onInstalled = () => {
       setInstalled(true);
       setDeferred(null);
