@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -36,9 +39,17 @@ public class AuthController {
         this.skillService = skillService;
     }
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     @PostMapping("/login")
     public Map<String, Object> login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request.getEmail(), request.getPassword());
+        log.info("Login attempt for: {}", request.getEmail());
+        try {
+            return authService.login(request.getEmail(), request.getPassword());
+        } catch (Exception e) {
+            log.error("Login failed for {}: {}", request.getEmail(), e.getClass().getName() + ": " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     @PostMapping("/signup")

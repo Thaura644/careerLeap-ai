@@ -59,7 +59,11 @@ public class AuthService {
     public Map<String, Object> login(String email, String rawPassword) {
         User user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
-        if (user.getPasswordHash() == null || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+        String hash = user.getPasswordHash();
+        if (hash == null || hash.isBlank()) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+        if (!hash.startsWith("$2") || !passwordEncoder.matches(rawPassword, hash)) {
             throw new IllegalArgumentException("Invalid email or password");
         }
         return authPayload(user);
