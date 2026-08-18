@@ -79,7 +79,8 @@ public class PaymentService {
             PaymentRecordRepository payments,
             @Value("${PAYMENTS_MODE:off}") String mode,
             @Value("${PAYSTACK_PUBLIC_KEY:}") String publicKey,
-            @Value("${PAYSTACK_SECRET_KEY:${PAYSTACK_LIVE_SECRET:}}") String secretKey) {
+            @Value("${PAYSTACK_SECRET_KEY:${PAYSTACK_LIVE_SECRET:}}") String secretKey,
+            @Value("${PAYSTACK_CURRENCIES:}") String currenciesCsv) {
         this.objectMapper = objectMapper;
         this.users = users;
         this.payments = payments;
@@ -89,6 +90,11 @@ public class PaymentService {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
                 .build();
+        // If the merchant sets PAYSTACK_CURRENCIES=NGN,USD only those are
+        // offered. An empty value means 'all five'.
+        this.currencies = (currenciesCsv == null || currenciesCsv.isBlank())
+                ? ALL_CURRENCIES
+                : List.of(currenciesCsv.split(","));
     }
 
     private static String normalize(String v) {
@@ -127,9 +133,14 @@ public class PaymentService {
         return "mismatch";
     }
 
-    /** Paystack-supported currencies; amounts are in each currency's minor unit
-     *  (kobo for NGN, cents for USD/ZAR/KES, pesewas for GHS). */
-    static final List<String> CURRENCIES = List.of("NGN", "USD", "GHS", "ZAR", "KES");
+    /** All known currencies with pricing. The merchant's actual supported set
+     *  is narrowed by {@code PAYSTACK_CURRENCIES} (comma-separated env var);
+     *  if unset, all five are offered. */
+    private static final List<String> ALL_CURRENCIES = List.of("NGN", "USD", "GHS", "ZAR", "KES");
+    private final List<String> currencies;
+
+    /** Returns the currencies this merchant actually supports. */
+    public List<String> getCurrencies() { return currencies; }
 
     public Map<String, Object> status() {
         List<Map<String, Object>> plans = new ArrayList<>();
@@ -159,7 +170,7 @@ public class PaymentService {
         result.put("mode", mode);
         result.put("enabled", isArmed());
         result.put("publicKey", isArmed() ? publicKey : "");
-        result.put("currencies", CURRENCIES);
+        result.put("currencies", currencies);
         result.put("plans", plans);
         return result;
     }

@@ -87,6 +87,7 @@ const UpgradePro = () => {
     planParam === "pro-annual" ? "annual" : "monthly"
   );
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [pro, setPro] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -108,6 +109,9 @@ const UpgradePro = () => {
     }
     if (!email.trim()) {
       return "Enter your email first.";
+    }
+    if (currency === "KES" && !phone.trim()) {
+      return "Enter your M-Pesa phone number for mobile money payment.";
     }
     return null;
   };
@@ -243,7 +247,7 @@ const UpgradePro = () => {
         amount: p.amountMinor,
         currency,
         ref: reference,
-        metadata: { plan: plan.id },
+        metadata: { plan: plan.id, phone_number: currency === "KES" ? phone.trim() : undefined },
         // NOTE: Paystack's validator rejects async functions as `callback`
         // ("Attribute callback must be a valid function") — keep this sync and
         // run the async verification inside.
@@ -353,6 +357,27 @@ const UpgradePro = () => {
               placeholder="you@example.com"
               className="h-11 w-full rounded-md border bg-background px-3 text-sm"
             />
+            {currency === "KES" && (
+              <div className="mt-3">
+                <label htmlFor="checkout-phone" className="mb-1.5 block text-sm font-medium">
+                  M-Pesa phone number
+                </label>
+                <input
+                  id="checkout-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    if (message) setMessage(null);
+                  }}
+                  placeholder="2547XXXXXXXX"
+                  className="h-11 w-full rounded-md border bg-background px-3 text-sm"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  This is the Safaricom number linked to your M-Pesa. You'll receive an STK push to confirm.
+                </p>
+              </div>
+            )}
             {message && (
               <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                 {message}
