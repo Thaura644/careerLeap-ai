@@ -42,11 +42,12 @@ public class InsightsService {
     private final SubmissionRepository submissions;
     private final FlashcardRepository flashcards;
     private final ObjectMapper objectMapper;
+    private final CreditService credits;
 
     public InsightsService(LlmService llmService, RoadmapRepository roadmaps, GoalRepository goals,
                            ResourceRepository resources, ResourceProgressRepository resourceProgress,
                            SubmissionRepository submissions, FlashcardRepository flashcards,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper, CreditService credits) {
         this.llmService = llmService;
         this.roadmaps = roadmaps;
         this.goals = goals;
@@ -55,6 +56,7 @@ public class InsightsService {
         this.submissions = submissions;
         this.flashcards = flashcards;
         this.objectMapper = objectMapper;
+        this.credits = credits;
     }
 
     public Map<String, Object> insights(User user) {
@@ -90,6 +92,13 @@ public class InsightsService {
 
     @Transactional
     public Map<String, Object> generateRoadmap(User user, Map<String, Object> profile) {
+        if (!credits.consume(user, CreditService.Action.ROADMAP)) {
+            Map<String, Object> err = new LinkedHashMap<>();
+            err.put("source", "error");
+            err.put("error", "credits_exhausted");
+            err.put("message", "AI credits exhausted. Credits refresh in ~7 hours.");
+            return err;
+        }
         Map<String, Object> merged = new LinkedHashMap<>(profile);
         // Fall back to the saved profile when the request omits fields.
         merged.putIfAbsent("currentRole", nvl(user.getCurrentRole(), "Your current role"));

@@ -3,13 +3,16 @@ package com.leapai.backend.controller;
 import com.leapai.backend.config.UserContext;
 import com.leapai.backend.service.AiContextService;
 import com.leapai.backend.service.ConversationService;
+import com.leapai.backend.service.CreditService;
 import com.leapai.backend.service.LlmService;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,12 +25,14 @@ public class AiAssistantController {
     private final LlmService llmService;
     private final ConversationService conversationService;
     private final AiContextService aiContextService;
+    private final CreditService credits;
 
     public AiAssistantController(LlmService llmService, ConversationService conversationService,
-                                 AiContextService aiContextService) {
+                                 AiContextService aiContextService, CreditService credits) {
         this.llmService = llmService;
         this.conversationService = conversationService;
         this.aiContextService = aiContextService;
+        this.credits = credits;
     }
 
     /**
@@ -48,6 +53,12 @@ public class AiAssistantController {
     @PostMapping("/chat")
     public Map<String, Object> chat(@RequestBody Map<String, Object> body) {
         var user = UserContext.require();
+        if (!credits.consume(user, CreditService.Action.CHAT)) {
+            String msg = credits.status(user).get("refreshesIn") != null
+                    ? "AI credits exhausted. Credits refresh in ~7 hours."
+                    : "AI credits exhausted. Try again next month.";
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, msg);
+        }
         String prompt = String.valueOf(body.getOrDefault("prompt", ""));
         Object historyObj = body.getOrDefault("history", List.of());
 

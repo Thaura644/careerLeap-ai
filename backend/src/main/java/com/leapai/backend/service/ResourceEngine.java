@@ -30,11 +30,13 @@ public class ResourceEngine {
     private final ResourceRepository resources;
     private final PageScraper scraper;
     private final LlmService llm;
+    private final CreditService credits;
 
-    public ResourceEngine(ResourceRepository resources, PageScraper scraper, LlmService llm) {
+    public ResourceEngine(ResourceRepository resources, PageScraper scraper, LlmService llm, CreditService credits) {
         this.resources = resources;
         this.scraper = scraper;
         this.llm = llm;
+        this.credits = credits;
     }
 
     /** One open-source catalog entry. */
@@ -266,6 +268,14 @@ public class ResourceEngine {
      * library — callers preview first, then import.
      */
     public Map<String, Object> analyzeUrl(String url, String title, Long userId) {
+        var user = com.leapai.backend.config.UserContext.require();
+        if (!credits.consume(user, CreditService.Action.ENRICH)) {
+            Map<String, Object> err = new LinkedHashMap<>();
+            err.put("url", url);
+            err.put("error", "credits_exhausted");
+            err.put("message", "AI credits exhausted. Credits refresh in ~7 hours.");
+            return err;
+        }
         String platform = platform(url);
         PageScraper.Scraped page = scraper.scrape(url);
         boolean scraped = page.ok();

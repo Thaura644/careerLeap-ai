@@ -40,13 +40,15 @@ public class FlashcardService {
     private final RoadmapRepository roadmaps;
     private final LlmService llmService;
     private final ObjectMapper objectMapper;
+    private final CreditService credits;
 
     public FlashcardService(FlashcardRepository flashcards, RoadmapRepository roadmaps,
-                            LlmService llmService, ObjectMapper objectMapper) {
+                            LlmService llmService, ObjectMapper objectMapper, CreditService credits) {
         this.flashcards = flashcards;
         this.roadmaps = roadmaps;
         this.llmService = llmService;
         this.objectMapper = objectMapper;
+        this.credits = credits;
     }
 
     /** All cards + scheduling stats for the user. */
@@ -84,6 +86,12 @@ public class FlashcardService {
      */
     @Transactional
     public Map<String, Object> generate(User user) {
+        if (!credits.consume(user, CreditService.Action.FLASHCARDS)) {
+            Map<String, Object> err = new LinkedHashMap<>();
+            err.put("error", "credits_exhausted");
+            err.put("message", "AI credits exhausted. Credits refresh in ~7 hours.");
+            return err;
+        }
         flashcards.deleteByUserId(user.getId());
 
         List<Map<String, Object>> cards = llmService.generateFlashcards(

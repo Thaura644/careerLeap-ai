@@ -43,6 +43,28 @@ public class User {
      *  granted. */
     private Instant planExpiresAt;
 
+    // --- Credit-based rate limiting -------------------------------------------
+    /** Monthly credit allowance (Free=300, Pro=99999). Reset on the 1st. */
+    @Column(nullable = false)
+    private int creditsTotal = 300;
+
+    /** Credits left in the current window. Deducted per AI action. */
+    @Column(nullable = false)
+    private int creditsRemaining = 300;
+
+    /** When credits last refreshed (monthly reset or 7hr partial refill). */
+    @Column(nullable = false)
+    private Instant creditResetAt = Instant.now();
+
+    public int getCreditsTotal() { return creditsTotal; }
+    public void setCreditsTotal(int creditsTotal) { this.creditsTotal = creditsTotal; }
+
+    public int getCreditsRemaining() { return creditsRemaining; }
+    public void setCreditsRemaining(int creditsRemaining) { this.creditsRemaining = creditsRemaining; }
+
+    public Instant getCreditResetAt() { return creditResetAt; }
+    public void setCreditResetAt(Instant creditResetAt) { this.creditResetAt = creditResetAt; }
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 

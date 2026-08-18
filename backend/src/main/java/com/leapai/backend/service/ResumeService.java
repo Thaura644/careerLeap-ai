@@ -27,10 +27,12 @@ public class ResumeService {
 
     private final LlmService llmService;
     private final SkillService skillService;
+    private final CreditService credits;
 
-    public ResumeService(LlmService llmService, SkillService skillService) {
+    public ResumeService(LlmService llmService, SkillService skillService, CreditService credits) {
         this.llmService = llmService;
         this.skillService = skillService;
+        this.credits = credits;
     }
 
     /** True when real AI analysis is available (key configured + free model guard passed). */
@@ -47,6 +49,12 @@ public class ResumeService {
         if (!available()) {
             result.put("ok", false);
             result.put("error", "Resume analysis is temporarily unavailable — the AI service isn't configured right now.");
+            return result;
+        }
+        var user = com.leapai.backend.config.UserContext.require();
+        if (!credits.consume(user, CreditService.Action.RESUME)) {
+            result.put("ok", false);
+            result.put("error", "AI credits exhausted. Credits refresh in ~7 hours.");
             return result;
         }
         if (text == null || text.isBlank() || text.trim().length() < 40) {
