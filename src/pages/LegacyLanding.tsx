@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AuthMenu } from "@/components/auth/AuthMenu";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { getAuthToken } from "@/lib/authSession";
 
 /** Prices served by GET /api/payments/status — the single source of truth. */
@@ -155,6 +155,67 @@ const footerLinks: { label: string; to: string }[][] = [
     { label: "Contact", to: "/contact" },
   ],
 ];
+
+const NewsletterForm = () => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("loading");
+    try {
+      const res = await apiPost<{ ok: boolean; error?: string }>("/newsletter", {
+        email: email.trim(),
+        website: "", // honeypot
+      });
+      if (res.ok) {
+        setStatus("done");
+      } else {
+        setStatus("error");
+        setErrorMsg(res.error || "Something went wrong.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Could not reach the server. Please try again.");
+    }
+  };
+
+  if (status === "done") {
+    return (
+      <div className="mt-6 inline-flex items-center gap-2 rounded-none border border-stone-300 bg-white px-5 py-3 text-[13px] text-stone-700">
+        <Check className="h-4 w-4 text-stone-500" />
+        You're in — check your inbox for a welcome.
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      <input
+        ref={inputRef}
+        type="email"
+        required
+        placeholder="your@email.com"
+        value={email}
+        onChange={(e) => { setEmail(e.target.value); setErrorMsg(""); }}
+        className="h-11 w-full max-w-xs rounded-none border border-stone-300 bg-white px-4 text-[13px] text-stone-800 placeholder:text-stone-400 focus:border-stone-500 focus:outline-none sm:w-72"
+      />
+      <Button
+        type="submit"
+        disabled={status === "loading"}
+        className="h-11 rounded-none bg-stone-900 px-6 text-[13px] hover:bg-stone-700 disabled:opacity-50"
+      >
+        {status === "loading" ? "Subscribing…" : "Subscribe"}
+      </Button>
+      {status === "error" && (
+        <p className="w-full text-center text-[12px] text-red-600 sm:text-left">{errorMsg}</p>
+      )}
+    </form>
+  );
+};
 
 const LegacyLanding = () => {
   const [open, setOpen] = useState(false);
@@ -459,9 +520,27 @@ const LegacyLanding = () => {
             <p className="mt-6 text-[12px] text-stone-500">
               Roadmaps are free — you pay for what roadmap.sh and AI agents can't give you: a
               practice engine with a real judge, real-world scenarios, interview & exam prep
-              tracks, and live content from creators. Checkout is live via Paystack in NGN, USD,
-              GHS, ZAR, or KES. The free plan is free forever; upgrade when it's useful.
+              tracks, and live content from creators.              Checkout is live via Paystack in NGN, USD, or KES. The free plan is free forever; upgrade when it's useful.
             </p>
+          </div>
+        </section>
+
+        {/* Newsletter capture */}
+        <section className="border-b border-stone-200">
+          <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+            <div className="mx-auto max-w-xl text-center">
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+                Stay in the loop
+              </p>
+              <h2 className="mt-3 font-display text-2xl font-medium tracking-tight sm:text-3xl">
+                Career moves, delivered weekly.
+              </h2>
+              <p className="mt-3 text-[14px] text-stone-600">
+                One email per week: real skill gaps, practical roadmaps, and what's working
+                for people making the switch. No spam — unsubscribe anytime.
+              </p>
+              <NewsletterForm />
+            </div>
           </div>
         </section>
 
