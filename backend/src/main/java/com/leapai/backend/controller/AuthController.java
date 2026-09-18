@@ -57,6 +57,13 @@ public class AuthController {
         return authService.signup(request.getFullName(), request.getEmail(), request.getPassword());
     }
 
+    /** Google Sign-In: body is { "credential": "<Google ID token>" } from Google's client library. */
+    @PostMapping("/google")
+    public Map<String, Object> googleLogin(@RequestBody Map<String, Object> body) {
+        String credential = body.get("credential") == null ? "" : String.valueOf(body.get("credential"));
+        return authService.googleLogin(credential);
+    }
+
     /** Start a password reset — public, no auth. Returns the same response for
      *  unknown emails too (no account enumeration). */
     @PostMapping("/forgot-password")

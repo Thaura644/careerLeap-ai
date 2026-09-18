@@ -27,55 +27,55 @@ const topics: { title: string; body: string }[] = [
 const Support = () => (
   <StaticPageShell>
     <div className="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+      <span className="inline-flex items-center rounded-full bg-edu-mint px-4 py-1.5 text-xs font-semibold text-edu-mint-fg">
         Help
-      </p>
-      <h1 className="mt-3 font-display text-4xl font-medium tracking-tight sm:text-5xl">
+      </span>
+      <h1 className="mt-4 font-marketing text-4xl font-extrabold tracking-tight text-edu-ink sm:text-5xl">
         Support
       </h1>
-      <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-stone-600">
+      <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-edu-ink/70">
         Leap.ai is built and maintained by one person, so support is human and honest — not a
         bot. Here's how to help yourself, and how to reach a human when you can't.
       </p>
 
       <div className="mt-10 space-y-8">
         {topics.map((t) => (
-          <section key={t.title} className="border-t border-stone-200 pt-6">
-            <h2 className="text-[15px] font-semibold tracking-tight">{t.title}</h2>
-            <p className="mt-2 text-[14px] leading-relaxed text-stone-600">{t.body}</p>
+          <section key={t.title} className="border-t border-edu-ink/10 pt-6">
+            <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">{t.title}</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">{t.body}</p>
           </section>
         ))}
       </div>
 
       <div className="mt-12 grid gap-6 sm:grid-cols-2">
-        <div className="border border-stone-900 bg-white p-6">
-          <h2 className="text-[15px] font-semibold tracking-tight">Still stuck?</h2>
-          <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
+        <div className="rounded-3xl border border-edu-ink/10 bg-white p-7 shadow-sm">
+          <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">Still stuck?</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">
             Send a message through the contact form — include your account email and as much
             detail as you can.
           </p>
           <Link
             to="/contact"
-            className="mt-4 inline-block bg-stone-900 px-4 py-2 text-[13px] text-white hover:bg-stone-700"
+            className="mt-4 inline-block rounded-full bg-edu-coral px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-edu-coral-dark"
           >
             Contact support
           </Link>
         </div>
-        <div className="border border-stone-300 bg-[#FAF9F7] p-6">
-          <h2 className="text-[15px] font-semibold tracking-tight">Common questions</h2>
-          <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
+        <div className="rounded-3xl border border-edu-ink/10 bg-edu-bg p-7">
+          <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">Common questions</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">
             Pricing, plans, and how the roadmap generator works — answers are on the FAQ.
           </p>
           <Link
             to="/faq"
-            className="mt-4 inline-block border border-stone-300 px-4 py-2 text-[13px] text-stone-800 hover:bg-stone-100"
+            className="mt-4 inline-block rounded-full border border-edu-ink/15 px-5 py-2.5 text-[13px] font-semibold text-edu-ink hover:bg-white"
           >
             Read the FAQ
           </Link>
         </div>
       </div>
 
-      <p className="mt-10 border-t border-stone-200 pt-6 font-mono text-[11px] text-stone-400">
+      <p className="mt-10 border-t border-edu-ink/10 pt-6 text-xs text-edu-ink/40">
         Service status: the backend runs on a free tier and can cold-start slowly — if a
         request hangs, waiting a minute and retrying usually resolves it.
       </p>

@@ -62,6 +62,12 @@ public class PracticeController {
         return Map.of("scenarios", scenarioService.list(UserContext.require()));
     }
 
+    /** Public catalog for anonymous browsing — no auth, no per-user state. */
+    @GetMapping("/scenarios/public")
+    public Map<String, Object> scenariosPublic() {
+        return Map.of("scenarios", scenarioService.listPublic());
+    }
+
     /** Scenario detail — brief, steps, per-user progress. 403 if locked. */
     @GetMapping("/scenarios/{slug}")
     public Map<String, Object> scenarioDetail(@PathVariable String slug) {

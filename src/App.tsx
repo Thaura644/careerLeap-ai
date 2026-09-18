@@ -31,6 +31,10 @@ import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
 import Career from "./pages/Career";
 import Blog from "./pages/Blog";
+import Research from "./pages/Research";
+import Pricing from "./pages/Pricing";
+import HowItWorks from "./pages/HowItWorks";
+import Catalog from "./pages/Catalog";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Cookies from "./pages/Cookies";
@@ -82,6 +86,10 @@ const App = () => {
                 <Route path="/support" element={<Support />} />
                 <Route path="/career" element={<Career />} />
                 <Route path="/blog" element={<Blog />} />
+                <Route path="/research" element={<Research />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/catalog" element={<Catalog />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/cookies" element={<Cookies />} />

@@ -47,12 +47,15 @@ export const AuthMenu: React.FC<{ className?: string }> = ({ className }) => {
   };
 
   if (!user) {
+    // Only rendered inside the dark marketing nav (Dashboard is a protected
+    // route, so a signed-out visitor never reaches it) — light text tuned
+    // for that dark background, safe without touching the authenticated app.
     return (
       <div className={cn("flex items-center gap-4", className)}>
-        <Link to="/login" className="text-[13px] tracking-wide text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100">
+        <Link to="/login" className="text-sm font-medium text-white/70 hover:text-white">
           Log in
         </Link>
-        <Button asChild className="h-9 rounded-none bg-stone-900 px-4 text-[13px] hover:bg-stone-700">
+        <Button asChild className="h-10 rounded-full bg-edu-coral px-5 text-sm font-semibold text-white hover:bg-edu-coral-dark">
           <Link to="/signup">Sign up</Link>
         </Button>
       </div>

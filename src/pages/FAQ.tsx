@@ -12,7 +12,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How much do paid plans cost?",
-    a: "Career Audit is a one-time $12 (also ₦15,000) — a full profile + resume review with a prioritized skill-gap analysis and action plan. Pro is $12/month (also ₦15,000) or $100/year (≈ 30% off) for the full practice library, real-world scenarios, unlimited roadmaps, goal tracking, AI insights, and creator tools. Prices show in your currency at checkout.",
+    a: "Career Audit is a one-time $12 (also ₦15,000) — a full profile + resume review with a prioritized skill-gap analysis and action plan. Pro is $15/month (also ₦18,750) or $100/year for the full practice library, real-world scenarios, unlimited roadmaps, goal tracking, AI insights, and creator tools. Prices show in your currency at checkout.",
   },
   {
     q: "How does the roadmap generator work?",
@@ -39,33 +39,33 @@ const faqs: { q: string; a: string }[] = [
 const FAQ = () => (
   <StaticPageShell>
     <div className="mx-auto max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
-      <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#C2410C]">
+      <span className="inline-flex items-center rounded-full bg-edu-lavender px-4 py-1.5 text-xs font-semibold text-edu-lavender-fg">
         FAQ
-      </p>
-      <h1 className="mt-3 font-display text-4xl font-medium tracking-tight sm:text-5xl">
+      </span>
+      <h1 className="mt-4 font-marketing text-4xl font-extrabold tracking-tight text-edu-ink sm:text-5xl">
         Frequently asked questions
       </h1>
-      <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-stone-600">
+      <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-edu-ink/70">
         Straight answers, no sales-speak. If your question isn't here, ask a human.
       </p>
 
       <div className="mt-10 space-y-8">
         {faqs.map((f) => (
-          <section key={f.q} className="border-t border-stone-200 pt-6">
-            <h2 className="text-[15px] font-semibold tracking-tight">{f.q}</h2>
-            <p className="mt-2 text-[14px] leading-relaxed text-stone-600">{f.a}</p>
+          <section key={f.q} className="border-t border-edu-ink/10 pt-6">
+            <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">{f.q}</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">{f.a}</p>
           </section>
         ))}
       </div>
 
-      <div className="mt-12 border border-stone-900 bg-white p-6">
-        <h2 className="text-[15px] font-semibold tracking-tight">Still have a question?</h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
+      <div className="mt-12 rounded-3xl border border-edu-ink/10 bg-white p-7 shadow-sm">
+        <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">Still have a question?</h2>
+        <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">
           Send it through the contact form — a human reads every message.
         </p>
         <Link
           to="/contact"
-          className="mt-4 inline-block bg-stone-900 px-4 py-2 text-[13px] text-white hover:bg-stone-700"
+          className="mt-4 inline-block rounded-full bg-edu-coral px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-edu-coral-dark"
         >
           Ask a human
         </Link>

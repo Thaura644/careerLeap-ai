@@ -63,13 +63,32 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// LeapAI brand colors — stone editorial palette (matches landing + auth)
+				// LeapAI brand colors — stone editorial palette (matches auth + legacy landing)
 				leap: {
 					navy: '#1C1917',
 					purple: '#57534E',
 					teal: '#A8A29E',
 					light: '#FAF9F7',
 					dark: '#1C1917'
+				},
+				// Marketing/public-site palette — scoped to landing + public pages only.
+				// Not used by the authenticated app; leap.* and shadcn tokens are untouched.
+				edu: {
+					ink: '#161320',
+					bg: '#FFFDF9',
+					indigo: {
+						DEFAULT: '#4F46E5',
+						dark: '#3730A3'
+					},
+					coral: {
+						DEFAULT: '#FF6B4A',
+						dark: '#E5502F'
+					},
+					highlight: '#FDE68A',
+					lavender: { DEFAULT: '#EDEAFE', fg: '#6D28D9' },
+					mint: { DEFAULT: '#DFF6EC', fg: '#0E9F6E' },
+					peach: { DEFAULT: '#FFEADD', fg: '#EA580C' },
+					sky: { DEFAULT: '#E4F1FF', fg: '#2563EB' }
 				}
 			},
 			borderRadius: {
@@ -112,7 +131,9 @@ export default {
 				sans: ['Inter', 'system-ui', 'sans-serif'],
 				heading: ['Inter', 'system-ui', 'sans-serif'],
 				display: ['Fraunces', 'Georgia', 'serif'],
-				mono: ['JetBrains Mono', 'ui-monospace', 'monospace']
+				mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+				// Marketing/public-site headline font — scoped like edu.* colors above.
+				marketing: ['Sora', 'system-ui', 'sans-serif']
 			}
 		}
 	},

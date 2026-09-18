@@ -1,5 +1,9 @@
 package com.leapai.backend.service;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.leapai.backend.config.JwtService;
 import com.leapai.backend.model.User;
 import com.leapai.backend.repository.UserRepository;
@@ -11,12 +15,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Real authentication: passwords are BCrypt-hashed, tokens are signed JWTs,
@@ -31,19 +39,36 @@ public class AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final String appBaseUrl;
+    private final String googleClientId;
+    private final GoogleIdTokenVerifier googleVerifier;
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final long RESET_TOKEN_TTL_SECONDS = 60 * 60; // 1 hour
 
     public AuthService(UserRepository users, PasswordEncoder passwordEncoder, JwtService jwtService,
                        EmailService emailService,
-                       @Value("${APP_BASE_URL:https://career-leap-ai.vercel.app}") String appBaseUrl) {
+                       @Value("${APP_BASE_URL:https://career-leap-ai.vercel.app}") String appBaseUrl,
+                       @Value("${GOOGLE_CLIENT_ID:}") String googleClientId) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.emailService = emailService;
         this.appBaseUrl = appBaseUrl == null || appBaseUrl.isBlank()
                 ? "https://career-leap-ai.vercel.app" : appBaseUrl.replaceAll("/+$", "");
+        this.googleClientId = googleClientId == null ? "" : googleClientId.trim();
+        this.googleVerifier = buildGoogleVerifier(this.googleClientId);
+    }
+
+    private static GoogleIdTokenVerifier buildGoogleVerifier(String clientId) {
+        if (clientId.isEmpty()) return null; // Google sign-in stays off until a real client ID is set.
+        try {
+            return new GoogleIdTokenVerifier.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(clientId))
+                    .build();
+        } catch (GeneralSecurityException | IOException e) {
+            throw new IllegalStateException("Could not initialize Google ID token verifier", e);
+        }
     }
 
     public Map<String, Object> signup(String fullName, String email, String rawPassword) {
@@ -60,6 +85,54 @@ public class AuthService {
     }
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
+    /**
+     * Google Sign-In: verifies the ID token Google's own client-side library
+     * handed the frontend (signature, issuer, audience, expiry — all via
+     * {@link GoogleIdTokenVerifier}, never trusting the client's claims
+     * directly). Finds the account by the verified email, or creates one.
+     *
+     * <p>Off by default — returns a clear error until GOOGLE_CLIENT_ID is set,
+     * the same arm-before-it-works pattern as payments (see PaymentService).
+     */
+    public Map<String, Object> googleLogin(String idTokenString) {
+        if (googleVerifier == null) {
+            throw new IllegalStateException("Google sign-in isn't configured yet — GOOGLE_CLIENT_ID is unset.");
+        }
+        if (idTokenString == null || idTokenString.isBlank()) {
+            throw new IllegalArgumentException("Missing Google ID token");
+        }
+        GoogleIdToken idToken;
+        try {
+            idToken = googleVerifier.verify(idTokenString);
+        } catch (GeneralSecurityException | IOException | IllegalArgumentException e) {
+            log.warn("Google ID token verification failed: {}", e.getMessage());
+            throw new IllegalArgumentException("Could not verify Google sign-in — try again.");
+        }
+        if (idToken == null) {
+            throw new IllegalArgumentException("Could not verify Google sign-in — try again.");
+        }
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        if (!Boolean.TRUE.equals(payload.getEmailVerified())) {
+            throw new IllegalArgumentException("That Google account's email isn't verified.");
+        }
+        String email = payload.getEmail().trim().toLowerCase();
+        String name = String.valueOf(payload.get("name"));
+
+        User user = users.findByEmailIgnoreCase(email).orElseGet(() -> {
+            User created = new User();
+            created.setFullName(name == null || name.isBlank() || "null".equals(name) ? email : name);
+            created.setEmail(email);
+            // No password was ever set — a random, unusable hash keeps the
+            // NOT NULL column happy without a schema change, and password
+            // login correctly fails for this account (it only signs in via
+            // Google, same as the account has no password to guess).
+            created.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
+            created.setPlan(User.Plan.FREE);
+            return users.save(created);
+        });
+        return authPayload(user);
+    }
 
     public Map<String, Object> login(String email, String rawPassword) {
         User user = users.findByEmailIgnoreCase(email.trim())

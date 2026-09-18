@@ -58,22 +58,22 @@ const ResetPassword = () => {
       linkHref="/login"
     >
       {!token ? (
-        <div className="border border-stone-300 bg-white p-6">
-          <p className="text-[14px] leading-relaxed text-stone-600">
+        <div className="rounded-3xl border border-edu-ink/10 bg-white p-6 shadow-sm">
+          <p className="text-[14px] leading-relaxed text-edu-ink/70">
             This link is missing its reset token. It may be truncated — open the full link
             from your email, or request a new one.
           </p>
           <Link
             to="/forgot-password"
-            className="mt-5 inline-block text-[13px] text-[#C2410C] underline hover:text-stone-900"
+            className="mt-5 inline-block text-[13px] font-semibold text-edu-indigo underline hover:text-edu-ink"
           >
             Request a new link
           </Link>
         </div>
       ) : status === "done" ? (
-        <div className="border border-stone-300 bg-white p-6">
-          <h2 className="text-[15px] font-semibold tracking-tight">Password updated ✓</h2>
-          <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
+        <div className="rounded-3xl border border-edu-ink/10 bg-white p-6 shadow-sm">
+          <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">Password updated ✓</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">
             You can now log in with your new password. Redirecting…
           </p>
         </div>
@@ -117,7 +117,7 @@ const ResetPassword = () => {
           <Button
             type="submit"
             disabled={status === "sending"}
-            className="h-11 w-full rounded-none bg-stone-900 text-sm hover:bg-stone-700"
+            className="h-11 w-full rounded-full bg-edu-coral text-sm font-semibold hover:bg-edu-coral-dark"
           >
             {status === "sending" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {status === "sending" ? "Updating..." : "Update password"}

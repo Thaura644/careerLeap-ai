@@ -40,16 +40,16 @@ const ForgotPassword = () => {
       linkHref="/login"
     >
       {status === "sent" ? (
-        <div className="border border-stone-300 bg-white p-6">
-          <h2 className="text-[15px] font-semibold tracking-tight">Check your inbox</h2>
-          <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
-            If <span className="font-medium text-stone-900">{email}</span> has a Leap.ai
+        <div className="rounded-3xl border border-edu-ink/10 bg-white p-6 shadow-sm">
+          <h2 className="text-[15px] font-semibold tracking-tight text-edu-ink">Check your inbox</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-edu-ink/70">
+            If <span className="font-medium text-edu-ink">{email}</span> has a Leap.ai
             account, a reset link is on its way. It expires in 1 hour. If you don't see it,
             check your spam folder.
           </p>
           <Link
             to="/login"
-            className="mt-5 inline-block text-[13px] text-[#C2410C] underline hover:text-stone-900"
+            className="mt-5 inline-block text-[13px] font-semibold text-edu-indigo underline hover:text-edu-ink"
           >
             Back to login
           </Link>
@@ -79,7 +79,7 @@ const ForgotPassword = () => {
           <Button
             type="submit"
             disabled={status === "sending"}
-            className="h-11 w-full rounded-none bg-stone-900 text-sm hover:bg-stone-700"
+            className="h-11 w-full rounded-full bg-edu-coral text-sm font-semibold hover:bg-edu-coral-dark"
           >
             {status === "sending" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {status === "sending" ? "Sending link..." : "Send reset link"}

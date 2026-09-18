@@ -27,6 +27,12 @@ const Signup = () => {
   // roadmap-report, or free). Carried through to onboarding, which routes to
   // the pay prompt (or straight to the dashboard) based on it.
   const plan = searchParams.get("plan");
+  // The onboarding sign-in modal sends ?next=/onboarding so the visitor lands
+  // back in the flow their draft is waiting in. Only internal paths honored.
+  const nextParam = searchParams.get("next");
+  const internalNext =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
+  const destination = internalNext || (skippedOnboarding ? "/dashboard" : plan ? `/onboarding?plan=${encodeURIComponent(plan)}` : "/onboarding");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,7 +55,7 @@ const Signup = () => {
       // when the browser closes.
       saveAuthSession(response.token, response.user, true);
       window.dispatchEvent(new Event("leap:auth-change"));
-      if (skippedOnboarding) {
+      if (skippedOnboarding && !internalNext) {
         // Entering the app directly is itself consent for the privacy gate —
         // record it so the dialog never blocks a later visit.
         localStorage.setItem("leap_privacy_consent", new Date().toISOString());
@@ -64,7 +70,7 @@ const Signup = () => {
         title: "Account created successfully",
         description: "Welcome to Leap.ai! Redirecting to onboarding...",
       });
-      navigate(plan ? `/onboarding?plan=${encodeURIComponent(plan)}` : "/onboarding");
+      navigate(destination);
     } catch (error) {
       if (error instanceof ApiTimeoutError) {
         toast({
@@ -157,11 +163,11 @@ const Signup = () => {
               className="text-sm font-normal text-muted-foreground"
             >
               By creating an account, you agree to our{" "}
-              <a href="/terms" className="font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600">
+              <a href="/terms" className="font-semibold text-edu-indigo underline underline-offset-4 hover:text-edu-ink">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="/privacy" className="font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600">
+              <a href="/privacy" className="font-semibold text-edu-indigo underline underline-offset-4 hover:text-edu-ink">
                 Privacy Policy
               </a>
             </Label>
@@ -171,7 +177,7 @@ const Signup = () => {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-none bg-stone-900 text-sm hover:bg-stone-700"
+          className="h-11 w-full rounded-full bg-edu-coral text-sm font-semibold hover:bg-edu-coral-dark"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isSubmitting ? "Creating your account..." : "Create account"}

@@ -23,7 +23,8 @@ const Login = () => {
 
   // Where to go after login: the protected route the visitor was turned away
   // from (?next=... from ProtectedRoute, or ?next=/upgrade from the upgrade
-  // CTA), falling back to the dashboard. Only internal paths are honored.
+  // CTA, or ?next=/onboarding from the onboarding sign-in modal), falling
+  // back to the dashboard. Only internal paths are honored.
   const redirectAfterLogin = (): string => {
     const next = searchParams.get("next");
     if (next && next.startsWith("/") && !next.startsWith("//")) return next;
@@ -106,7 +107,7 @@ const Login = () => {
               <Label htmlFor="password">Password</Label>
               <Link
                 to="/forgot-password"
-                className="text-sm font-medium text-stone-900 underline underline-offset-4 hover:text-stone-600"
+                className="text-sm font-medium text-edu-indigo underline underline-offset-4 hover:text-edu-ink"
               >
                 Forgot password?
               </Link>
@@ -139,7 +140,7 @@ const Login = () => {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-none bg-stone-900 text-sm hover:bg-stone-700"
+          className="h-11 w-full rounded-full bg-edu-coral text-sm font-semibold hover:bg-edu-coral-dark"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isSubmitting ? "Logging in..." : "Log in"}

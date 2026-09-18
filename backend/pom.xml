@@ -66,6 +66,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Google Sign-In: verifies the ID token Google's client-side library
+             hands us (signature, issuer, audience, expiry) — official client,
+             not a hand-rolled JWKS check. -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
         <!-- H2: local/dev default. Postgres: production (see application.properties). -->
         <dependency>
             <groupId>com.h2database</groupId>

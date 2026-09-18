@@ -1,10 +1,8 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -13,274 +11,284 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
-import { CalendarIcon, CalendarRange, Check } from "lucide-react";
+import { ArrowRight, CalendarIcon, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiPost, ApiError, ApiTimeoutError } from "@/lib/api";
 
 interface BookDemoModalProps {
   trigger?: React.ReactNode;
+  /** Button label when no custom trigger is given. */
+  label?: string;
+  /** Style the default trigger as a filled pill (hero) or quiet text link. */
+  appearance?: "button" | "link";
   className?: string;
-  variant?: "default" | "outline" | "link";
 }
 
+/**
+ * "Contact sales" modal — the visitor's message lands in the founder's inbox
+ * (CONTACT_SALES_EMAIL on the backend) and is persisted in demo_requests so
+ * nothing is silently dropped. Demo date/time is optional: some buyers just
+ * want pricing for a team, others want a live walkthrough.
+ */
 export const BookDemoModal: React.FC<BookDemoModalProps> = ({
   trigger,
+  label = "Contact sales",
+  appearance = "button",
   className,
-  variant = "default"
 }) => {
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [teamSize, setTeamSize] = useState<string>("");
   const [message, setMessage] = useState("");
   const [date, setDate] = useState<Date | undefined>(undefined);
-  const [timeSlot, setTimeSlot] = useState<string>("");
+  const [timeSlot, setTimeSlot] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot — humans never see this
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!name || !email || !date || !timeSlot) {
+    if (!name.trim() || !email.trim()) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
+        description: "Please add your name and email so we can reply.",
+        variant: "destructive",
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In a real implementation, you would send this data to your backend
-      const demoRequest = {
-        name,
-        email,
-        companyName,
-        teamSize,
-        message,
-        demoDate: date,
+      await apiPost<{ ok: boolean; message?: string }>("/demo-requests", {
+        name: name.trim(),
+        email: email.trim(),
+        companyName: companyName.trim(),
+        message: message.trim(),
+        // Optional fields — sent empty when the visitor skips them.
+        demoDate: date ? format(date, "yyyy-MM-dd") : "",
         timeSlot,
-        salesEmail: "jamesmweni52@gmail.com"
-      };
-      
-      console.log("Demo request:", demoRequest);
-      
-      // Success state
-      setIsSuccess(true);
-      toast({
-        title: "Demo scheduled!",
-        description: `Your demo is scheduled for ${format(date!, "MMMM do, yyyy")} at ${timeSlot}.`,
+        website, // honeypot
       });
-      
-      // Reset form after 2 seconds
+      setIsSuccess(true);
       setTimeout(() => {
+        setIsSuccess(false);
+        setOpen(false);
         setName("");
         setEmail("");
         setCompanyName("");
-        setTeamSize("");
         setMessage("");
         setDate(undefined);
         setTimeSlot("");
-        setIsSuccess(false);
-      }, 2000);
-      
+      }, 2400);
     } catch (error) {
       toast({
         title: "Something went wrong",
-        description: "Please try again later.",
-        variant: "destructive"
+        description:
+          error instanceof ApiTimeoutError
+            ? "The server is waking up — try again in a few seconds."
+            : error instanceof ApiError && error.message
+              ? error.message
+              : "Couldn't send right now — please try again in a minute.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const timeSlots = [
-    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", 
-    "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM",
-    "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM", 
-    "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM"
-  ];
+  const timeSlots = ["9:00 AM", "11:00 AM", "1:00 PM", "3:00 PM", "4:30 PM"];
 
-  const defaultTrigger = (
-    <Button 
-      variant={variant} 
-      className={className}
-    >
-      <CalendarRange className="mr-2 h-4 w-4" />
-      Request Demo
-    </Button>
-  );
+  const defaultTrigger =
+    appearance === "link" ? (
+      <button type="button" className={cn("text-sm font-semibold text-edu-ink hover:text-edu-indigo", className)}>
+        {label} →
+      </button>
+    ) : (
+      <button
+        type="button"
+        className={cn(
+          "text-sm font-semibold text-edu-ink hover:text-edu-indigo",
+          className
+        )}
+      >
+        {label}
+      </button>
+    );
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Schedule a Demo</DialogTitle>
-          <DialogDescription>
-            Fill out the form below to schedule a personalized demo with our team.
-          </DialogDescription>
-        </DialogHeader>
-        
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
+      <DialogContent className="rounded-[1.75rem] bg-white p-0 sm:max-w-[520px]">
         {isSuccess ? (
-          <div className="py-8 text-center">
-            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-              <Check className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">Demo Scheduled!</h3>
-            <p className="text-muted-foreground">
-              We've scheduled your demo for {date && format(date, "MMMM do, yyyy")} at {timeSlot}.
-              You'll receive a calendar invitation and confirmation email shortly.
+          <div className="px-8 py-12 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-edu-mint text-edu-mint-fg">
+              <Check className="h-7 w-7" strokeWidth={2.5} />
+            </span>
+            <h3 className="mt-5 font-marketing text-xl font-extrabold tracking-tight text-edu-ink">
+              Message sent.
+            </h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-edu-ink/60">
+              It's in our inbox — expect a reply within one business day.
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
-                <Input 
-                  id="name" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
+          <div className="p-7 sm:p-8">
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="font-marketing text-2xl font-extrabold tracking-tight text-edu-ink">
+                Contact sales
+              </DialogTitle>
+              <DialogDescription className="text-[14px] leading-relaxed text-edu-ink/60">
+                Tell us what your team or org needs — team pricing, a live walkthrough,
+                or a custom plan. A human replies, not a bot.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="sales-name" className="text-[13px] font-semibold">
+                    Name *
+                  </Label>
+                  <Input
+                    id="sales-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ada Obi"
+                    required
+                    className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sales-email" className="text-[13px] font-semibold">
+                    Work email *
+                  </Label>
+                  <Input
+                    id="sales-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="ada@company.com"
+                    required
+                    className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input 
-                  id="email" 
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="company">Company Name</Label>
-                <Input 
-                  id="company"
+
+              <div className="space-y-1.5">
+                <Label htmlFor="sales-company" className="text-[13px] font-semibold">
+                  Company <span className="font-normal text-edu-ink/40">(optional)</span>
+                </Label>
+                <Input
+                  id="sales-company"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Company or team name"
+                  className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="teamSize">Team Size</Label>
-                <Select
-                  value={teamSize}
-                  onValueChange={setTeamSize}
-                >
-                  <SelectTrigger id="teamSize">
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1-10">1-10 employees</SelectItem>
-                    <SelectItem value="11-50">11-50 employees</SelectItem>
-                    <SelectItem value="51-200">51-200 employees</SelectItem>
-                    <SelectItem value="201-500">201-500 employees</SelectItem>
-                    <SelectItem value="501+">501+ employees</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="sales-message" className="text-[13px] font-semibold">
+                  What do you need? *
+                </Label>
+                <Textarea
+                  id="sales-message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value.slice(0, 2000))}
+                  placeholder="e.g. We'd like Leap.ai Pro for a 12-person engineering team — what does pricing look like? A walkthrough would help too."
+                  className="min-h-[96px] resize-none rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                />
+                <p className="text-right text-[11px] text-edu-ink/40">{message.length}/2000</p>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Preferred Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date"
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                      disabled={(date) => {
-                        // Disable past dates and weekends
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const day = date.getDay();
-                        return date < today || day === 0 || day === 6;
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timeSlot">Preferred Time *</Label>
-                <Select
-                  value={timeSlot}
-                  onValueChange={setTimeSlot}
-                  required
-                >
-                  <SelectTrigger id="timeSlot">
-                    <SelectValue placeholder="Select time" />
-                  </SelectTrigger>
-                  <SelectContent>
+
+              {/* Optional live walkthrough — collapsed into one quiet row */}
+              <div className="rounded-2xl border border-dashed border-edu-ink/15 bg-edu-bg/40 p-4">
+                <p className="text-[13px] font-semibold text-edu-ink">
+                  Want a live walkthrough? <span className="font-normal text-edu-ink/50">(optional)</span>
+                </p>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          "h-10 justify-start rounded-xl border-edu-ink/15 bg-white font-normal",
+                          !date && "text-edu-ink/40"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-edu-indigo" />
+                        {date ? format(date, "MMM d, yyyy") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        disabled={(d) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const day = d.getDay();
+                          return d < today || day === 0 || day === 6;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <select
+                    value={timeSlot}
+                    onChange={(e) => setTimeSlot(e.target.value)}
+                    className="h-10 rounded-xl border border-edu-ink/15 bg-white px-3 text-sm text-edu-ink focus:border-edu-indigo focus:outline-none focus:ring-2 focus:ring-edu-indigo/20"
+                  >
+                    <option value="">Pick a time</option>
                     {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
+                      <option key={slot} value={slot}>
                         {slot}
-                      </SelectItem>
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </select>
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea
-                id="message"
-                placeholder="Tell us about your specific needs or questions"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <DialogFooter>
-              <Button type="submit" disabled={isSubmitting} className="bg-leap-purple">
-                {isSubmitting ? "Scheduling..." : "Schedule Demo"}
+
+              {/* Honeypot: hidden from humans, bots fill it in */}
+              <div className="absolute left-[-9999px]" aria-hidden="true">
+                <label htmlFor="sales-website">Website</label>
+                <input
+                  id="sales-website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="h-11 w-full rounded-full bg-edu-coral text-sm font-semibold shadow-lg shadow-edu-coral/25 hover:bg-edu-coral-dark"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…
+                  </>
+                ) : (
+                  <>
+                    Send message <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
-            </DialogFooter>
-          </form>
+              <p className="text-center text-[11px] text-edu-ink/40">
+                Goes straight to the Leap.ai team — no newsletters, no sharing.
+              </p>
+            </form>
+          </div>
         )}
       </DialogContent>
     </Dialog>

@@ -153,11 +153,11 @@ public class PaymentService {
                 "ZAR", price("R220", 22_000L),
                 "KES", price("KSh 1,600", 160_000L))));
         plans.add(plan("pro-monthly", "Pro — monthly", Map.of(
-                "NGN", price("\u20A615,000", 1_500_000L),
-                "USD", price("$12", 1_200L),
-                "GHS", price("GH\u20B5150", 15_000L),
-                "ZAR", price("R220", 22_000L),
-                "KES", price("KSh 1,600", 160_000L))));
+                "NGN", price("\u20A618,750", 1_875_000L),
+                "USD", price("$15", 1_500L),
+                "GHS", price("GH\u20B5188", 18_800L),
+                "ZAR", price("R275", 27_500L),
+                "KES", price("KSh 2,000", 200_000L))));
         // Annual ≈ 30% off the monthly rate (≈ $8.33/mo equivalent) in every currency.
         plans.add(plan("pro-annual", "Pro — annual", Map.of(
                 "NGN", price("\u20A6125,000", 12_500_000L),
@@ -268,7 +268,8 @@ public class PaymentService {
             if (grantsPro) {
                 grantPro(user, planId);
             }
-            recordPayment(user, planId, reference, currencyOf(data), false);
+            long amountMinor = data.path("amount").asLong(0);
+            recordPayment(user, planId, reference, currencyOf(data), false, amountMinor);
             log.info("[payments] VERIFIED charge {} for {} (plan {}, grantedPro {})",
                     reference, user.getEmail(), planId, grantsPro);
             return Map.of("verified", true, "pro", grantsPro,
@@ -289,7 +290,7 @@ public class PaymentService {
         if (grantsPro) {
             grantPro(user, planId);
         }
-        recordPayment(user, planId, reference, "USD", true);
+        recordPayment(user, planId, reference, "USD", true, 0L);
         log.info("[payments] SIMULATED verify {} for {} (plan {}, grantedPro {})",
                 reference, user.getEmail(), planId, grantsPro);
         return Map.of("verified", true, "simulated", true, "pro", grantsPro,
@@ -312,7 +313,7 @@ public class PaymentService {
     }
 
     /** Persist the confirmed charge as an invoice row for Settings. */
-    private void recordPayment(User user, String planId, String reference, String currency, boolean simulated) {
+    private void recordPayment(User user, String planId, String reference, String currency, boolean simulated, long amountMinor) {
         try {
             PaymentRecord r = new PaymentRecord();
             r.setUserId(user.getId());
@@ -320,7 +321,7 @@ public class PaymentService {
             r.setPlanLabel(planLabel(planId));
             r.setReference(reference);
             r.setCurrency(currency == null || currency.isBlank() ? "USD" : currency);
-            r.setAmountMinor(null); // filled from Paystack data when available; simulated has none
+            r.setAmountMinor(simulated || amountMinor <= 0 ? null : amountMinor);
             r.setStatus(simulated ? "simulated" : "success");
             r.setExpiresAt(user.getPlanExpiresAt());
             payments.save(r);

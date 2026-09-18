@@ -59,6 +59,31 @@ public class PracticeScenarioService {
         return out;
     }
 
+    /**
+     * Public catalog for anonymous browsing (landing/marketing pages) — no
+     * user, so no domain ranking and no progress data, just what a scenario
+     * is and whether it's free (trial) or Pro. Nothing here requires a
+     * session; the moment someone wants the actual brief/steps, that's the
+     * signup wall (enforced by {@link #detail}).
+     */
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPublic() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (PracticeScenario s : scenarios.findAllByOrderByIdAsc()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("slug", s.getSlug());
+            m.put("title", s.getTitle());
+            m.put("type", s.getType().name());
+            m.put("difficulty", s.getDifficulty());
+            m.put("category", s.getCategory());
+            m.put("estMinutes", s.getEstMinutes());
+            m.put("summary", s.getSummary());
+            m.put("free", s.isTrial());
+            out.add(m);
+        }
+        return out;
+    }
+
     /** Full detail (brief + steps + progress). Locked for non-Pro on non-trial. */
     @Transactional(readOnly = true)
     public Map<String, Object> detail(String slug, User user) {
