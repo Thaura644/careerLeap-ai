@@ -46,7 +46,13 @@ export function getAuthToken(): string | null {
   if (lsToken) {
     const expires = Number(localStorage.getItem(EXPIRES_KEY) || 0);
     if (expires && Date.now() > expires) {
+      // 30-day client-side expiry hit — drop the session and tell every
+      // mounted listener (header menu, contexts) so the UI reflects it
+      // immediately instead of the next user-initiated event.
       clearAuthSession();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("leap:auth-change"));
+      }
       return null;
     }
     return lsToken;

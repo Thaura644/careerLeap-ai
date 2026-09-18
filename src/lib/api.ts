@@ -1,4 +1,4 @@
-import { getAuthToken } from "./authSession";
+import { getAuthToken, clearAuthSession } from "./authSession";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
 
@@ -20,6 +20,22 @@ export class ApiTimeoutError extends Error {
   constructor(path: string) {
     super(`Request to ${path} timed out`);
     this.name = "ApiTimeoutError";
+  }
+}
+
+/**
+ * A 401 means the stored token is dead — expired server-side, the signing
+ * secret changed, or the account no longer exists — no matter what
+ * "remember me" promised on the client. Drop the stale session, sync every
+ * mounted listener, and send the visitor to log in; they return to the page
+ * they were on via ?next= (Login reads it).
+ */
+function handleUnauthorized(): void {
+  clearAuthSession();
+  window.dispatchEvent(new Event("leap:auth-change"));
+  if (!window.location.pathname.startsWith("/login")) {
+    const here = window.location.pathname + window.location.search;
+    window.location.href = `/login?next=${encodeURIComponent(here)}`;
   }
 }
 
@@ -78,6 +94,7 @@ async function errorMessage(path: string, res: Response): Promise<Error> {
 
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetchWithTimeout(path, { method: "GET", headers: withHeaders() });
+  if (res.status === 401) handleUnauthorized();
   if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
@@ -88,6 +105,7 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     headers: withHeaders(),
     body: JSON.stringify(body),
   });
+  if (res.status === 401) handleUnauthorized();
   if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
@@ -98,12 +116,14 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
     headers: withHeaders(),
     body: JSON.stringify(body),
   });
+  if (res.status === 401) handleUnauthorized();
   if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
 
 export async function apiDelete<T>(path: string): Promise<T> {
   const res = await fetchWithTimeout(path, { method: "DELETE", headers: withHeaders() });
+  if (res.status === 401) handleUnauthorized();
   if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
@@ -117,6 +137,7 @@ export async function apiPostMultipart<T>(path: string, formData: FormData): Pro
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
+  if (res.status === 401) handleUnauthorized();
   if (!res.ok) throw await errorMessage(path, res);
   return res.json();
 }
