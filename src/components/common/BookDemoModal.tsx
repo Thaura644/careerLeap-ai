@@ -161,7 +161,7 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ada Obi"
                     required
-                    className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                    className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 text-edu-ink placeholder:text-edu-ink/35 focus-visible:ring-edu-indigo/30"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -175,7 +175,7 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ada@company.com"
                     required
-                    className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                    className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 text-edu-ink placeholder:text-edu-ink/35 focus-visible:ring-edu-indigo/30"
                   />
                 </div>
               </div>
@@ -189,7 +189,7 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="Company or team name"
-                  className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                  className="h-10 rounded-xl border-edu-ink/15 bg-edu-bg/50 text-edu-ink placeholder:text-edu-ink/35 focus-visible:ring-edu-indigo/30"
                 />
               </div>
 
@@ -202,7 +202,7 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                   value={message}
                   onChange={(e) => setMessage(e.target.value.slice(0, 2000))}
                   placeholder="e.g. We'd like Leap.ai Pro for a 12-person engineering team — what does pricing look like? A walkthrough would help too."
-                  className="min-h-[96px] resize-none rounded-xl border-edu-ink/15 bg-edu-bg/50 focus-visible:ring-edu-indigo/30"
+                  className="min-h-[96px] resize-none rounded-xl border-edu-ink/15 bg-edu-bg/50 text-edu-ink placeholder:text-edu-ink/35 focus-visible:ring-edu-indigo/30"
                 />
                 <p className="text-right text-[11px] text-edu-ink/40">{message.length}/2000</p>
               </div>
@@ -245,7 +245,7 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                   <select
                     value={timeSlot}
                     onChange={(e) => setTimeSlot(e.target.value)}
-                    className="h-10 rounded-xl border border-edu-ink/15 bg-white px-3 text-sm text-edu-ink focus:border-edu-indigo focus:outline-none focus:ring-2 focus:ring-edu-indigo/20"
+                    className="h-10 rounded-xl border border-edu-ink/15 bg-white px-3 text-sm text-edu-ink placeholder:text-edu-ink/35 focus:border-edu-indigo focus:outline-none focus:ring-2 focus:ring-edu-indigo/20"
                   >
                     <option value="">Pick a time</option>
                     {timeSlots.map((slot) => (
