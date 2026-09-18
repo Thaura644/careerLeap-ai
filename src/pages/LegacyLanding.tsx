@@ -1,12 +1,76 @@
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiPost } from "@/lib/api";
 import { getAuthToken } from "@/lib/authSession";
 import { Reveal } from "@/components/common/Reveal";
 import { HeroIllustration } from "@/components/landing/HeroIllustration";
 import { FeaturePreview } from "@/components/landing/FeaturePreview";
 import { BookDemoModal } from "@/components/common/BookDemoModal";
 import StaticPageShell from "./StaticPageShell";
+
+/** Newsletter capture — posts to the real /api/newsletter endpoint. */
+const NewsletterForm = () => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setStatus("loading");
+    try {
+      const res = await apiPost<{ ok: boolean; error?: string }>("/newsletter", {
+        email: email.trim(),
+        website: "", // honeypot
+      });
+      if (res.ok) {
+        setStatus("done");
+      } else {
+        setStatus("error");
+        setErrorMsg(res.error || "Something went wrong.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Could not reach the server. Please try again.");
+    }
+  };
+
+  if (status === "done") {
+    return (
+      <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-edu-mint px-5 py-3 text-[13px] font-medium text-edu-mint-fg">
+        <Check className="h-4 w-4" />
+        You're in — check your inbox for a welcome.
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+      <input
+        ref={inputRef}
+        type="email"
+        required
+        placeholder="your@email.com"
+        value={email}
+        onChange={(e) => { setEmail(e.target.value); setErrorMsg(""); }}
+        className="h-11 w-full max-w-xs rounded-full border border-edu-ink/15 bg-white px-4 text-[13px] text-edu-ink placeholder:text-edu-ink/40 focus:border-edu-indigo focus:outline-none focus:ring-2 focus:ring-edu-indigo/20 sm:w-72"
+      />
+      <Button
+        type="submit"
+        disabled={status === "loading"}
+        className="h-11 rounded-full bg-edu-ink px-6 text-[13px] font-semibold hover:bg-edu-ink/90 disabled:opacity-50"
+      >
+        {status === "loading" ? "Subscribing…" : "Subscribe"}
+      </Button>
+      {status === "error" && (
+        <p className="w-full text-center text-[12px] text-red-600 sm:text-left">{errorMsg}</p>
+      )}
+    </form>
+  );
+};
 
 const LegacyLanding = () => {
   // Signed-in users jump straight to onboarding; everyone else goes through
@@ -98,6 +162,25 @@ const LegacyLanding = () => {
               <BookDemoModal appearance="link" label="Contact sales" />
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* Newsletter capture */}
+      <section className="border-b border-edu-ink/5">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+          <div className="mx-auto max-w-xl text-center">
+            <span className="inline-flex items-center rounded-full bg-edu-peach px-4 py-1.5 text-xs font-semibold text-edu-peach-fg">
+              Stay in the loop
+            </span>
+            <h2 className="mt-4 font-marketing text-3xl font-extrabold tracking-tight text-edu-ink sm:text-4xl">
+              Career moves, delivered weekly.
+            </h2>
+            <p className="mt-3 text-[14px] leading-relaxed text-edu-ink/70">
+              One email per week: real skill gaps, practical roadmaps, and what's working
+              for people making the switch. No spam — unsubscribe anytime.
+            </p>
+            <NewsletterForm />
+          </div>
         </div>
       </section>
 
