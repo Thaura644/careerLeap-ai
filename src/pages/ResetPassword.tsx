@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import AuthLayout from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { apiPost, ApiError, ApiTimeoutError } from "@/lib/api";
 
@@ -81,10 +82,9 @@ const ResetPassword = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="password">New password</Label>
-            <Input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               placeholder="At least 8 characters"
               required
               minLength={8}
@@ -96,10 +96,9 @@ const ResetPassword = () => {
 
           <div className="space-y-2">
             <Label htmlFor="confirm">Confirm new password</Label>
-            <Input
+            <PasswordInput
               id="confirm"
               name="confirm"
-              type="password"
               placeholder="Repeat your new password"
               required
               className="w-full"
