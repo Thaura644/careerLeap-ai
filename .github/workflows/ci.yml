@@ -5,10 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+# Pinned to ubuntu-24.04: the ubuntu-latest label migrates to Ubuntu 26
+# beginning October 19, 2026 — pinning keeps the build environment stable.
 jobs:
   frontend:
     name: Frontend (typecheck + build)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: .
@@ -26,7 +28,7 @@ jobs:
 
   backend:
     name: Backend (compile + smoke test)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
