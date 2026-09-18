@@ -9,8 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-// Social-login icons; unused while the social buttons are commented out.
-// import { Github, Twitter } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { apiPost, ApiError, ApiTimeoutError } from "@/lib/api";
 import { saveAuthSession } from "@/lib/authSession";
 
@@ -146,28 +145,7 @@ const Login = () => {
           {isSubmitting ? "Logging in..." : "Log in"}
         </Button>
 
-        {/* Social login is commented out until real OAuth exists (no backend
-            endpoints or handlers — the buttons did nothing). Re-enable when
-            GitHub/Twitter OAuth is wired end-to-end. */}
-        {/* <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="outline" type="button" className="w-full">
-            <Github className="mr-2 h-4 w-4" />
-            GitHub
-          </Button>
-          <Button variant="outline" type="button" className="w-full">
-            <Twitter className="mr-2 h-4 w-4" />
-            Twitter
-          </Button>
-        </div> */}
+        <GoogleSignInButton />
       </form>
     </AuthLayout>
   );

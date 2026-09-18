@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, User, Bell, Globe, Shield, Mail, Save, AlertTriangle, Receipt } from "lucide-react";
 import BillingTab from "@/components/settings/BillingTab";
+import { McpConnections } from "@/components/settings/McpConnections";
 import { apiGet, apiPut, ApiError, ApiTimeoutError } from "@/lib/api";
 import { clearAuthSession } from "@/lib/authSession";
 import { useToast } from "@/hooks/use-toast";
@@ -360,14 +361,13 @@ const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Connected Accounts</CardTitle>
-                <CardDescription>Third-party account connections are not available yet</CardDescription>
+                <CardDescription>
+                  AI assistants connect below. Social/learning-platform connections (LinkedIn,
+                  GitHub) are still on the roadmap, not built yet.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Account connections (LinkedIn, Twitter, GitHub, learning platforms) are on the
-                  roadmap but not built yet. You'll see them here once they exist — this page will
-                  never claim a connection that isn't real.
-                </p>
+                <McpConnections />
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,6 +1,6 @@
 import { getAuthToken, clearAuthSession } from "./authSession";
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
 
 // Render's free tier cold-starts can take 30-60s; keep the default generous so
 // legit slow starts don't fail, but never let a request hang forever silently.
