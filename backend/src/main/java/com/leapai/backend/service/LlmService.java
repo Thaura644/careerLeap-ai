@@ -254,6 +254,138 @@ public class LlmService {
         }
     }
 
+    private static final String SYSTEM_CUSTOM_PRACTICE_PROMPT =
+            "You are Leap.ai's practice engine. Given a user's real career profile as JSON, design "
+            + "ONE realistic practice exercise that actually fits their field and goal — Leap.ai "
+            + "covers every field, not just software engineering, so do not default to a coding "
+            + "problem unless their current/target role or industry is genuinely technical "
+            + "(software, data, DevOps, etc.). Respond with ONLY valid JSON, no markdown, in exactly "
+            + "this shape: {\"type\": string, \"title\": string, \"prompt\": string, \"context\": "
+            + "string, \"evaluationCriteria\": [string], \"expectedFormat\": string}. Rules:\n"
+            + "- type: a short label for the exercise format, chosen to fit the field — e.g. "
+            + "\"coding\", \"case_study\", \"written_analysis\", \"scenario_response\", "
+            + "\"design_critique\", \"calculation\", \"communication_drill\". Invent a better one if "
+            + "none fit; the point is the format must make sense for THIS user's field.\n"
+            + "- title: short, specific to their target role, under 80 chars.\n"
+            + "- prompt: the actual exercise instructions — concrete and realistic, as if a manager "
+            + "in that field handed it to them. For a nurse, a clinical scenario; for a marketer, a "
+            + "campaign brief; for an engineer, a coding or system-design problem; and so on.\n"
+            + "- context: 1-2 sentences on why this exercise matters for their specific target role "
+            + "and stated gap/goal — reference their real profile data, not generic advice.\n"
+            + "- evaluationCriteria: 3-5 concrete things a strong response would include — used later "
+            + "to grade their submission, so make these genuinely checkable, not vague.\n"
+            + "- expectedFormat: one short sentence telling the user how to respond (e.g. \"Write "
+            + "your approach in a few paragraphs\", \"Paste your code\", \"List your steps in order\").\n"
+            + "Never invent facts about the user beyond what's in their profile. Never produce a "
+            + "generic exercise that could apply to any field — it must be traceable to this user's "
+            + "actual current role, target role, and industry.";
+
+    /**
+     * Generates one personalized practice exercise from the user's real
+     * profile — deliberately not always a coding problem; the LLM picks the
+     * exercise type to fit the user's actual field. Returns
+     * {@code {"source": "error", "error": ...}} when the LLM isn't configured
+     * or the response can't be parsed — never a fabricated fallback exercise.
+     */
+    public Map<String, Object> generateCustomPractice(Map<String, Object> profile, Long userId) {
+        if (!isConfigured()) {
+            log.warn("[llm] custom practice requested but no LLM key configured — refusing to fabricate");
+            return Map.of("source", "error", "error",
+                    "Practice generation needs the AI model to be configured. Please try again later.");
+        }
+        try {
+            String userJson = objectMapper.writeValueAsString(profile);
+            List<Map<String, Object>> messages = List.of(
+                    Map.of("role", "system", "content", SYSTEM_CUSTOM_PRACTICE_PROMPT),
+                    Map.of("role", "user", "content", "User profile (JSON):\n" + userJson));
+            String text = complete(messages, 0.8, 1200, userId, "custom_practice");
+            JsonNode node = extractJson(text);
+            if (node == null || node.path("title").asText("").isBlank() || node.path("prompt").asText("").isBlank()) {
+                return Map.of("source", "error", "error", "The AI's response couldn't be parsed. Please try again.");
+            }
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("source", "llm");
+            result.put("type", node.path("type").asText("general").trim());
+            result.put("title", node.path("title").asText("").trim());
+            result.put("prompt", node.path("prompt").asText("").trim());
+            result.put("context", node.path("context").asText("").trim());
+            result.put("expectedFormat", node.path("expectedFormat").asText("").trim());
+            List<String> criteria = new ArrayList<>();
+            if (node.path("evaluationCriteria").isArray()) {
+                for (JsonNode c : node.get("evaluationCriteria")) {
+                    String s = c.asText("").trim();
+                    if (!s.isEmpty()) criteria.add(s);
+                }
+            }
+            result.put("evaluationCriteria", criteria);
+            return result;
+        } catch (Exception e) {
+            log.warn("[llm] custom practice generation failed: {}", e.getMessage());
+            return Map.of("source", "error", "error",
+                    "The AI couldn't build a practice exercise right now. Please try again in a moment.");
+        }
+    }
+
+    private static final String SYSTEM_PRACTICE_FEEDBACK_PROMPT =
+            "You are Leap.ai's practice grader. You will receive the original exercise (title, "
+            + "prompt, evaluation criteria) and the user's real submitted response. Grade the "
+            + "response strictly against the given evaluation criteria — do not invent new "
+            + "criteria. Respond with ONLY valid JSON, no markdown, in exactly this shape: "
+            + "{\"score\": number, \"strengths\": [string], \"gaps\": [string], \"overallFeedback\": "
+            + "string}. score is 0-100. strengths and gaps must each reference specific evaluation "
+            + "criteria and specific parts of the user's actual response — never generic praise or "
+            + "generic criticism. overallFeedback is 2-3 sentences, direct and actionable. If the "
+            + "response is empty or nonsensical, score it 0 and say so plainly.";
+
+    /**
+     * Grades a real submission against the exercise's own evaluation
+     * criteria. Returns {@code {"source": "error", ...}} rather than a fake
+     * score when the LLM is unavailable.
+     */
+    public Map<String, Object> evaluateCustomPracticeSubmission(String title, String prompt,
+            List<String> evaluationCriteria, String response, Long userId) {
+        if (!isConfigured()) {
+            return Map.of("source", "error", "error",
+                    "Grading needs the AI model to be configured. Please try again later.");
+        }
+        try {
+            Map<String, Object> context = new LinkedHashMap<>();
+            context.put("title", title);
+            context.put("prompt", prompt);
+            context.put("evaluationCriteria", evaluationCriteria);
+            context.put("userResponse", response);
+            List<Map<String, Object>> messages = List.of(
+                    Map.of("role", "system", "content", SYSTEM_PRACTICE_FEEDBACK_PROMPT),
+                    Map.of("role", "user", "content", objectMapper.writeValueAsString(context)));
+            String text = complete(messages, 0.3, 1000, userId, "custom_practice_feedback");
+            JsonNode node = extractJson(text);
+            if (node == null) {
+                return Map.of("source", "error", "error", "The AI's feedback couldn't be parsed. Please try again.");
+            }
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("source", "llm");
+            result.put("score", node.path("score").asInt(-1));
+            result.put("overallFeedback", node.path("overallFeedback").asText("").trim());
+            List<String> strengths = new ArrayList<>();
+            if (node.path("strengths").isArray()) for (JsonNode s : node.get("strengths")) {
+                String v = s.asText("").trim();
+                if (!v.isEmpty()) strengths.add(v);
+            }
+            List<String> gaps = new ArrayList<>();
+            if (node.path("gaps").isArray()) for (JsonNode g : node.get("gaps")) {
+                String v = g.asText("").trim();
+                if (!v.isEmpty()) gaps.add(v);
+            }
+            result.put("strengths", strengths);
+            result.put("gaps", gaps);
+            return result;
+        } catch (Exception e) {
+            log.warn("[llm] custom practice grading failed: {}", e.getMessage());
+            return Map.of("source", "error", "error",
+                    "The AI couldn't grade your submission right now. Please try again in a moment.");
+        }
+    }
+
     private static final String SYSTEM_RESUME_PROMPT =
             "You are Leap.ai's resume parser. Extract the professional and technical skills "
             + "mentioned in the resume text. Respond with ONLY valid JSON, no markdown, in exactly "

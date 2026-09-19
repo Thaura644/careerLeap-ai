@@ -10,4 +10,5 @@ public interface CommunityMembershipRepository extends JpaRepository<CommunityMe
     Optional<CommunityMembership> findByUserIdAndGroupId(Long userId, Long groupId);
     List<CommunityMembership> findByUserId(Long userId);
     long countByGroupId(Long groupId);
+    Optional<CommunityMembership> findFirstByGroupIdOrderByJoinedAtDesc(Long groupId);
 }

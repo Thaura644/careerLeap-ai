@@ -38,6 +38,7 @@ import {
   Filter,
   Loader2,
   Check,
+  Plus,
 } from "lucide-react";
 import { apiGet, apiPost, ApiError } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
@@ -46,6 +47,8 @@ import { ResourcesProvider, useResources, EventType } from "@/context/ResourcesC
 interface CommunityGroup {
   id: number;
   topic: string;
+  description: string | null;
+  userCreated: boolean;
   members: number;
   lastActive: string;
   joined: boolean;
@@ -70,6 +73,10 @@ const CommunityContent = () => {
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [groupsError, setGroupsError] = useState<string | null>(null);
   const [joiningId, setJoiningId] = useState<number | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTopic, setNewTopic] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [creatingGroup, setCreatingGroup] = useState(false);
 
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
@@ -118,6 +125,27 @@ const CommunityContent = () => {
       toast({ title: "Something went wrong", description: "Try again in a moment.", variant: "destructive" });
     } finally {
       setJoiningId(null);
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newTopic.trim()) return;
+    setCreatingGroup(true);
+    try {
+      const created = await apiPost<CommunityGroup>("/community", {
+        topic: newTopic.trim(),
+        description: newDescription.trim(),
+      });
+      setGroups((prev) => [...prev, created]);
+      setNewTopic("");
+      setNewDescription("");
+      setCreateOpen(false);
+      toast({ title: "Group created", description: "You're the first member." });
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Could not create the group.";
+      toast({ title: "Couldn't create group", description: message, variant: "destructive" });
+    } finally {
+      setCreatingGroup(false);
     }
   };
 
@@ -263,9 +291,43 @@ const CommunityContent = () => {
 
           <TabsContent value="groups" className="space-y-4">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Community Groups</CardTitle>
-                <CardDescription>Find groups related to your interests</CardDescription>
+              <CardHeader className="pb-3 flex flex-row items-start justify-between gap-4">
+                <div>
+                  <CardTitle>Community Groups</CardTitle>
+                  <CardDescription>Find groups related to your interests, or start your own</CardDescription>
+                </div>
+                <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="shrink-0 rounded-full">
+                      <Plus className="mr-2 h-4 w-4" /> Create group
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>New group</DialogTitle>
+                      <DialogDescription>You'll be its first member — invite others by sharing it.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Input
+                        placeholder="Group name — e.g. 'Breaking into UX Research'"
+                        value={newTopic}
+                        onChange={(e) => setNewTopic(e.target.value.slice(0, 200))}
+                      />
+                      <Textarea
+                        placeholder="What's this group for? (optional)"
+                        value={newDescription}
+                        onChange={(e) => setNewDescription(e.target.value.slice(0, 500))}
+                        rows={3}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleCreateGroup} disabled={creatingGroup || !newTopic.trim()} className="rounded-full">
+                        {creatingGroup && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Create
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardHeader>
               <CardContent className="space-y-4">
                 {groupsLoading ? (
@@ -278,15 +340,19 @@ const CommunityContent = () => {
                   </div>
                 ) : groups.length === 0 ? (
                   <div className="rounded-2xl border p-6 text-center text-muted-foreground">
-                    No groups yet — check back soon.
+                    No groups yet — create the first one.
                   </div>
                 ) : (
                   groups.map((g) => (
                     <div key={g.id} className="rounded-2xl border p-4">
-                      <h3 className="font-semibold">{g.topic}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{g.topic}</h3>
+                        {g.userCreated && <Badge variant="outline" className="rounded-full text-[10px]">Member-created</Badge>}
+                      </div>
+                      {g.description && <p className="mt-1 text-sm text-muted-foreground">{g.description}</p>}
                       <div className="flex gap-2 mt-3">
                         <Badge variant="outline" className="rounded-full">{g.members.toLocaleString()} members</Badge>
-                        <Badge variant="outline" className="rounded-full">Active {g.lastActive}</Badge>
+                        <Badge variant="outline" className="rounded-full">{g.lastActive}</Badge>
                       </div>
                       <Button
                         size="sm"

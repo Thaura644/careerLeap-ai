@@ -27,6 +27,13 @@ public class CommunityController {
         return communityService.groups(UserContext.require());
     }
 
+    @PostMapping
+    public Map<String, Object> createGroup(@RequestBody Map<String, Object> body) {
+        String topic = body.get("topic") == null ? "" : String.valueOf(body.get("topic"));
+        String description = body.get("description") == null ? "" : String.valueOf(body.get("description"));
+        return communityService.createGroup(UserContext.require(), topic, description);
+    }
+
     @PostMapping("/{groupId}/join")
     public Map<String, Object> join(@PathVariable Long groupId) {
         return communityService.join(groupId, UserContext.require());

@@ -11,6 +11,8 @@ import com.leapai.backend.repository.CommunityPostRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,10 +21,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Community groups, memberships, and posts. Group topics/seed member counts
- * are curated content; joining, leaving, and posting are real, persisted
- * actions — not a static listing. The displayed member count is the seed
- * count plus real joins, so it grows as people actually join.
+ * Community groups, memberships, and posts. Every number shown to the user —
+ * member count, "last active" — is computed from real CommunityMembership
+ * and CommunityPost rows, never a static seed value. A brand-new group
+ * honestly shows 0 members and "No activity yet" until real people join and
+ * post in it.
  */
 @Service
 public class CommunityService {
@@ -48,6 +51,34 @@ public class CommunityService {
             result.add(groupDto(g, joinedIds.contains(g.getId())));
         }
         return result;
+    }
+
+    /** Real, user-created group — anyone signed in can start one. */
+    @Transactional
+    public Map<String, Object> createGroup(User user, String topic, String description) {
+        String trimmedTopic = topic == null ? "" : topic.trim();
+        if (trimmedTopic.isEmpty()) {
+            throw new IllegalArgumentException("Give the group a name.");
+        }
+        if (trimmedTopic.length() > 200) trimmedTopic = trimmedTopic.substring(0, 200);
+        String trimmedDesc = description == null ? "" : description.trim();
+        if (trimmedDesc.length() > 500) trimmedDesc = trimmedDesc.substring(0, 500);
+
+        CommunityGroup g = new CommunityGroup();
+        g.setTopic(trimmedTopic);
+        g.setDescription(trimmedDesc.isEmpty() ? null : trimmedDesc);
+        g.setCreatedByUserId(user.getId());
+        g.setMembers(0);
+        g.setLastActive("");
+        groups.save(g);
+
+        // Creating a group makes you its first real member.
+        CommunityMembership m = new CommunityMembership();
+        m.setUserId(user.getId());
+        m.setGroupId(g.getId());
+        memberships.save(m);
+
+        return groupDto(g, true);
     }
 
     @Transactional
@@ -116,10 +147,37 @@ public class CommunityService {
         Map<String, Object> dto = new LinkedHashMap<>();
         dto.put("id", g.getId());
         dto.put("topic", g.getTopic());
-        dto.put("members", g.getMembers() + memberships.countByGroupId(g.getId()));
-        dto.put("lastActive", g.getLastActive());
+        dto.put("description", g.getDescription());
+        dto.put("userCreated", g.getCreatedByUserId() != null);
+        dto.put("members", memberships.countByGroupId(g.getId()));
+        dto.put("lastActive", lastActiveLabel(g.getId()));
         dto.put("joined", joined);
         return dto;
+    }
+
+    /** Real "last active" from the most recent post or join in this group — never a canned string. */
+    private String lastActiveLabel(Long groupId) {
+        Instant latestPost = posts.findFirstByGroupIdOrderByCreatedAtDesc(groupId)
+                .map(CommunityPost::getCreatedAt).orElse(null);
+        Instant latestJoin = memberships.findFirstByGroupIdOrderByJoinedAtDesc(groupId)
+                .map(CommunityMembership::getJoinedAt).orElse(null);
+        Instant latest = latestPost == null ? latestJoin
+                : latestJoin == null ? latestPost
+                : latestPost.isAfter(latestJoin) ? latestPost : latestJoin;
+        if (latest == null) return "No activity yet";
+        return relativeTime(latest);
+    }
+
+    private static String relativeTime(Instant when) {
+        Duration d = Duration.between(when, Instant.now());
+        long minutes = Math.max(0, d.toMinutes());
+        if (minutes < 1) return "just now";
+        if (minutes < 60) return minutes + "m ago";
+        long hours = d.toHours();
+        if (hours < 24) return hours + "h ago";
+        long days = d.toDays();
+        if (days < 30) return days + "d ago";
+        return (days / 30) + "mo ago";
     }
 
     private Map<String, Object> postDto(CommunityPost p, String groupTopic) {

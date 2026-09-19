@@ -16,6 +16,7 @@ import {
   Target,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { CustomPracticeEngine } from "@/components/practice/CustomPracticeEngine";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -231,8 +232,18 @@ const Practice = () => {
         <div className="mb-6">
           <h1 className="font-marketing text-3xl font-extrabold mb-2">Practice</h1>
           <p className="text-muted-foreground">
-            Real coding problems with hidden test cases — the judge runs your Java against
-            them, so "solved" means the code actually passes.
+            Built for your actual role and goal — nursing, law, engineering, history, finance,
+            whatever your field is. Practice fits the work, not the other way around.
+          </p>
+        </div>
+
+        <CustomPracticeEngine />
+
+        <div className="mb-4">
+          <h2 className="font-marketing text-lg font-extrabold">Practice library</h2>
+          <p className="text-sm text-muted-foreground">
+            A growing set of problems with real, checkable answers — currently strongest for
+            technical roles; more fields are added as the library grows.
           </p>
         </div>
 

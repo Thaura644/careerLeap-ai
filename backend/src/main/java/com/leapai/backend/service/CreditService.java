@@ -55,7 +55,8 @@ public class CreditService {
         ROADMAP(1),
         FLASHCARDS(1),
         RESUME(1),
-        ENRICH(1);
+        ENRICH(1),
+        CUSTOM_PRACTICE(1);
 
         private final int cost;
         Action(int cost) { this.cost = cost; }
