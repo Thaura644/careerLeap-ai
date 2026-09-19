@@ -163,7 +163,7 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
                           {resource.reasons.slice(0, 3).map((reason) => (
                             <span
                               key={reason}
-                              className="inline-flex items-center rounded-full bg-leap-purple/10 dark:bg-leap-purple/20 px-2 py-0.5 text-[10px] font-medium text-leap-purple"
+                              className="inline-flex items-center rounded-full bg-edu-indigo/10 dark:bg-edu-indigo/20 px-2 py-0.5 text-[10px] font-medium text-edu-indigo"
                             >
                               {reason}
                             </span>
@@ -177,7 +177,7 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
                       <Button 
                         variant="link" 
                         size="sm" 
-                        className="text-xs text-leap-purple px-0 mt-1 flex items-center"
+                        className="text-xs text-edu-indigo px-0 mt-1 flex items-center"
                         asChild
                       >
                         <a href={resource.url} target="_blank" rel="noopener noreferrer">
@@ -195,7 +195,7 @@ export const AIResourceRecommendations: React.FC<AIResourceRecommendationsProps>
       
       <CardFooter className={cn(compact ? "p-3" : "")}>
         <Link to="/resources" className="ml-auto">
-          <Button variant="link" className="text-leap-purple flex items-center">
+          <Button variant="link" className="text-edu-indigo flex items-center">
             View all resources <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
         </Link>

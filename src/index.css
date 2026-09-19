@@ -5,84 +5,87 @@
 @tailwind utilities;
 
 @layer base {
+  /* Same edu.* palette as the marketing site (tailwind.config.ts), expressed
+     as shadcn semantic tokens so the whole authenticated app — every Button,
+     Card, Badge, Input — picks it up automatically. */
   :root {
-    --background: 40 33% 98%;
-    --foreground: 24 10% 10%;
+    --background: 40 33% 99%;
+    --foreground: 254 25% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 24 10% 10%;
+    --card-foreground: 254 25% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 24 10% 10%;
+    --popover-foreground: 254 25% 10%;
 
-    --primary: 24 10% 10%;
-    --primary-foreground: 40 33% 98%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 12% 92%;
-    --secondary-foreground: 24 10% 10%;
+    --secondary: 245 30% 95%;
+    --secondary-foreground: 254 25% 10%;
 
-    --muted: 40 20% 96%;
-    --muted-foreground: 25 5% 45%;
+    --muted: 245 20% 96%;
+    --muted-foreground: 250 8% 45%;
 
-    --accent: 30 12% 92%;
-    --accent-foreground: 24 10% 10%;
+    --accent: 249 91% 96%;
+    --accent-foreground: 263 70% 50%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 40 33% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 30 12% 88%;
-    --input: 30 12% 88%;
-    --ring: 24 10% 10%;
+    --border: 250 20% 90%;
+    --input: 250 20% 90%;
+    --ring: 243 75% 59%;
 
-    --radius: 0;
+    --radius: 1rem;
 
-    --sidebar-background: 40 33% 97%;
-    --sidebar-foreground: 25 5% 30%;
-    --sidebar-primary: 24 10% 10%;
-    --sidebar-primary-foreground: 40 33% 98%;
-    --sidebar-accent: 30 12% 92%;
-    --sidebar-accent-foreground: 24 10% 10%;
-    --sidebar-border: 30 12% 88%;
-    --sidebar-ring: 24 10% 10%;
+    --sidebar-background: 254 25% 10%;
+    --sidebar-foreground: 250 20% 92%;
+    --sidebar-primary: 243 75% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 254 20% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 254 20% 20%;
+    --sidebar-ring: 243 75% 62%;
   }
 
   .dark {
-    --background: 24 10% 8%;
-    --foreground: 40 20% 92%;
+    --background: 254 25% 8%;
+    --foreground: 250 20% 92%;
 
-    --card: 24 10% 11%;
-    --card-foreground: 40 20% 92%;
+    --card: 254 22% 12%;
+    --card-foreground: 250 20% 92%;
 
-    --popover: 24 10% 11%;
-    --popover-foreground: 40 20% 92%;
+    --popover: 254 22% 12%;
+    --popover-foreground: 250 20% 92%;
 
-    --primary: 40 20% 92%;
-    --primary-foreground: 24 10% 8%;
+    --primary: 243 85% 70%;
+    --primary-foreground: 254 25% 8%;
 
-    --secondary: 24 8% 18%;
-    --secondary-foreground: 40 20% 92%;
+    --secondary: 254 18% 18%;
+    --secondary-foreground: 250 20% 92%;
 
-    --muted: 24 8% 16%;
-    --muted-foreground: 30 6% 60%;
+    --muted: 254 15% 16%;
+    --muted-foreground: 250 10% 65%;
 
-    --accent: 24 8% 18%;
-    --accent-foreground: 40 20% 92%;
+    --accent: 254 18% 20%;
+    --accent-foreground: 250 60% 80%;
 
     --destructive: 0 62.8% 40%;
-    --destructive-foreground: 40 20% 92%;
+    --destructive-foreground: 250 20% 92%;
 
-    --border: 24 8% 18%;
-    --input: 24 8% 18%;
-    --ring: 40 20% 92%;
+    --border: 254 15% 20%;
+    --input: 254 15% 20%;
+    --ring: 243 85% 70%;
 
-    --sidebar-background: 24 10% 9%;
-    --sidebar-foreground: 30 6% 70%;
-    --sidebar-primary: 40 20% 92%;
-    --sidebar-primary-foreground: 24 10% 8%;
-    --sidebar-accent: 24 8% 17%;
-    --sidebar-accent-foreground: 40 20% 92%;
-    --sidebar-border: 24 8% 17%;
-    --sidebar-ring: 40 20% 92%;
+    --sidebar-background: 254 30% 6%;
+    --sidebar-foreground: 250 15% 80%;
+    --sidebar-primary: 243 85% 70%;
+    --sidebar-primary-foreground: 254 25% 8%;
+    --sidebar-accent: 254 20% 14%;
+    --sidebar-accent-foreground: 250 20% 92%;
+    --sidebar-border: 254 20% 16%;
+    --sidebar-ring: 243 85% 70%;
   }
 }
 

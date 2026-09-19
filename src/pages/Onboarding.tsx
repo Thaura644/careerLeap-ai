@@ -456,8 +456,8 @@ const Onboarding = () => {
       <header className="border-b bg-white py-4">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
-            <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
-              Leap<span className="text-stone-400">.ai</span>
+            <span className="font-marketing text-[22px] font-extrabold tracking-tight text-foreground">
+              Leap<span className="text-edu-coral">.ai</span>
             </span>
 
             <Button variant="ghost" onClick={skipIfAccountExists}>
@@ -470,7 +470,7 @@ const Onboarding = () => {
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           {paidPlan && (
-            <div className="mb-6 rounded-md border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700">
+            <div className="mb-6 rounded-2xl border border-edu-indigo/20 bg-edu-lavender px-4 py-3 text-sm text-edu-lavender-fg">
               You're signing up for{" "}
               <span className="font-semibold">
                 {plan === "roadmap-report" ? "Career Audit" : "Pro"}
@@ -733,7 +733,7 @@ const Onboarding = () => {
                             key={c.name}
                             className={`flex items-start gap-2 rounded-md border p-2.5 cursor-pointer transition-colors ${
                               checked
-                                ? "border-leap-purple bg-leap-purple/5"
+                                ? "border-edu-indigo bg-edu-indigo/5"
                                 : "border-gray-200 hover:border-gray-300 dark:border-border"
                             }`}
                             onClick={() =>
@@ -813,7 +813,7 @@ const Onboarding = () => {
                             key={format.name}
                             className={`flex items-start gap-2 rounded-md border p-2.5 cursor-pointer transition-colors ${
                               checked
-                                ? "border-leap-purple bg-leap-purple/5"
+                                ? "border-edu-indigo bg-edu-indigo/5"
                                 : "border-gray-200 hover:border-gray-300"
                             }`}
                             onClick={() =>
@@ -883,7 +883,7 @@ const Onboarding = () => {
                       dashboard.
                     </p>
                     <Button
-                      className="bg-leap-purple hover:bg-opacity-90 group"
+                      className="bg-edu-indigo hover:bg-opacity-90 group"
                       onClick={nextStep}
                       size="lg"
                     >
@@ -907,7 +907,7 @@ const Onboarding = () => {
                   )}
 
                   {step !== 5 && step !== 6 && (
-                    <Button className="bg-leap-purple hover:bg-opacity-90" onClick={nextStep}>
+                    <Button className="bg-edu-indigo hover:bg-opacity-90" onClick={nextStep}>
                       Continue
                     </Button>
                   )}

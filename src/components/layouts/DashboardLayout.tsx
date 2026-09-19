@@ -95,22 +95,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Link
         to={item.href}
         className={cn(
-          "group relative flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium transition-colors",
+          "group relative flex items-center gap-3 rounded-full px-3 py-2 text-[13px] font-medium transition-colors",
           isActive
-            ? "bg-accent text-accent-foreground"
-            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+            ? "bg-sidebar-accent text-white"
+            : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-white"
         )}
       >
-        {isActive && (
-          <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary" />
-        )}
-        <item.icon className={cn("h-[18px] w-[18px]", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+        <item.icon className={cn("h-[18px] w-[18px]", isActive ? "text-sidebar-primary" : "text-sidebar-foreground/60 group-hover:text-white")} />
         <span>{item.title}</span>
         {item.pro && (
           <span
             className={cn(
               "ml-auto flex h-5 items-center justify-center rounded-full px-2 text-[10px] font-semibold tracking-wide",
-              isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+              isActive ? "bg-edu-coral text-white" : "bg-white/10 text-sidebar-foreground/70"
             )}
           >
             PRO
@@ -131,17 +128,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="sr-only">Toggle navigation menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <div className="flex h-14 items-center border-b px-4">
+          <SheetContent side="left" className="w-64 border-none bg-sidebar p-0 text-sidebar-foreground">
+            <div className="flex h-14 items-center border-b border-sidebar-border px-4">
               <Link to="/" className="flex items-center gap-2">
-                <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
-                  Leap<span className="text-stone-400">.ai</span>
+                <span className="font-marketing text-[22px] font-extrabold tracking-tight text-white">
+                  Leap<span className="text-edu-coral">.ai</span>
                 </span>
               </Link>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="ml-auto" 
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-white"
                 onClick={() => setIsMobileNavOpen(false)}
               >
                 <X className="h-5 w-5" />
@@ -152,7 +149,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <NavLink key={item.href} item={item} />
               ))}
               <Link to="/upgrade" className="mt-4">
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button className="w-full rounded-full bg-edu-coral hover:bg-edu-coral-dark">
                   <Crown className="mr-2 h-4 w-4" />
                   Upgrade to Pro
                 </Button>
@@ -161,8 +158,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </SheetContent>
         </Sheet>
         <Link to="/" className="flex min-w-0 items-center gap-2">
-          <span className="truncate font-display text-xl font-semibold tracking-tight text-foreground sm:text-[22px]">
-            Leap<span className="text-stone-400">.ai</span>
+          <span className="truncate font-marketing text-xl font-extrabold tracking-tight text-foreground sm:text-[22px]">
+            Leap<span className="text-edu-coral">.ai</span>
           </span>
         </Link>          <div className="ml-auto flex shrink-0 items-center gap-2">
           <ThemeToggle />
@@ -173,11 +170,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Desktop navigation — sticky sidebar with its own scroll. The user
           icon and global search stay pinned; only the nav list scrolls. */}
       <div className="flex flex-1 items-start">
-        <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-background md:flex">
-          <div className="flex h-14 shrink-0 items-center border-b px-4">
+        <aside className="sticky top-0 hidden h-screen w-64 flex-col bg-sidebar text-sidebar-foreground md:flex">
+          <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-4">
             <Link to="/" className="flex items-center gap-2">
-              <span className="font-display text-[22px] font-semibold tracking-tight text-foreground">
-                Leap<span className="text-stone-400">.ai</span>
+              <span className="font-marketing text-[22px] font-extrabold tracking-tight text-white">
+                Leap<span className="text-edu-coral">.ai</span>
               </span>
             </Link>
             <div className="ml-auto">
@@ -185,22 +182,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
 
-          <div className="shrink-0 border-b px-4 py-3">
+          <div className="shrink-0 border-b border-sidebar-border px-4 py-3">
             <button
               type="button"
               onClick={openGlobalSearch}
-              className="flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-leap-purple hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-full border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:border-sidebar-ring hover:text-white"
             >
               <SearchIcon className="h-4 w-4" />
               <span className="flex-1 text-left">Search…</span>
-              <kbd className="rounded border px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+              <kbd className="rounded border border-sidebar-border px-1.5 py-0.5 text-[10px]">⌘K</kbd>
             </button>
           </div>
 
           <nav className="grid flex-1 content-start gap-5 overflow-y-auto px-3 py-4">
             {navGroups.map((group) => (
               <div key={group.label} className="grid gap-1">
-                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
                   {group.label}
                 </p>
                 {group.items.map((item) => (
@@ -210,17 +207,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             ))}
           </nav>
 
-          <div className="shrink-0 border-t p-3">
-            <div className="rounded-md border bg-accent/40 p-3">
+          <div className="shrink-0 border-t border-sidebar-border p-3">
+            <div className="rounded-3xl bg-sidebar-accent/60 p-4">
               <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-primary" />
-                <p className="text-[13px] font-semibold">Unlock everything</p>
+                <Crown className="h-4 w-4 text-edu-coral" />
+                <p className="text-[13px] font-semibold text-white">Unlock everything</p>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-1 text-xs leading-relaxed text-sidebar-foreground/60">
                 Full practice library, scenarios, interview prep &amp; creator content.
               </p>
               <Link to="/upgrade" className="mt-3 block">
-                <Button className="h-8 w-full bg-primary text-primary-foreground text-xs hover:bg-primary/90">
+                <Button className="h-8 w-full rounded-full bg-edu-coral text-xs hover:bg-edu-coral-dark">
                   Upgrade to Pro
                 </Button>
               </Link>

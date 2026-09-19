@@ -45,7 +45,7 @@ export const FloatingAssistant: React.FC = () => {
           "fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-transform",
           open
             ? "bg-muted text-muted-foreground hover:scale-105"
-            : "bg-leap-purple text-white hover:scale-105"
+            : "bg-edu-indigo text-white hover:scale-105"
         )}
       >
         {open ? <X className="h-6 w-6" /> : <Brain className="h-6 w-6" />}
@@ -73,7 +73,7 @@ export const FloatingAssistant: React.FC = () => {
       >
         <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
           <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-leap-purple" />
+            <Brain className="h-5 w-5 text-edu-indigo" />
             <span className="text-sm font-semibold">AI Assistant</span>
           </div>
           <div className="flex items-center gap-1">

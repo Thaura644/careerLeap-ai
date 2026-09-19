@@ -93,13 +93,13 @@ const ScenarioCard: React.FC<{ scenario: PracticeScenario; isPro: boolean }> = (
     <Card
       className={cn(
         "flex h-full min-w-0 flex-col transition-colors",
-        locked ? "opacity-70" : "hover:border-leap-purple",
+        locked ? "opacity-70" : "hover:border-edu-indigo",
         scenario.trial && !locked && "border-leap-teal/40"
       )}
     >
       <CardContent className="flex flex-1 flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-leap-purple/10 px-2.5 py-1 text-xs font-medium text-leap-purple">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-edu-indigo/10 px-2.5 py-1 text-xs font-medium text-edu-indigo">
             <Icon className="h-3.5 w-3.5" />
             {meta.label}
           </span>
@@ -127,7 +127,7 @@ const ScenarioCard: React.FC<{ scenario: PracticeScenario; isPro: boolean }> = (
                 <CheckCircle2 className="h-3.5 w-3.5" /> Complete
               </span>
             ) : done > 0 ? (
-              <span className="font-medium text-leap-purple">
+              <span className="font-medium text-edu-indigo">
                 {done}/{scenario.stepCount} steps
               </span>
             ) : (
@@ -152,8 +152,8 @@ const ProblemRow: React.FC<{ problem: PracticeProblem; locked?: boolean }> = ({ 
     <Card
       className={cn(
         "min-w-0 transition-colors",
-        locked ? "opacity-60" : "hover:border-leap-purple",
-        problem.recommended && "border-leap-purple/40 bg-leap-purple/[0.03]"
+        locked ? "opacity-60" : "hover:border-edu-indigo",
+        problem.recommended && "border-edu-indigo/40 bg-edu-indigo/[0.03]"
       )}
     >
       <CardContent className="flex items-center gap-4 p-4">
@@ -167,7 +167,7 @@ const ProblemRow: React.FC<{ problem: PracticeProblem; locked?: boolean }> = ({ 
             <p className={cn("font-medium truncate", locked && "text-muted-foreground")}>{problem.title}</p>
             {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
             {problem.recommended && problem.reason && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-leap-purple/10 px-2 py-0.5 text-[10px] font-medium text-leap-purple">
+              <span className="inline-flex items-center gap-1 rounded-full bg-edu-indigo/10 px-2 py-0.5 text-[10px] font-medium text-edu-indigo">
                 <Sparkles className="h-3 w-3" />
                 {problem.reason}
               </span>
@@ -243,7 +243,7 @@ const Practice = () => {
               {solvedCount} / {problems.length} solved
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-leap-purple" />
+              <Sparkles className="h-4 w-4 text-edu-indigo" />
               {recommended.length} recommended for your roadmap
             </span>
           </div>
@@ -270,8 +270,8 @@ const Practice = () => {
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs transition-colors",
                   difficulty === d
-                    ? "border-leap-purple bg-leap-purple text-white"
-                    : "border-border text-muted-foreground hover:border-leap-purple hover:text-leap-purple"
+                    ? "border-edu-indigo bg-edu-indigo text-white"
+                    : "border-border text-muted-foreground hover:border-edu-indigo hover:text-edu-indigo"
                 )}
               >
                 {d === "ALL" ? "All" : d.charAt(0) + d.slice(1).toLowerCase()}
@@ -308,7 +308,7 @@ const Practice = () => {
             {/* Recommended — the practices your roadmap needs */}
             <section>
               <div className="mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-leap-purple" />
+                <MapPin className="h-4 w-4 text-edu-indigo" />
                 <h2 className="text-lg font-semibold">Recommended for your roadmap</h2>
               </div>
               <p className="mb-4 text-sm text-muted-foreground">
@@ -340,7 +340,7 @@ const Practice = () => {
                 <Code2 className="h-4 w-4 text-muted-foreground" />
                 <h2 className="text-lg font-semibold">Explore more areas</h2>
                 {!isPro && (
-                  <span className="rounded-full bg-leap-purple px-2 py-0.5 text-[10px] font-medium text-white">
+                  <span className="rounded-full bg-edu-indigo px-2 py-0.5 text-[10px] font-medium text-white">
                     PRO
                   </span>
                 )}
@@ -353,14 +353,14 @@ const Practice = () => {
               ) : !isPro ? (
                 <Card className="relative overflow-hidden">
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/85 p-8 text-center backdrop-blur-[2px]">
-                    <Crown className="h-8 w-8 text-leap-purple" />
+                    <Crown className="h-8 w-8 text-edu-indigo" />
                     <h3 className="text-lg font-semibold">Unlock every problem</h3>
                     <p className="max-w-sm text-sm text-muted-foreground">
                       Explore problems beyond your roadmap — harder topics, new areas, and
                       the full library. Upgrade to Pro to open them.
                     </p>
                     <Link to="/upgrade">
-                      <Button className="bg-leap-purple hover:bg-leap-purple/90">
+                      <Button className="bg-edu-indigo hover:bg-edu-indigo/90">
                         <Crown className="mr-2 h-4 w-4" />
                         Upgrade to Pro
                       </Button>
@@ -420,7 +420,7 @@ const ScenarioSections: React.FC = () => {
       <section className="space-y-3">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold">
-            {React.createElement(SCENARIO_TYPE_META[type].icon, { className: "h-4 w-4 text-leap-purple" })}
+            {React.createElement(SCENARIO_TYPE_META[type].icon, { className: "h-4 w-4 text-edu-indigo" })}
             {heading}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">{blurb}</p>
@@ -447,10 +447,10 @@ const ScenarioSections: React.FC = () => {
       {/* Real-world practice — case studies + build projects */}
       <section className="space-y-3">
         <div className="mb-3 flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-leap-purple" />
+          <Briefcase className="h-5 w-5 text-edu-indigo" />
           <h2 className="text-xl font-semibold">Practice in the real world</h2>
           {!isPro && proChecked && (
-            <span className="rounded-full bg-leap-purple px-2 py-0.5 text-[10px] font-medium text-white">
+            <span className="rounded-full bg-edu-indigo px-2 py-0.5 text-[10px] font-medium text-white">
               SOME FREE
             </span>
           )}
@@ -477,10 +477,10 @@ const ScenarioSections: React.FC = () => {
       {/* Interview & exam prep */}
       <section className="space-y-6">
         <div className="mb-3 flex items-center gap-2">
-          <GraduationCap className="h-5 w-5 text-leap-purple" />
+          <GraduationCap className="h-5 w-5 text-edu-indigo" />
           <h2 className="text-xl font-semibold">Preparing for an interview? Or an exam or test?</h2>
           {!isPro && proChecked && (
-            <span className="rounded-full bg-leap-purple px-2 py-0.5 text-[10px] font-medium text-white">
+            <span className="rounded-full bg-edu-indigo px-2 py-0.5 text-[10px] font-medium text-white">
               SOME FREE
             </span>
           )}

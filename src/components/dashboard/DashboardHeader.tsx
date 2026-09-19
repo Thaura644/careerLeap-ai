@@ -74,7 +74,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRoadmapGener
         )}
       </div>
       <Button
-        className="bg-leap-purple hover:bg-leap-purple/90 shrink-0"
+        className="bg-edu-indigo hover:bg-edu-indigo/90 shrink-0"
         onClick={handleGenerateReport}
         disabled={loading || generating}
       >

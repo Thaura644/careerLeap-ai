@@ -20,7 +20,7 @@ export const AIEnterpriseFeatures: React.FC = () => {
           mapping, custom integration, and workforce analytics — and this page will say so.
           For now, Pro covers everything that's actually available.
         </p>
-        <Link to="/upgrade" className="text-sm text-leap-purple hover:underline">
+        <Link to="/upgrade" className="text-sm text-edu-indigo hover:underline">
           See what's available now on /upgrade →
         </Link>
       </CardContent>

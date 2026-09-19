@@ -309,7 +309,7 @@ const UpgradePro = () => {
           )}
           {pro && <p className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">✓ Pro is active</p>}
           {planParam && !pro && (
-            <p className="mx-auto mt-4 max-w-2xl rounded-md bg-stone-100 px-4 py-2.5 text-sm text-stone-700">
+            <p className="mx-auto mt-4 max-w-2xl rounded-2xl bg-edu-lavender px-4 py-2.5 text-sm text-edu-lavender-fg">
               You're here to get{" "}
               <span className="font-semibold">
                 {planParam === "roadmap-report" ? "the Career Audit" : planParam === "pro-annual" ? "Pro — annual" : "Pro"}
@@ -434,8 +434,8 @@ const UpgradePro = () => {
           </Card>
 
           {/* Pro */}
-          <Card className="border-leap-purple border-2">
-            <div className="bg-leap-purple text-white py-1 px-3 rounded-t-md text-center text-sm font-medium">
+          <Card className="border-edu-indigo border-2">
+            <div className="bg-edu-indigo text-white py-1 px-3 rounded-t-md text-center text-sm font-medium">
               RECOMMENDED
             </div>
             <CardHeader>
@@ -450,7 +450,7 @@ const UpgradePro = () => {
                   onClick={() => setBilling("monthly")}
                   className={`h-9 rounded text-sm font-medium transition-colors ${
                     billing === "monthly"
-                      ? "bg-leap-purple text-white"
+                      ? "bg-edu-indigo text-white"
                       : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -461,7 +461,7 @@ const UpgradePro = () => {
                   onClick={() => setBilling("annual")}
                   className={`h-9 rounded text-sm font-medium transition-colors ${
                     billing === "annual"
-                      ? "bg-leap-purple text-white"
+                      ? "bg-edu-indigo text-white"
                       : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
@@ -510,7 +510,7 @@ const UpgradePro = () => {
             </CardContent>
             <CardFooter className="flex-col gap-2">
               <Button
-                className="w-full bg-leap-purple hover:bg-opacity-90"
+                className="w-full bg-edu-indigo hover:bg-opacity-90"
                 disabled={!status?.enabled || busy}
                 onClick={() => proPlan && startCheckout(proPlan)}
               >
@@ -565,7 +565,7 @@ const UpgradePro = () => {
 
         <div className="flex flex-col items-center gap-3 pb-10 text-center">
           <Button
-            className="bg-leap-purple hover:bg-opacity-90 px-8 py-6 text-lg"
+            className="bg-edu-indigo hover:bg-opacity-90 px-8 py-6 text-lg"
             disabled={!status?.enabled || busy}
             onClick={() => proPlan && startCheckout(proPlan)}
           >

@@ -363,7 +363,7 @@ export const AIGoalsManager: React.FC<AIGoalsManagerProps> = ({ className }) => 
                     <Button variant="outline" type="button" onClick={resetForm}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={isProcessing} className="bg-leap-purple">
+                    <Button type="submit" disabled={isProcessing} className="bg-edu-indigo">
                       {isProcessing ? "Saving..." : isEditing ? "Update Goal" : "Create Goal"}
                     </Button>
                   </DialogFooter>

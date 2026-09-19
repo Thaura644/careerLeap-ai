@@ -100,7 +100,7 @@ const PracticeScenario = () => {
         {locked && !detail && (
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/85 p-8 text-center backdrop-blur-[2px]">
-              <Lock className="h-8 w-8 text-leap-purple" />
+              <Lock className="h-8 w-8 text-edu-indigo" />
               <h3 className="text-lg font-semibold">This scenario is a Pro perk</h3>
               <p className="max-w-sm text-sm text-muted-foreground">
                 Unlock the full real-world practice library — every case study,
@@ -108,7 +108,7 @@ const PracticeScenario = () => {
                 per category.
               </p>
               <Link to="/upgrade">
-                <Button className="bg-leap-purple hover:bg-leap-purple/90">
+                <Button className="bg-edu-indigo hover:bg-edu-indigo/90">
                   <Crown className="mr-2 h-4 w-4" /> Upgrade to Pro
                 </Button>
               </Link>
@@ -126,7 +126,7 @@ const PracticeScenario = () => {
           <>
             <div className="mb-6">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-leap-purple/10 px-2.5 py-1 text-xs font-medium text-leap-purple">
+                <span className="inline-flex items-center gap-1 rounded-full bg-edu-indigo/10 px-2.5 py-1 text-xs font-medium text-edu-indigo">
                   <Sparkles className="h-3.5 w-3.5" />
                   {TYPE_LABEL[detail.type]}
                 </span>
@@ -152,7 +152,7 @@ const PracticeScenario = () => {
             {locked ? (
               <Card className="relative overflow-hidden">
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/85 p-8 text-center backdrop-blur-[2px]">
-                  <Lock className="h-8 w-8 text-leap-purple" />
+                  <Lock className="h-8 w-8 text-edu-indigo" />
                   <h3 className="text-lg font-semibold">This scenario is a Pro perk</h3>
                   <p className="max-w-sm text-sm text-muted-foreground">
                     Unlock the full real-world practice library — every case study,
@@ -160,7 +160,7 @@ const PracticeScenario = () => {
                     per category.
                   </p>
                   <Link to="/upgrade">
-                    <Button className="bg-leap-purple hover:bg-leap-purple/90">
+                    <Button className="bg-edu-indigo hover:bg-edu-indigo/90">
                       <Crown className="mr-2 h-4 w-4" /> Upgrade to Pro
                     </Button>
                   </Link>
@@ -207,7 +207,7 @@ const PracticeScenario = () => {
                     <div
                       className={cn(
                         "h-full rounded-full transition-all",
-                        complete ? "bg-green-500" : "bg-leap-purple"
+                        complete ? "bg-green-500" : "bg-edu-indigo"
                       )}
                       style={{ width: `${pct}%` }}
                     />
@@ -246,7 +246,7 @@ const PracticeScenario = () => {
                                 setToggling(null);
                               }
                             }}
-                            className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-leap-purple disabled:opacity-50"
+                            className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-edu-indigo disabled:opacity-50"
                           >
                             {toggling === i ? (
                               <Loader2 className="h-5 w-5 animate-spin" />

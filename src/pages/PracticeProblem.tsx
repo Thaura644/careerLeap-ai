@@ -116,8 +116,8 @@ const PracticeProblem = () => {
             <ArrowLeft className="h-4 w-4" /> All problems
           </Link>
           <Card className="mx-auto max-w-md p-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-leap-purple/10">
-              <Crown className="h-6 w-6 text-leap-purple" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-edu-indigo/10">
+              <Crown className="h-6 w-6 text-edu-indigo" />
             </div>
             <h1 className="text-xl font-bold">This problem is for Pro members</h1>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -125,7 +125,7 @@ const PracticeProblem = () => {
               your roadmap's recommendations. Upgrade to Pro to open it.
             </p>
             <Link to="/upgrade" className="mt-6 block">
-              <Button className="w-full bg-leap-purple hover:bg-leap-purple/90">
+              <Button className="w-full bg-edu-indigo hover:bg-edu-indigo/90">
                 <Crown className="mr-2 h-4 w-4" />
                 Upgrade to Pro
               </Button>
@@ -160,7 +160,7 @@ const PracticeProblem = () => {
                 </span>
                 <span className="text-xs text-muted-foreground">{problem.category}</span>
                 {problem.recommended && problem.reason && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-leap-purple/10 px-2 py-0.5 text-[11px] font-medium text-leap-purple">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-edu-indigo/10 px-2 py-0.5 text-[11px] font-medium text-edu-indigo">
                     <Sparkles className="h-3 w-3" />
                     {problem.reason}
                   </span>

@@ -72,7 +72,7 @@ export const McpConnections = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-leap-purple/10 text-leap-purple">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-edu-indigo/10 text-edu-indigo">
           <Bot className="h-5 w-5" />
         </span>
         <div>
@@ -122,7 +122,7 @@ export const McpConnections = () => {
           onChange={(e) => setLabel(e.target.value)}
           maxLength={100}
         />
-        <Button onClick={handleCreate} disabled={creating} className="shrink-0 bg-leap-purple hover:bg-opacity-90">
+        <Button onClick={handleCreate} disabled={creating} className="shrink-0 bg-edu-indigo hover:bg-opacity-90">
           {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Generate token
         </Button>

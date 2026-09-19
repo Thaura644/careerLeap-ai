@@ -18,12 +18,12 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
           <div>
             <CardTitle className="flex items-center gap-2">
               Advanced AI Insights
-              <Badge className="bg-leap-purple text-white">PRO</Badge>
+              <Badge className="bg-edu-indigo text-white">PRO</Badge>
             </CardTitle>
             <CardDescription>Unlock powerful career analysis and guidance</CardDescription>
           </div>
           <Link to="/upgrade" className="shrink-0">
-            <Button className="bg-leap-purple hover:bg-opacity-90">
+            <Button className="bg-edu-indigo hover:bg-opacity-90">
               <Crown className="mr-2 h-4 w-4" />
               Upgrade to Pro
             </Button>
@@ -34,13 +34,13 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
         {!isPro && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] z-10 flex items-center justify-center">
             <div className="text-center p-6 max-w-md">
-              <Crown className="h-12 w-12 text-leap-purple mx-auto mb-3" />
+              <Crown className="h-12 w-12 text-edu-indigo mx-auto mb-3" />
               <h3 className="text-xl font-bold mb-2">Unlock Advanced AI Features</h3>
               <p className="text-muted-foreground mb-4">
                 Unlimited AI conversations, advanced insights, and Pro-gated resources.
               </p>
               <Link to="/upgrade">
-                <Button className="bg-leap-purple hover:bg-opacity-90 px-6">
+                <Button className="bg-edu-indigo hover:bg-opacity-90 px-6">
                   See Pro Benefits
                 </Button>
               </Link>
@@ -56,7 +56,7 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
             </div>
           )}
           <div className="border rounded-lg p-4">
-            <Brain className="h-8 w-8 text-leap-purple mb-2" />
+            <Brain className="h-8 w-8 text-edu-indigo mb-2" />
             <h3 className="font-semibold">Advanced Career Insights</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Personalized recommendations based on your career trajectory
@@ -64,7 +64,7 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
           </div>
           
           <div className="border rounded-lg p-4">
-            <BarChart className="h-8 w-8 text-leap-purple mb-2" />
+            <BarChart className="h-8 w-8 text-edu-indigo mb-2" />
             <h3 className="font-semibold">Skills Gap Analysis</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Analysis of your skills against the roadmap focus areas
@@ -72,7 +72,7 @@ export const AIProFeatures: React.FC<AIProFeaturesProps> = ({ isPro = false }) =
           </div>
           
           <div className="border rounded-lg p-4">
-            <FileText className="h-8 w-8 text-leap-purple mb-2" />
+            <FileText className="h-8 w-8 text-edu-indigo mb-2" />
             <h3 className="font-semibold">Interview Preparation</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Preparation guidance for your target roles

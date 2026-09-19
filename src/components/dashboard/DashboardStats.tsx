@@ -51,7 +51,7 @@ export const DashboardStats: React.FC = () => {
   const tiles = [
     {
       icon: Target,
-      iconClass: "bg-leap-purple/10 text-leap-purple",
+      iconClass: "bg-edu-indigo/10 text-edu-indigo",
       label: "Goal Progress",
       value: goalCard?.value ?? "0%",
       sub: goalCard?.secondaryText ?? "Add a goal to get started",

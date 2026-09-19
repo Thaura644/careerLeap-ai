@@ -55,7 +55,7 @@ const ContextStrip: React.FC = () => {
   return (
     <div className="border-b bg-muted/40 px-4 py-2">
       <div className="flex items-start gap-2">
-        <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0 text-leap-purple" />
+        <Eye className="mt-0.5 h-3.5 w-3.5 shrink-0 text-edu-indigo" />
         <p className="text-xs leading-relaxed text-muted-foreground">
           <span className="font-medium text-foreground">I can see:</span> {bits.join(" · ")}
         </p>
@@ -122,7 +122,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
         )}
       >
         {isAI && (
-          <Avatar className="h-8 w-8 bg-leap-purple text-white">
+          <Avatar className="h-8 w-8 bg-edu-indigo text-white">
             <AvatarFallback>AI</AvatarFallback>
             <AvatarImage src="/ai-avatar.png" />
           </Avatar>
@@ -133,7 +133,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
             "px-4 py-3 rounded-lg max-w-[80%]",
             isAI 
               ? "bg-muted text-foreground rounded-tl-none" 
-              : "bg-leap-purple text-white rounded-tr-none"
+              : "bg-edu-indigo text-white rounded-tr-none"
           )}
         >
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -196,7 +196,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
         <CardHeader className={cn(compact ? "p-3" : "")}>
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-leap-purple" />
+              <Brain className="h-5 w-5 text-edu-indigo" />
               <CardTitle className={cn(compact ? "text-lg" : "")}>AI Assistant</CardTitle>
             </div>
             {messages.length > 0 && (
@@ -227,8 +227,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
           <div className={cn("space-y-4", compact ? "pt-0" : "pt-2")}>
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-                <div className="bg-leap-purple/10 p-3 rounded-full">
-                  <Brain className="h-8 w-8 text-leap-purple" />
+                <div className="bg-edu-indigo/10 p-3 rounded-full">
+                  <Brain className="h-8 w-8 text-edu-indigo" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Your AI Career Assistant</h3>
@@ -261,7 +261,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = ({
             onClick={handleSendMessage} 
             disabled={!inputMessage.trim() || isProcessing}
             className={cn("shrink-0", 
-              isProcessing ? "animate-pulse bg-leap-purple/70" : "bg-leap-purple"
+              isProcessing ? "animate-pulse bg-edu-indigo/70" : "bg-edu-indigo"
             )}
           >
             {isProcessing ? <Zap className="h-4 w-4" /> : <Send className="h-4 w-4" />}

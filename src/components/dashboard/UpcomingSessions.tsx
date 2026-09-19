@@ -23,7 +23,7 @@ export const UpcomingSessions: React.FC = () => {
   const getSessionIconClasses = (type: string) => {
     switch (type) {
       case "mentor":
-        return "bg-leap-purple/10 dark:bg-leap-purple/20 text-leap-purple";
+        return "bg-edu-indigo/10 dark:bg-edu-indigo/20 text-edu-indigo";
       case "peer":
         return "bg-leap-teal/10 dark:bg-leap-teal/20 text-leap-teal";
       default:

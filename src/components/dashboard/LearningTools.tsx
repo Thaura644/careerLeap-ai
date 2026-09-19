@@ -61,7 +61,7 @@ export const LearningTools: React.FC = () => {
     {
       to: "/resources",
       icon: BookOpen,
-      accent: "bg-leap-purple/10 text-leap-purple",
+      accent: "bg-edu-indigo/10 text-edu-indigo",
       title: "Resources",
       description: "Courses, guides, podcasts — matched to your profile.",
       stat: loading ? null : "The learning library",
@@ -78,7 +78,7 @@ export const LearningTools: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tools.map((tool) => (
           <Link key={tool.title} to={tool.to} className="group">
-            <Card className="h-full transition-all hover:border-leap-purple/60 hover:shadow-md">
+            <Card className="h-full transition-all hover:border-edu-indigo/60 hover:shadow-md">
               <CardContent className="p-5 flex flex-col h-full">
                 <div className="flex items-center justify-between mb-3">
                   <div className={cn("flex h-11 w-11 items-center justify-center rounded-xl", tool.accent)}>
@@ -95,7 +95,7 @@ export const LearningTools: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-leap-purple px-0 w-fit group-hover:gap-1.5 transition-all flex items-center"
+                  className="text-edu-indigo px-0 w-fit group-hover:gap-1.5 transition-all flex items-center"
                 >
                   {tool.cta} <ArrowRight className="h-3.5 w-3.5" />
                 </Button>

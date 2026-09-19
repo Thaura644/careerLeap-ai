@@ -59,7 +59,7 @@ const LinkRow: React.FC<{
       "group flex items-start justify-between gap-2 rounded-md border p-3 transition-colors",
       completed
         ? "border-emerald-500/40 bg-emerald-500/5"
-        : "hover:border-leap-purple/50 hover:bg-accent/50"
+        : "hover:border-edu-indigo/50 hover:bg-accent/50"
     )}
   >
     <a
@@ -72,7 +72,7 @@ const LinkRow: React.FC<{
         <div className="flex flex-wrap items-center gap-1.5">
           <span
             className={cn(
-              "text-sm font-medium group-hover:text-leap-purple",
+              "text-sm font-medium group-hover:text-edu-indigo",
               completed && "text-muted-foreground line-through decoration-muted-foreground/50"
             )}
           >
@@ -86,7 +86,7 @@ const LinkRow: React.FC<{
         </div>
         {note && <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>}
       </div>
-      <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-leap-purple" />
+      <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-edu-indigo" />
     </a>
     <button
       type="button"
@@ -333,7 +333,7 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
                       <span
                         className={cn(
                           "absolute left-[15px] top-9 h-[calc(100%-28px)] w-px",
-                          i < Math.min(selected, phases.length - 1) ? "bg-leap-purple" : "bg-border"
+                          i < Math.min(selected, phases.length - 1) ? "bg-edu-indigo" : "bg-border"
                         )}
                         aria-hidden="true"
                       />
@@ -345,8 +345,8 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
                       className={cn(
                         "z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border font-mono text-xs font-medium transition-colors",
                         isActive
-                          ? "border-leap-purple bg-leap-purple text-white shadow-sm"
-                          : "border-border bg-card text-muted-foreground hover:border-leap-purple hover:text-leap-purple"
+                          ? "border-edu-indigo bg-edu-indigo text-white shadow-sm"
+                          : "border-border bg-card text-muted-foreground hover:border-edu-indigo hover:text-edu-indigo"
                       )}
                     >
                       {i + 1}
@@ -357,11 +357,11 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
                       className={cn(
                         "min-w-0 flex-1 rounded-md border p-3 text-left transition-colors",
                         isActive
-                          ? "border-leap-purple bg-leap-purple/5"
+                          ? "border-edu-indigo bg-edu-indigo/5"
                           : "border-transparent hover:border-border hover:bg-accent/40"
                       )}
                     >
-                      <span className={cn("block text-sm font-medium", isActive ? "text-leap-purple" : "")}>
+                      <span className={cn("block text-sm font-medium", isActive ? "text-edu-indigo" : "")}>
                         {phase.title}
                       </span>
                       {phase.duration && (
@@ -400,7 +400,7 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
                 <ul className="mt-4 space-y-1.5">
                   {activePhase.milestones.map((milestone) => (
                     <li key={milestone} className="flex items-start gap-2 text-sm">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-leap-purple shrink-0" />
+                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-edu-indigo shrink-0" />
                       {milestone}
                     </li>
                   ))}
@@ -417,7 +417,7 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
               {!catalogLoading && (catalogResources.length > 0 || activePhase.references?.length) && (
                 <div className="mt-5 border-t pt-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <BookOpen className="h-4 w-4 text-leap-purple" />
+                    <BookOpen className="h-4 w-4 text-edu-indigo" />
                     <h4 className="text-sm font-semibold">Resources for this phase</h4>
                     {resourceRows.length > 0 && (
                       <span className="text-xs text-muted-foreground">
@@ -457,7 +457,7 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
               {!catalogLoading && catalogTools.length > 0 && (
                 <div className="mt-5 border-t pt-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Wrench className="h-4 w-4 text-leap-purple" />
+                    <Wrench className="h-4 w-4 text-edu-indigo" />
                     <h4 className="text-sm font-semibold">Tools to practice with</h4>
                   </div>
                   <div className="space-y-2">
@@ -479,7 +479,7 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
                   {activePhase.resources?.length ? (
                     <>
                       <div className="flex items-center gap-2 mb-3">
-                        <BookOpen className="h-4 w-4 text-leap-purple" />
+                        <BookOpen className="h-4 w-4 text-edu-indigo" />
                         <h4 className="text-sm font-semibold">Resources for this phase</h4>
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -489,7 +489,7 @@ export const RoadmapTab: React.FC<RoadmapTabProps> = ({ refreshKey = 0 }) => {
                   ) : (
                     <p className="text-sm text-muted-foreground">
                       No curated links for this phase yet — check the{" "}
-                      <Link to="/resources" className="text-leap-purple hover:underline inline-flex items-center">
+                      <Link to="/resources" className="text-edu-indigo hover:underline inline-flex items-center">
                         full library <ArrowRight className="ml-0.5 h-3 w-3" />
                       </Link>
                       .

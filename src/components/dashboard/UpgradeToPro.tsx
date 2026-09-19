@@ -76,7 +76,7 @@ export const UpgradeToPro: React.FC = () => {
 
   if (isPro) {
     return (
-      <Card className="bg-leap-purple text-white">
+      <Card className="bg-edu-indigo text-white">
         <CardContent className="p-6">
           <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
             <Crown className="h-5 w-5" /> You're on Pro
@@ -95,7 +95,7 @@ export const UpgradeToPro: React.FC = () => {
   }
 
   return (
-    <Card className="bg-leap-purple text-white">
+    <Card className="bg-edu-indigo text-white">
       <CardContent className="p-6">
         {isExhausted ? (
           <>
