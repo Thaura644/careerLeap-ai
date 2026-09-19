@@ -43,6 +43,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns(
                         "/api/auth/me",
                         "/api/auth/profile",
+                        "/api/auth/profile-photo",
                         "/api/dashboard/**",
                         "/api/resources/**",
                         "/api/community/**",

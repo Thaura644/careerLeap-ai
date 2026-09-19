@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AlignJustify, BadgeCheck, LayoutDashboard, LogOut, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -90,6 +90,7 @@ export const AuthMenu: React.FC<{ className?: string }> = ({ className }) => {
           </span>
           <span className="relative">
             <Avatar className="h-9 w-9 border border-stone-300">
+              {user.profilePhoto && <AvatarImage src={user.profilePhoto} alt={user.fullName || "Account"} />}
               <AvatarFallback className="bg-stone-900 text-sm font-semibold text-stone-50">
                 {initials}
               </AvatarFallback>

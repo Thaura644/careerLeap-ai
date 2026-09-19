@@ -20,6 +20,7 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 export interface StoredUser {
   fullName?: string;
   email?: string;
+  profilePhoto?: string | null;
 }
 
 /** Persist the session: localStorage + 30-day expiry when remembered,
@@ -70,6 +71,15 @@ export function getAuthUser(): StoredUser | null {
   } catch {
     return null;
   }
+}
+
+/** Merges a partial update (e.g. a new profile photo) into whichever storage
+ *  tier currently holds the session, without touching the token/expiry. */
+export function updateStoredUser(patch: Partial<StoredUser>): void {
+  const tier = localStorage.getItem(USER_KEY) ? localStorage : sessionStorage.getItem(USER_KEY) ? sessionStorage : null;
+  if (!tier) return;
+  const current = getAuthUser() || {};
+  tier.setItem(USER_KEY, JSON.stringify({ ...current, ...patch }));
 }
 
 /** Clear the session from both storage tiers. */

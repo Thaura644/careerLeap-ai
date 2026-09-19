@@ -39,14 +39,16 @@
 
     --radius: 1rem;
 
-    --sidebar-background: 254 25% 10%;
-    --sidebar-foreground: 250 20% 92%;
-    --sidebar-primary: 243 75% 62%;
+    /* Sidebar actually follows light/dark mode now — it was hardcoded dark
+       in both themes before, so toggling the theme did nothing to it. */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 254 25% 10%;
+    --sidebar-primary: 243 75% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 254 20% 18%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 254 20% 20%;
-    --sidebar-ring: 243 75% 62%;
+    --sidebar-accent: 245 30% 95%;
+    --sidebar-accent-foreground: 254 25% 10%;
+    --sidebar-border: 250 20% 90%;
+    --sidebar-ring: 243 75% 59%;
   }
 
   .dark {
@@ -105,5 +107,14 @@
   }
   .btn-outline {
     @apply bg-white hover:bg-gray-50 text-leap-navy border border-leap-navy font-medium rounded-md py-2 px-4 transition-all;
+  }
+  /* Scrollable but no visible scrollbar track/thumb — used by the dashboard
+     sidebar nav, which scrolls but shouldn't show a bar doing it. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

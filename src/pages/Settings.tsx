@@ -7,20 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, User, Bell, Globe, Shield, Mail, Save, AlertTriangle, Receipt } from "lucide-react";
+import { Loader2, User, Bell, Globe, Shield, Mail, Save, AlertTriangle, Receipt, Camera, X } from "lucide-react";
 import BillingTab from "@/components/settings/BillingTab";
 import { McpConnections } from "@/components/settings/McpConnections";
-import { apiGet, apiPut, ApiError, ApiTimeoutError } from "@/lib/api";
-import { clearAuthSession } from "@/lib/authSession";
+import { apiGet, apiPut, apiDelete, ApiError, ApiTimeoutError } from "@/lib/api";
+import { clearAuthSession, updateStoredUser } from "@/lib/authSession";
 import { useToast } from "@/hooks/use-toast";
+import { resizeImageToDataUri } from "@/lib/imageResize";
 
 interface MeUser {
   id: number;
   fullName: string;
   email: string;
   plan: string;
+  profilePhoto?: string | null;
   currentRole?: string | null;
   targetRole?: string | null;
   timeframe?: string | null;
@@ -49,6 +51,7 @@ const Settings = () => {
   const [timeframe, setTimeframe] = useState("");
   const [aspirations, setAspirations] = useState("");
   const [saving, setSaving] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   const loadAccount = useCallback(() => {
     setLoading(true);
@@ -108,6 +111,44 @@ const Settings = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Not an image", description: "Choose a JPEG, PNG, or similar image file.", variant: "destructive" });
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      const dataUri = await resizeImageToDataUri(file);
+      const updated = await apiPut<MeUser>("/auth/profile-photo", { photo: dataUri });
+      setUser((u) => (u ? { ...u, profilePhoto: updated.profilePhoto } : u));
+      updateStoredUser({ profilePhoto: updated.profilePhoto });
+      window.dispatchEvent(new Event("leap:auth-change"));
+      toast({ title: "Photo updated" });
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Could not upload — try a smaller image.";
+      toast({ title: "Upload failed", description: message, variant: "destructive" });
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const handlePhotoRemove = async () => {
+    setPhotoUploading(true);
+    try {
+      const updated = await apiDelete<MeUser>("/auth/profile-photo");
+      setUser((u) => (u ? { ...u, profilePhoto: updated.profilePhoto } : u));
+      updateStoredUser({ profilePhoto: null });
+      window.dispatchEvent(new Event("leap:auth-change"));
+    } catch {
+      toast({ title: "Couldn't remove photo", description: "Try again in a moment.", variant: "destructive" });
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -201,13 +242,38 @@ const Settings = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col md:flex-row gap-6 mb-6">
-                    <div className="flex flex-col items-center gap-4">
-                      <Avatar className="h-24 w-24">
-                        <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-                      </Avatar>
-                      <p className="text-xs text-muted-foreground text-center max-w-[180px]">
-                        Profile photos aren't supported yet.
-                      </p>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <Avatar className="h-24 w-24">
+                          {user.profilePhoto && <AvatarImage src={user.profilePhoto} alt={user.fullName} />}
+                          <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                        </Avatar>
+                        <label
+                          htmlFor="profile-photo-input"
+                          className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-edu-indigo text-white shadow-sm hover:bg-edu-indigo/90"
+                          title="Change photo"
+                        >
+                          {photoUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                        </label>
+                        <input
+                          id="profile-photo-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={photoUploading}
+                          onChange={handlePhotoSelect}
+                        />
+                      </div>
+                      {user.profilePhoto && (
+                        <button
+                          type="button"
+                          onClick={handlePhotoRemove}
+                          disabled={photoUploading}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" /> Remove photo
+                        </button>
+                      )}
                     </div>
                     <div className="flex-1 grid gap-4">
                       <div className="space-y-2">

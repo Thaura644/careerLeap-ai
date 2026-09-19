@@ -34,6 +34,15 @@ public class User {
     @Column(nullable = false, length = 200)
     private String fullName;
 
+    /** A small JPEG/PNG, stored as a data: URI. Client resizes to ~256px
+     *  before upload, so this stays a few hundred KB at most — no separate
+     *  object storage needed. Null means "show initials". */
+    @Column(name = "profile_photo", columnDefinition = "text")
+    private String profilePhoto;
+
+    public String getProfilePhoto() { return profilePhoto; }
+    public void setProfilePhoto(String profilePhoto) { this.profilePhoto = profilePhoto; }
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private Plan plan = Plan.FREE;

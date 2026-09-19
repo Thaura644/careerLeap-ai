@@ -8,6 +8,7 @@ import com.leapai.backend.repository.UserRepository;
 import com.leapai.backend.service.AuthService;
 import com.leapai.backend.service.SkillService;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -62,6 +63,18 @@ public class AuthController {
     public Map<String, Object> googleLogin(@RequestBody Map<String, Object> body) {
         String credential = body.get("credential") == null ? "" : String.valueOf(body.get("credential"));
         return authService.googleLogin(credential);
+    }
+
+    /** Body: { "photo": "data:image/jpeg;base64,..." } — the frontend resizes before sending. */
+    @PutMapping("/profile-photo")
+    public Map<String, Object> updateProfilePhoto(@RequestBody Map<String, Object> body) {
+        String photo = body.get("photo") == null ? "" : String.valueOf(body.get("photo"));
+        return authService.updateProfilePhoto(UserContext.require(), photo);
+    }
+
+    @DeleteMapping("/profile-photo")
+    public Map<String, Object> removeProfilePhoto() {
+        return authService.removeProfilePhoto(UserContext.require());
     }
 
     /** Start a password reset — public, no auth. Returns the same response for

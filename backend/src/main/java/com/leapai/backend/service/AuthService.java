@@ -134,6 +134,32 @@ public class AuthService {
         return authPayload(user);
     }
 
+    /** Max size for the stored data: URI — a resized ~256px JPEG fits well under this. */
+    private static final int MAX_PHOTO_DATA_URI_LENGTH = 700_000;
+
+    /**
+     * Sets the user's profile photo. The frontend resizes/compresses to a
+     * small square before sending, so this is a size *guard*, not the resize
+     * itself — never trust the client alone to have actually shrunk it.
+     */
+    public Map<String, Object> updateProfilePhoto(User user, String dataUri) {
+        if (dataUri == null || !dataUri.startsWith("data:image/")) {
+            throw new IllegalArgumentException("Expected an image data URI");
+        }
+        if (dataUri.length() > MAX_PHOTO_DATA_URI_LENGTH) {
+            throw new IllegalArgumentException("Image is too large — try a smaller photo");
+        }
+        user.setProfilePhoto(dataUri);
+        users.save(user);
+        return publicUser(user);
+    }
+
+    public Map<String, Object> removeProfilePhoto(User user) {
+        user.setProfilePhoto(null);
+        users.save(user);
+        return publicUser(user);
+    }
+
     public Map<String, Object> login(String email, String rawPassword) {
         User user = users.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
@@ -232,6 +258,7 @@ public class AuthService {
         u.put("id", user.getId());
         u.put("fullName", user.getFullName());
         u.put("email", user.getEmail());
+        u.put("profilePhoto", user.getProfilePhoto());
         u.put("plan", user.getPlan() != null ? user.getPlan().name().toLowerCase() : "free");
         // Career profile (drives the roadmap engine). Null-safe for new accounts.
         u.put("currentRole", nvl(user.getCurrentRole(), null));
