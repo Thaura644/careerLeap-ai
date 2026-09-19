@@ -1,28 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  MessageSquare, 
-  Users, 
-  Bookmark, 
-  Calendar, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  MessageSquare,
+  Bookmark,
+  Calendar,
   Crown,
   Filter,
-  Loader2
+  Loader2,
+  Check,
 } from "lucide-react";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost, ApiError } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 import { ResourcesProvider, useResources, EventType } from "@/context/ResourcesContext";
 
 interface CommunityGroup {
@@ -30,18 +48,41 @@ interface CommunityGroup {
   topic: string;
   members: number;
   lastActive: string;
+  joined: boolean;
+}
+
+interface CommunityPost {
+  id: number;
+  groupId: number;
+  groupTopic: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
 }
 
 const CommunityContent = () => {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") === "events" ? "events" : "discussions";
   const [tab, setTab] = useState(initialTab);
+  const { toast } = useToast();
+
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
   const [groupsError, setGroupsError] = useState<string | null>(null);
+  const [joiningId, setJoiningId] = useState<number | null>(null);
+
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState<string | null>(null);
+
+  const [postOpen, setPostOpen] = useState(false);
+  const [postGroupId, setPostGroupId] = useState<string>("");
+  const [postBody, setPostBody] = useState("");
+  const [posting, setPosting] = useState(false);
+
   const { upcomingEvents, loading: eventsLoading } = useResources();
 
-  useEffect(() => {
+  const loadGroups = () => {
     apiGet<CommunityGroup[]>("/community")
       .then((data) => setGroups(data || []))
       .catch(() => {
@@ -49,7 +90,54 @@ const CommunityContent = () => {
         setGroupsError("Could not load community groups.");
       })
       .finally(() => setGroupsLoading(false));
+  };
+
+  const loadPosts = () => {
+    apiGet<{ posts: CommunityPost[] }>("/community/posts")
+      .then((res) => setPosts(res.posts || []))
+      .catch(() => setPostsError("Could not load discussions."))
+      .finally(() => setPostsLoading(false));
+  };
+
+  useEffect(() => {
+    loadGroups();
+    loadPosts();
   }, []);
+
+  const joinedGroups = groups.filter((g) => g.joined);
+
+  const toggleMembership = async (group: CommunityGroup) => {
+    setJoiningId(group.id);
+    try {
+      const updated = await apiPost<CommunityGroup>(
+        `/community/${group.id}/${group.joined ? "leave" : "join"}`,
+        {}
+      );
+      setGroups((prev) => prev.map((g) => (g.id === group.id ? { ...g, ...updated } : g)));
+    } catch {
+      toast({ title: "Something went wrong", description: "Try again in a moment.", variant: "destructive" });
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const submitPost = async () => {
+    if (!postGroupId || !postBody.trim()) return;
+    setPosting(true);
+    try {
+      await apiPost(`/community/${postGroupId}/posts`, { body: postBody.trim() });
+      setPostBody("");
+      setPostGroupId("");
+      setPostOpen(false);
+      loadPosts();
+      toast({ title: "Posted", description: "Your post is live in the group." });
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Could not post — try again.";
+      toast({ title: "Couldn't post", description: message, variant: "destructive" });
+    } finally {
+      setPosting(false);
+    }
+  };
 
   return (
       <DashboardLayout>
@@ -68,10 +156,51 @@ const CommunityContent = () => {
                 className="w-full pl-8 sm:w-[280px]"
               />
             </div>
-            <Button variant="default" disabled title="Discussions open soon" className="shrink-0">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              New Post
-            </Button>
+            <Dialog open={postOpen} onOpenChange={setPostOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="default"
+                  disabled={joinedGroups.length === 0}
+                  title={joinedGroups.length === 0 ? "Join a group first to post" : undefined}
+                  className="shrink-0 rounded-full"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  New Post
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>New post</DialogTitle>
+                  <DialogDescription>Share a question, a win, or advice with a group you've joined.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Select value={postGroupId} onValueChange={setPostGroupId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose a group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {joinedGroups.map((g) => (
+                        <SelectItem key={g.id} value={String(g.id)}>
+                          {g.topic}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Textarea
+                    placeholder="What's on your mind?"
+                    value={postBody}
+                    onChange={(e) => setPostBody(e.target.value.slice(0, 4000))}
+                    rows={5}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button onClick={submitPost} disabled={posting || !postGroupId || !postBody.trim()} className="rounded-full">
+                    {posting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Post
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -83,7 +212,7 @@ const CommunityContent = () => {
               <TabsTrigger value="events">Events</TabsTrigger>
               <TabsTrigger value="saved">Saved</TabsTrigger>
             </TabsList>
-            <Button variant="outline" size="sm" className="hidden sm:flex" disabled>
+            <Button variant="outline" size="sm" className="hidden sm:flex rounded-full" disabled>
               <Filter className="mr-2 h-4 w-4" />
               Filter
             </Button>
@@ -93,17 +222,41 @@ const CommunityContent = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle>Discussions</CardTitle>
-                <CardDescription>Join the conversation with your peers</CardDescription>
+                <CardDescription>Real posts from groups across the community</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg p-10 text-center">
-                  <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground" />
-                  <h3 className="font-semibold mt-3">Discussions are opening soon</h3>
-                  <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    There are no discussions yet. When posting opens, this is where the community
-                    shares questions, wins, and advice.
-                  </p>
-                </div>
+                {postsLoading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading discussions…
+                  </div>
+                ) : postsError ? (
+                  <div className="rounded-2xl border p-6 text-center text-muted-foreground">{postsError}</div>
+                ) : posts.length === 0 ? (
+                  <div className="rounded-2xl border p-10 text-center">
+                    <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground" />
+                    <h3 className="font-semibold mt-3">No discussions yet</h3>
+                    <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                      {joinedGroups.length === 0
+                        ? "Join a group below, then be the first to start a conversation."
+                        : "Be the first to post in a group you've joined."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {posts.map((p) => (
+                      <div key={p.id} className="rounded-2xl border p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold">{p.authorName}</p>
+                          <Badge variant="outline" className="rounded-full">{p.groupTopic}</Badge>
+                        </div>
+                        <p className="mt-2 text-sm text-foreground whitespace-pre-wrap">{p.body}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {new Date(p.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -120,36 +273,47 @@ const CommunityContent = () => {
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading groups…
                   </div>
                 ) : groupsError ? (
-                  <div className="border rounded-lg p-6 text-center text-muted-foreground">
+                  <div className="rounded-2xl border p-6 text-center text-muted-foreground">
                     {groupsError}
                   </div>
                 ) : groups.length === 0 ? (
-                  <div className="border rounded-lg p-6 text-center text-muted-foreground">
+                  <div className="rounded-2xl border p-6 text-center text-muted-foreground">
                     No groups yet — check back soon.
                   </div>
                 ) : (
                   groups.map((g) => (
-                    <div key={g.id} className="border rounded-lg p-4">
+                    <div key={g.id} className="rounded-2xl border p-4">
                       <h3 className="font-semibold">{g.topic}</h3>
                       <div className="flex gap-2 mt-3">
-                        <Badge variant="outline">{g.members.toLocaleString()} members</Badge>
-                        <Badge variant="outline">Active {g.lastActive}</Badge>
+                        <Badge variant="outline" className="rounded-full">{g.members.toLocaleString()} members</Badge>
+                        <Badge variant="outline" className="rounded-full">Active {g.lastActive}</Badge>
                       </div>
-                      <Button size="sm" className="mt-3" disabled title="Joining opens with discussions">
-                        Join Group
+                      <Button
+                        size="sm"
+                        variant={g.joined ? "outline" : "default"}
+                        className="mt-3 rounded-full"
+                        disabled={joiningId === g.id}
+                        onClick={() => toggleMembership(g)}
+                      >
+                        {joiningId === g.id ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : g.joined ? (
+                          <Check className="mr-2 h-4 w-4" />
+                        ) : null}
+                        {g.joined ? "Joined" : "Join Group"}
                       </Button>
                     </div>
                   ))
                 )}
 
-                <div className="border border-dashed rounded-lg p-4 relative overflow-hidden">
+                <div className="rounded-2xl border border-dashed p-4 relative overflow-hidden">
                   <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                    <Crown className="h-8 w-8 text-leap-purple mb-2" />
+                    <Crown className="h-8 w-8 text-edu-coral mb-2" />
                     <h3 className="font-semibold text-center">Pro Groups</h3>
                     <p className="text-sm text-muted-foreground text-center max-w-xs mt-1">
                       Upgrade to Pro to access industry-specific groups with verified professionals
                     </p>
-                    <Button className="mt-3 bg-leap-purple hover:bg-opacity-90">Upgrade to Pro</Button>
+                    <Button className="mt-3 rounded-full bg-edu-coral hover:bg-edu-coral-dark">Upgrade to Pro</Button>
                   </div>
                   <h3 className="font-semibold">Coming soon</h3>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -172,14 +336,14 @@ const CommunityContent = () => {
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading events…
                   </div>
                 ) : upcomingEvents.length === 0 ? (
-                  <div className="border rounded-lg p-6 text-center text-muted-foreground">
+                  <div className="rounded-2xl border p-6 text-center text-muted-foreground">
                     No events scheduled yet — check back soon.
                   </div>
                 ) : (
                   upcomingEvents.map((event: EventType) => (
-                    <div key={event.id} className="border rounded-lg p-4">
+                    <div key={event.id} className="rounded-2xl border p-4">
                       <div className="flex gap-4">
-                        <div className="min-w-16 h-16 bg-muted rounded-md flex flex-col items-center justify-center text-center">
+                        <div className="min-w-16 h-16 bg-muted rounded-xl flex flex-col items-center justify-center text-center">
                           <span className="text-sm font-medium">{event.date.split(" ")[0]?.toUpperCase()}</span>
                           <span className="text-lg font-bold">{event.date.split(" ")[1]}</span>
                         </div>
@@ -187,11 +351,11 @@ const CommunityContent = () => {
                           <h3 className="font-semibold">{event.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                           <div className="flex gap-2 mt-2">
-                            <Badge variant="outline" className="flex items-center gap-1">
+                            <Badge variant="outline" className="flex items-center gap-1 rounded-full">
                               <Calendar className="h-3 w-3" />
                               {event.date}, {event.time}
                             </Badge>
-                            <Badge variant={event.isPro ? "default" : "outline"}>
+                            <Badge variant={event.isPro ? "default" : "outline"} className="rounded-full">
                               {event.isPro ? "Pro" : "Free"}
                             </Badge>
                           </div>
@@ -211,7 +375,7 @@ const CommunityContent = () => {
                 <CardDescription>Discussions and resources you've bookmarked</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg p-6 text-center">
+                <div className="rounded-2xl border p-6 text-center">
                   <Bookmark className="h-8 w-8 mx-auto text-muted-foreground" />
                   <h3 className="font-semibold mt-2">No saved content yet</h3>
                   <p className="text-sm text-muted-foreground mt-1">
