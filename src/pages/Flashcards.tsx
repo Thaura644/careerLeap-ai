@@ -112,7 +112,7 @@ const Flashcards = () => {
       <div className="mx-auto max-w-3xl">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-1">Flashcards</h1>
+            <h1 className="font-marketing text-3xl font-extrabold mb-1">Flashcards</h1>
             <p className="text-muted-foreground">
               Spaced-repetition cards generated from your roadmap and skills.
             </p>

@@ -154,7 +154,7 @@ const PracticeProblem = () => {
           <>
             <div className="mb-6">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-bold">{problem.title}</h1>
+                <h1 className="font-marketing text-2xl font-extrabold">{problem.title}</h1>
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">
                   {problem.difficulty}
                 </span>

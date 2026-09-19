@@ -283,7 +283,7 @@ const UpgradePro = () => {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-3">Upgrade to Pro</h1>
+          <h1 className="font-marketing text-3xl font-extrabold mb-3">Upgrade to Pro</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             The roadmap is free. Pro unlocks what roadmap.sh and AI agents can't give you: the
             full practice engine, real-world scenarios, interview &amp; exam prep, and live

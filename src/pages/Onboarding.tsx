@@ -481,7 +481,7 @@ const Onboarding = () => {
           )}
           {step >= 2 && (
             <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold mb-2">Let's set up your career profile</h1>
+              <h1 className="font-marketing text-3xl font-extrabold mb-2">Let's set up your career profile</h1>
               <p className="text-gray-600 dark:text-gray-400">
                 This shapes the roadmap we generate for you
               </p>
@@ -509,7 +509,7 @@ const Onboarding = () => {
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-edu-lavender px-4 py-1.5 text-xs font-semibold text-edu-lavender-fg">
                       <Sparkles className="h-3.5 w-3.5" /> Start with your goal
                     </span>
-                    <h1 className="mt-4 text-3xl font-bold tracking-tight">
+                    <h1 className="mt-4 font-marketing text-3xl font-extrabold tracking-tight">
                       What do you want to achieve?
                     </h1>
                     <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">

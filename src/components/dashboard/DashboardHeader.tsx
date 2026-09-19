@@ -62,7 +62,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onRoadmapGener
           </>
         ) : (
           <>
-            <h1 className="font-display text-2xl font-semibold tracking-tight">
+            <h1 className="font-marketing text-2xl font-extrabold tracking-tight">
               Welcome back, {userName}.
             </h1>
             <p className="text-muted-foreground">

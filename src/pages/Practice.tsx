@@ -229,7 +229,7 @@ const Practice = () => {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Practice</h1>
+          <h1 className="font-marketing text-3xl font-extrabold mb-2">Practice</h1>
           <p className="text-muted-foreground">
             Real coding problems with hidden test cases — the judge runs your Java against
             them, so "solved" means the code actually passes.

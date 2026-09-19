@@ -60,7 +60,7 @@ const Resources = () => {
       <DashboardLayout>
         <div className="max-w-5xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-2">Resources</h1>
+            <h1 className="font-marketing text-2xl font-extrabold mb-2">Resources</h1>
             <p className="text-muted-foreground">
               Curated learning materials to advance your career across various disciplines and industries
             </p>

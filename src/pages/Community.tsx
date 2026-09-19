@@ -56,7 +56,7 @@ const CommunityContent = () => {
         <div className="flex flex-col gap-6">
         <div className="flex flex-col flex-wrap justify-between gap-4 sm:flex-row sm:items-center">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold">Community</h1>
+            <h1 className="font-marketing text-2xl font-extrabold">Community</h1>
             <p className="text-muted-foreground">Connect with peers and professionals</p>
           </div>
           <div className="flex min-w-0 gap-2">
